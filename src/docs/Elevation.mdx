@@ -1,0 +1,41 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks'
+import * as ElevationStories from './Elevation.stories'
+
+<Meta title="Foundations/Elevation" summary="エレベーション（影）による奥行き表現のガイドライン" />
+
+# Elevation
+
+wip-ui のエレベーションは [inhouse のエレベーショントークン](https://design.pepabo.com/inhouse/flavors/elevation/) に基づいています。影（box-shadow）を使って Z 軸方向の奥行きを表現し、要素間の階層関係をユーザーに伝えます。
+
+## レベル
+
+7 段階のエレベーションレベルが定義されています。数値が大きいほどユーザーに近い位置にあることを示します。
+
+<Canvas of={ElevationStories.Levels} sourceState="none" />
+
+## スタックの分類
+
+### Major Stack
+
+画面全体の「地面（ground plane）」を基準とした絶対的な重なり順を定義します。新しいスタッキングコンテキストを作り、z-index の関係を決定します。
+
+### Minor Stack
+
+Major Stack の上に相対的に重なる要素です。
+
+- **On タイプ**: 前の要素の上に積み重なる。新しいスタッキングコンテキストは作らない（例: ボタン、カード）
+- **Over タイプ**: スタッキングコンテキストを作り、他の要素の上に浮かぶ（例: ヘッダー、メニュー、ダイアログ）
+
+## コンポーネントでの使い方
+
+Paper コンポーネントの `elevation` prop でレベルを指定します。
+
+```tsx
+{/* カードとして使用 */}
+<Paper elevation={1}>コンテンツ</Paper>
+
+{/* 影なしでアウトラインのみ */}
+<Paper outlined>コンテンツ</Paper>
+```
+
+Dialog や SnackBar などのオーバーレイコンポーネントは、適切なエレベーションレベルがあらかじめ設定されています。

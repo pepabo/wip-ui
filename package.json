@@ -1,0 +1,103 @@
+{
+  "name": "@pepabo/wip-ui",
+  "version": "0.1.0",
+  "description": "WIP UI Component Library",
+  "author": "GMO Pepabo, Inc.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pepabo/wip-ui.git"
+  },
+  "homepage": "https://pepabo.github.io/wip-ui/",
+  "bugs": {
+    "url": "https://github.com/pepabo/wip-ui/issues"
+  },
+  "keywords": [
+    "react",
+    "ui",
+    "components",
+    "design-system",
+    "storybook",
+    "pepabo"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": [
+    "**/*.css",
+    "**/*.scss"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/js/index.js",
+  "module": "./dist/js/index.js",
+  "types": "./dist/js/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/js/index.d.ts",
+      "import": "./dist/js/index.js",
+      "default": "./dist/js/index.js"
+    },
+    "./css/*.css": "./dist/css/*.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "biome:check": "biome check .",
+    "biome:format": "biome format . --write",
+    "biome:lint": "biome lint . --write",
+    "lint": "npm run typecheck && npm run biome:check",
+    "lint:fix": "npm run biome:format && npm run biome:lint",
+    "lint:staged": "biome check --write --files-ignore-unknown=true --no-errors-on-unmatched --error-on-warnings",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run lint:staged",
+    "test": "vitest",
+    "build:flavors": "node scripts/build-flavor-css.mjs",
+    "build:js": "node scripts/build-js.mjs",
+    "build": "npm run build:js && npm run build:flavors",
+    "prestorybook": "npm run build:flavors",
+    "prebuild-storybook": "npm run build:flavors",
+    "prepublishOnly": "npm run build",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "peerDependencies": {
+    "react": "^19.1.1",
+    "react-aria-components": "^1.12.2",
+    "react-dom": "^19.1.1"
+  },
+  "dependencies": {
+    "@pepabo-inhouse/adapter": "^4.0.0",
+    "@pepabo-inhouse/app-bar": "^4.0.0",
+    "@pepabo-inhouse/avatar": "^4.0.0",
+    "@pepabo-inhouse/breadcrumb": "^4.0.0",
+    "@pepabo-inhouse/button": "^4.0.0",
+    "@pepabo-inhouse/checkbox": "^4.0.0",
+    "@pepabo-inhouse/container": "^4.0.0",
+    "@pepabo-inhouse/flavor": "^4.0.0",
+    "@pepabo-inhouse/grid": "^4.0.0",
+    "@pepabo-inhouse/icon": "^4.0.0",
+    "@pepabo-inhouse/select": "^4.0.0",
+    "@pepabo-inhouse/tab": "^4.0.0",
+    "@pepabo-inhouse/table": "^4.0.0",
+    "@pepabo-inhouse/textfield": "^4.0.0",
+    "clsx": "^2.1.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.7",
+    "@figma/code-connect": "^1.4.1",
+    "@storybook/addon-docs": "^10.3.3",
+    "@storybook/addon-links": "^10.3.3",
+    "@storybook/addon-mcp": "^0.4.2",
+    "@storybook/react-vite": "^10.3.3",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "lefthook": "^2.0.4",
+    "sass-embedded": "^1.93.3",
+    "storybook": "^10.3.3",
+    "typescript": "^5.9.2",
+    "vite": "^6.4.1",
+    "vitest": "^3.2.4"
+  }
+}

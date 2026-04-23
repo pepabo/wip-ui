@@ -1,0 +1,66 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-radio-group {
+  @include adapter.text($level: m);
+  display: flex;
+  flex-direction: column;
+  gap: adapter.get-gap-size(xs);
+  color: adapter.get-text-color(light, high_emphasis);
+}
+
+.wip-radio {
+  @include adapter.text($level: m);
+  display: flex;
+  position: relative;
+  align-items: center;
+  gap: adapter.get-gap-size(xs);
+  forced-color-adjust: none;
+  cursor: pointer;
+
+  &:before {
+    content: '';
+    display: block;
+    width: adapter.get-radio-child-background-width();
+    height: adapter.get-radio-child-background-height();
+    border-radius: 50%;
+    box-shadow: 0 0 0 .0625rem adapter.get-radio-border-color();
+  }
+
+  &:after {
+    content: '';
+    position: absolute;
+    left: calc((adapter.get-radio-child-background-width() - adapter.get-radio-child-foreground-width()) / 2);
+    top: 50%;
+    transform: translateY(-50%) scale(0);
+    width: adapter.get-radio-child-foreground-width();
+    height: adapter.get-radio-child-foreground-height();
+    background: adapter.get-primitive-color(blue, 800);
+    border-radius: 50%;
+    transition: transform 200ms;
+  }
+
+  &[data-selected] {
+    &:before {
+      box-shadow: 0 0 0 .0625rem adapter.get-primitive-color(blue, 800);
+    }
+
+    &:after {
+      transform: translateY(-50%) scale(1);
+    }
+  }
+
+  &[data-focus-visible]:before {
+    outline: 0.25rem solid color-mix(in lch, adapter.get-semantic-color(neutral, 500) 15%, transparent);
+    outline-offset: 0;
+  }
+
+  &[data-selected][data-focus-visible]:before {
+    outline: 0.25rem solid color-mix(in lch, adapter.get-primitive-color(blue, 500) 15%, transparent);
+    outline-offset: 0;
+  }
+
+  &[data-disabled] {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,46 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks'
+import * as TypographyStories from './Typography.stories'
+
+<Meta title="Foundations/Typography" summary="タイポグラフィトークンとテキスト表示のガイドライン" />
+
+# Typography
+
+wip-ui のタイポグラフィは [inhouse のタイポグラフィトークン](https://design.pepabo.com/inhouse/flavors/typography/) に基づいています。4px のバーティカルリズムグリッドに沿ったフォントサイズと行間が定義されています。
+
+## フォントサイズ
+
+8 段階のサイズスケールが用意されています。`m`（16px = 1rem）が基準です。
+
+<Canvas of={TypographyStories.TypeScale} sourceState="none" />
+
+## 行間（Density）
+
+行間は 3 段階の密度で制御します。用途に応じて使い分けてください。
+
+<Canvas of={TypographyStories.Density} sourceState="none" />
+
+## テキストカラー
+
+強調度に基づく 3 段階のカラーと、状態を示すセマンティックカラーが用意されています。
+
+<Canvas of={TypographyStories.TextColors} sourceState="none" />
+
+## レスポンシブ対応
+
+`size` prop にオブジェクトを渡すことで、ブレークポイントごとにサイズを変更できます。
+
+```tsx
+<Typography size={{ xxs: 's', m: 'l', xl: 'xxl' }}>
+  レスポンシブなテキスト
+</Typography>
+```
+
+## HTML 要素の指定
+
+`component` prop で描画する HTML 要素を変更できます。見出しとして使う場合は適切な `h1`〜`h6` を指定してください。視覚的なサイズと意味的な要素レベルは独立して設定できます。
+
+```tsx
+<Typography component="h2" size="xl" fontWeight="bold">
+  見出し
+</Typography>
+```

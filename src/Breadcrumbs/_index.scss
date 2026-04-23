@@ -1,0 +1,30 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+@use '@pepabo-inhouse/breadcrumb' as breadcrumb;
+
+.wip-breadcrumbs {
+  @include breadcrumb.style;
+
+  ._item:not(:last-child)::after {
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+
+  & ._link {
+    text-decoration: none;
+    color: adapter.get-text-color(light, low_emphasis);
+
+    &[data-hovered] {
+      color: adapter.get-text-color(light, mid_emphasis);
+      text-decoration: underline;
+    }
+
+    &[data-current] {
+      color: adapter.get-text-color(light, high_emphasis);
+    }
+
+    &[data-focus-visible]:after {
+      content: '';
+      position: absolute;
+      inset: -2px -4px;
+    }
+  }
+}

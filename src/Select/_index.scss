@@ -1,0 +1,112 @@
+@use "@pepabo-inhouse/select" as select;
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-select {
+  @include select.style();
+
+  &[data-disabled] {
+    & ._label-container {
+      opacity: adapter.get-disabled-surface-opacity();
+    }
+  }
+
+  &[data-invalid] {
+    & ._select {
+      box-shadow: none;
+      border: 1px solid adapter.get-semantic-color(negative, 500);
+    }
+  }
+
+
+  & ._label-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    margin-bottom: adapter.get-gap-size($level: xs);;
+  }
+
+  & ._label {
+    @include adapter.text($level: s);
+    font-weight: 600;
+  }
+
+  & ._caption {
+    @include adapter.text($level: xxs);
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+
+  & ._select {
+    &:focus-visible {
+      outline: 0.25rem solid color-mix(in lch, adapter.get-semantic-color(neutral, 500) 15%, transparent);
+      outline-offset: 0;
+    }
+  }
+
+  & ._select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    cursor: pointer;
+    position: relative;
+  }
+
+  & ._value {
+    flex: 1;
+    text-align: left;
+  }
+
+  & ._icon {
+    position: absolute;
+  }
+
+  & .react-aria-FieldError {
+    @include adapter.text($level: xs);
+    color: adapter.get-semantic-color(negative, 500);
+    display: block;
+    margin-top: adapter.get-gap-size($level: xxs);
+  }
+
+  &-popover {
+    background-color: adapter.get-primitive-color(white);
+    border: 1px solid adapter.get-field-border-color(neutral, enabled);
+    border-radius: adapter.get-radius-size(m); // figma上で6pxになってるの確認
+    min-width: var(--trigger-width);
+
+    @each $size in (s, m, l) {
+      &.-size-#{$size} {
+        @include adapter.text($level: $size, $density: normal);
+      }
+    }
+
+    ._listbox {
+      padding: adapter.get-spacing-size(xs);
+      display: grid;
+      gap: adapter.get-gap-size(xxs);
+      width: unset;
+      max-height: inherit;
+      min-height: unset;
+      overflow: scroll;
+    }
+
+    ._item {
+      cursor: pointer;
+      padding: adapter.get-spacing-size(s) adapter.get-spacing-size(m);
+      border-radius: adapter.get-radius-size(m);
+
+      &[data-focus-visible] {
+        outline: none;
+      }
+
+      &[data-selected] {
+        background: adapter.get-semantic-color(neutral, 100);
+      }
+
+      &[data-focused],
+      &[data-pressed] {
+        background: adapter.get-semantic-color(informative, 200);
+        outline: none;
+      }
+    }
+  }
+}

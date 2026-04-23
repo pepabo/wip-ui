@@ -1,0 +1,42 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks'
+import { Table, TableHeader, TableBody, Column, Row, Cell } from '../Table'
+import * as IconStories from './Icons.stories'
+
+<Meta title="Foundations/Icons" summary="アイコンの使い方とアイコン一覧" />
+
+# Icons
+
+wip-ui のアイコンは [inhouse のアイコントークン](https://design.pepabo.com/inhouse/flavors/icon/) に基づいた Material Design ベースのアイコンセットです。
+
+## 使い方
+
+```tsx
+import { Icon } from 'wip-ui'
+
+<Icon name="home" />
+<Icon name="heart" size="l" />
+<Icon name="star" size="s" color="#FFD700" />
+```
+
+## サイズ
+
+<Canvas of={IconStories.SizeComparison} sourceState="none" />
+
+<Table aria-label="アイコンサイズ一覧">
+  <TableHeader>
+    <Column id="size" isRowHeader>サイズ</Column>
+    <Column id="value">値</Column>
+    <Column id="usage">用途</Column>
+  </TableHeader>
+  <TableBody>
+    <Row><Cell><code>s</code></Cell><Cell>16px</Cell><Cell>インラインテキスト、ラベル内</Cell></Row>
+    <Row><Cell><code>m</code></Cell><Cell>24px</Cell><Cell>ボタン、リスト項目（デフォルト）</Cell></Row>
+    <Row><Cell><code>l</code></Cell><Cell>32px</Cell><Cell>ヘッダー、強調表示</Cell></Row>
+  </TableBody>
+</Table>
+
+## アイコン一覧
+
+全 103 種類のアイコンが利用できます。
+
+<Canvas of={IconStories.AllIcons} sourceState="none" />

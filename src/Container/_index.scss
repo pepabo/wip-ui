@@ -1,0 +1,5 @@
+@use "@pepabo-inhouse/container" as container;
+
+.wip-container {
+  @include container.style;
+}

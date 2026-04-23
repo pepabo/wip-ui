@@ -1,0 +1,5 @@
+@use '@pepabo-inhouse/avatar' as avatar;
+
+.wip-avatar {
+  @include avatar.style;
+}

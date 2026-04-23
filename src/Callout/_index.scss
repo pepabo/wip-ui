@@ -1,0 +1,78 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-callout {
+  @include adapter.text($level: s);
+  display: flex;
+  align-items: center;
+  padding: adapter.get-spacing-size(s);
+  border-radius: adapter.get-radius-size(m);
+  gap: adapter.get-gap-size(s);
+  box-shadow: adapter.get-elevation-box-shadow(1);
+
+  &.-appearance-outline {
+    box-shadow: none;
+  }
+
+  &.-color {
+    &-informative {
+      background-color: adapter.get-semantic-color(informative, 50);
+      color: adapter.get-semantic-color(informative, 800);
+
+      &.-appearance-outline {
+        background-color: transparent;
+        border: adapter.get-border-size(s) solid adapter.get-semantic-color(informative, 800);
+      }
+    }
+    &-neutral {
+      background-color: adapter.get-semantic-color(neutral, 50);
+      color: adapter.get-semantic-color(neutral, 800);
+
+      &.-appearance-outline {
+        background-color: transparent;
+        border: adapter.get-border-size(s) solid adapter.get-semantic-color(neutral, 800);
+      }
+    }
+    &-negative {
+      background-color: adapter.get-semantic-color(negative, 100);
+      color: adapter.get-semantic-color(negative, 800);
+
+      &.-appearance-outline {
+        background-color: transparent;
+        border: adapter.get-border-size(s) solid adapter.get-semantic-color(negative, 800);
+      }
+    }
+    &-notice {
+      background-color: adapter.get-semantic-color(notice, 100);
+      color: adapter.get-semantic-color(notice, 900);
+
+      &.-appearance-outline {
+        background-color: transparent;
+        border: adapter.get-border-size(s) solid adapter.get-semantic-color(notice, 900);
+      }
+    }
+    &-positive {
+      background-color: adapter.get-semantic-color(positive, 100);
+      color: adapter.get-semantic-color(positive, 800);
+
+      &.-appearance-outline {
+        background-color: transparent;
+        border: adapter.get-border-size(s) solid adapter.get-semantic-color(positive, 800);
+      }
+    }
+  }
+
+  &-icon {
+    align-items: center;
+    font-size: adapter.get-font-size(m);
+    padding: adapter.get-spacing-size(xxs) 0;
+  }
+
+  &-content {
+    flex: 1;
+  }
+
+  &-action {
+    align-self: center;
+    margin-left: auto;
+  }
+}

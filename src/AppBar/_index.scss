@@ -1,0 +1,13 @@
+@use '@pepabo-inhouse/app-bar' as app-bar;
+
+.wip-app-bar {
+  @include app-bar.style;
+
+  ._content {
+    justify-content: space-between;
+  }
+}
+
+.wip-app-bar-trailing {
+  margin-left: auto;
+}

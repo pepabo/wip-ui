@@ -1,0 +1,42 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-paper {
+  border-radius: adapter.get-radius-size(l);
+  background: adapter.get-surface-color(light, primary);
+
+  &--elevation-0 {
+    box-shadow: none;
+  }
+
+  &--elevation-1 {
+    box-shadow: adapter.get-elevation-box-shadow(1);
+  }
+
+  &--elevation-2 {
+    box-shadow: adapter.get-elevation-box-shadow(2);
+  }
+
+  &--elevation-3 {
+    box-shadow: adapter.get-elevation-box-shadow(3);
+  }
+
+  &--elevation-4 {
+    box-shadow: adapter.get-elevation-box-shadow(4);
+  }
+
+  &--elevation-5 {
+    box-shadow: adapter.get-elevation-box-shadow(5);
+  }
+
+  &--elevation-6 {
+    box-shadow: adapter.get-elevation-box-shadow(6);
+  }
+
+  &--outlined {
+    border: adapter.get-border-size(m) solid adapter.get-border-color(light, high_emphasis);
+  }
+
+  &--square {
+    border-radius: 0;
+  }
+}

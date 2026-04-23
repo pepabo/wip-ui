@@ -1,0 +1,15 @@
+@use '@pepabo-inhouse/tab' as tab;
+@use "@pepabo-inhouse/adapter/functions" as adapter-functions;
+
+.wip-tab {
+  @include tab.style;
+
+  & ._item {
+    &.--activated {
+      &::after {
+        // TODO: TabのColorをpackage側に追加する
+        background: adapter-functions.get-button-surface-color($color: interactive);
+      }
+    }
+  }
+}

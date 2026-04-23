@@ -1,0 +1,31 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-sticker {
+  display: inline-block;
+  width: fit-content;
+  height: fit-content;
+  font-weight: bold;
+  border-radius: adapter.get-radius-size(m);
+
+  @each $color in (neutral, informative, positive, negative, notice, attention) {
+    &.-color-#{$color} {
+      @if $color == neutral {
+        background-color: adapter.get-semantic-color($color, 50);
+        color: adapter.get-semantic-color($color, 800);
+      } @else {
+        background-color: adapter.get-semantic-color($color, 100);
+        color: adapter.get-semantic-color($color, 800);
+      }
+    }
+  }
+
+  &.-size-s {
+    @include adapter.text($level: xs);
+    padding: adapter.get-spacing-size(xxs) adapter.get-spacing-size(xs);
+  }
+
+  &.-size-m {
+    @include adapter.text($level: s);
+    padding: adapter.get-spacing-size(xxs) adapter.get-spacing-size(m);
+  }
+}

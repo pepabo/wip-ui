@@ -1,0 +1,7 @@
+@use '@pepabo-inhouse/icon' as icon;
+@use '@pepabo-inhouse/flavor' as flavor;
+
+.wip-icon {
+  @include icon.style;
+  @include flavor.icon-font('../icon/dist');
+}

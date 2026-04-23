@@ -1,0 +1,56 @@
+@use "@pepabo-inhouse/textfield" as textfield;
+@use '@pepabo-inhouse/adapter' as adapter;
+@use "@pepabo-inhouse/adapter/functions" as adapter-functions;
+
+.wip-textfield {
+  @include textfield.style();
+
+  &[data-disabled] {
+    & ._label-container {
+      opacity: 0.38;
+    }
+  }
+
+  & ._label-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    margin-bottom: adapter-functions.get-gap-size($level: xs);;
+  }
+
+  & ._label {
+    @include adapter.text($level: s);
+    font-weight: bold;
+  }
+
+  & ._caption {
+    @include adapter.text($level: xxs);
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+
+  &.-appearance-outlined.-color-neutral {
+    & ._input {
+      &:user-invalid {
+        box-shadow: none;
+        border: 1px solid adapter.get-semantic-color(negative, 500);
+      }
+
+      &:hover:not(:user-invalid) {
+        // React Aria Default Style
+        box-shadow: inset 0 0 0 0.0625rem #afb3ba;
+      }
+
+      &:focus-visible {
+        outline: 0.25rem solid color-mix(in lch, adapter.get-semantic-color(neutral, 500) 15%, transparent);
+        outline-offset: 0;
+      }
+    }
+  }
+
+  & .react-aria-FieldError {
+    @include adapter.text($level: xs);
+    color: adapter.get-semantic-color(negative, 500);
+    display: block;
+    margin-top: adapter-functions.get-gap-size($level: xxs);
+  }
+}

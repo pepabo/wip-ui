@@ -1,0 +1,23 @@
+@use '@pepabo-inhouse/checkbox' as checkbox;
+@use '@pepabo-inhouse/flavor' as flavor;
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.aria-checkbox {
+  display: flex;
+  align-items: center;
+  gap: adapter.get-spacing-size(xs);
+
+  & .-label {
+    cursor: pointer;
+
+    &.--disabled {
+      opacity: adapter.get-disabled-surface-opacity();
+      cursor: default;
+    }
+  }
+}
+
+.wip-checkbox {
+  @include checkbox.style;
+  @include flavor.icon-font('../icon/dist');
+}

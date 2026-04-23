@@ -1,0 +1,34 @@
+// Storybook docs ページの見出し周りの余白を調整
+.sbdocs-wrapper {
+  .sbdocs-content {
+    h1 {
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      margin-top: 48px;
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      margin-top: 32px;
+      margin-bottom: 12px;
+    }
+
+    // Canvas (story 埋め込み) の前後に余白
+    .docs-story {
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+
+    // テーブルの上に余白
+    table {
+      margin-top: 8px;
+    }
+
+    // コードブロックの前後
+    pre {
+      margin-top: 8px;
+    }
+  }
+}

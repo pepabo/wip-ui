@@ -1,0 +1,70 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+@use '@pepabo-inhouse/adapter/mixins' as adapter-mixins;
+
+$sizes: (xxs, xs, s, m, l, xl, xxl, xxxl);
+$densities: (comfort, normal, dense);
+$breakpoints: (xs, s, m, l, xl, xxl);
+
+.wip-typography {
+  // Base size + density combinations
+  @each $size in $sizes {
+    @each $density in $densities {
+      &.-size-#{$size}.-density-#{$density} {
+        @include adapter.text($level: $size, $density: $density);
+      }
+    }
+  }
+
+  // Responsive size + density combinations
+  @each $bp in $breakpoints {
+    @include adapter-mixins.mq-boundary(up, $bp) {
+      @each $size in $sizes {
+        @each $density in $densities {
+          &.-size-#{$bp}-#{$size}.-density-#{$density} {
+            @include adapter.text($level: $size, $density: $density);
+          }
+        }
+      }
+    }
+  }
+
+  &.-font-weight {
+    &-normal {
+      font-weight: normal;
+    }
+
+    &-bold {
+      font-weight: bold;
+    }
+  }
+
+  &.-color {
+    &-high_emphasis {
+      color: adapter.get-text-color(light, high_emphasis);
+    }
+
+    &-medium_emphasis {
+      color: adapter.get-text-color(light, mid_emphasis);
+    }
+
+    &-low_emphasis {
+      color: adapter.get-text-color(light, low_emphasis);
+    }
+
+    &-informative {
+      color: adapter.get-text-color(light, informative);
+    }
+
+    &-positive {
+      color: adapter.get-text-color(light, positive);
+    }
+
+    &-notice {
+      color: adapter.get-text-color(light, notice);
+    }
+
+    &-negative {
+      color: adapter.get-text-color(light, negative);
+    }
+  }
+}

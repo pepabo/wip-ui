@@ -1,0 +1,65 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+import { Callout } from '../Callout'
+
+<Meta title="Introduction/Getting Started" summary="wip-ui のインストールとセットアップ手順" />
+
+# Getting Started
+
+<Callout color="notice">
+  wip-ui は現在 npm 公開に向けて準備中です。公開後は <code>npm install wip-ui</code> でインストールできるようになります。
+</Callout>
+
+## セットアップ
+
+### 1. CSS のインポート
+
+使用するフレーバーの CSS ファイルをアプリケーションのエントリーポイントでインポートします。
+
+```tsx
+// 例: Pepper フレーバーを使用する場合
+import 'wip-ui/css/pepper.css'
+```
+
+利用可能なフレーバーは [Overview](?path=/docs/introduction-overview--docs) を参照してください。
+
+### 2. FlavorProvider の配置
+
+アプリケーションのルートに `FlavorProvider` を配置して、使用するフレーバーを指定します。
+
+```tsx
+import { FlavorProvider } from 'wip-ui'
+import 'wip-ui/css/pepper.css'
+
+function App() {
+  return (
+    <FlavorProvider flavor="pepper">
+      {/* アプリケーション全体 */}
+    </FlavorProvider>
+  )
+}
+```
+
+`FlavorProvider` の詳細な API は [Introduction/FlavorProvider](?path=/docs/introduction-flavorprovider--docs) を参照してください。
+
+### 3. コンポーネントの使用
+
+```tsx
+import { Button, Typography, Stack } from 'wip-ui'
+
+function MyPage() {
+  return (
+    <Stack gap="m">
+      <Typography component="h1" size="xl" fontWeight="bold">
+        ページタイトル
+      </Typography>
+      <Button color="interactive">アクション</Button>
+    </Stack>
+  )
+}
+```
+
+## 必須ピア依存
+
+- `react` ^19.1.1
+- `react-dom` ^19.1.1
+- `react-aria-components` ^1.12.2

@@ -1,0 +1,258 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+// InhouseにSwitchがないので、一時的に各自のスタイルを定義する
+$switch-radius-size: adapter.get-radius-size($level: m) * 4; // 1rem
+$switch-border-size: adapter.get-border-size($level: l); // 0.125rem
+
+@function get-switch-width($size) {
+  @if $size == 's' {
+    @return 2rem;
+  } @else if $size == 'm' {
+    @return 2.5rem;
+  } @else if $size == 'l' {
+    @return 3rem;
+  }
+}
+
+@function get-switch-height($size) {
+  @if $size == 's' {
+    @return 1.25rem;
+  } @else if $size == 'm' {
+    @return 1.5rem;
+  } @else if $size == 'l' {
+    @return 1.75rem;
+  }
+}
+
+@function get-switch-thumb-size($size) {
+  @if $size == 's' {
+    @return 0.75rem;
+  } @else if $size == 'm' {
+    @return 1rem;
+  } @else if $size == 'l' {
+    @return 1.25rem;
+  }
+}
+
+@function get-switch-thumb-color($state) {
+  @if $state == 'default' {
+    @return adapter.get-primitive-color(gray, 600);
+  } @else if $state == 'disabled' {
+    @return adapter.get-semantic-color(neutral, 400);
+  } @else if $state == 'selected' {
+    @return adapter.get-primitive-color(white);
+  } @else if $state == 'selected-disabled' {
+    @return adapter.get-semantic-color(neutral, 400);
+  }
+}
+
+@function get-switch-color($color) {
+  @if $color == 'neutral' {
+    @return adapter.get-semantic-color(neutral, 800);
+  } @else if $color == 'interactive' {
+    @return adapter.get-semantic-color(informative, 600);
+  } @else if $color == 'negative' {
+    @return adapter.get-semantic-color(negative, 600);
+  }
+}
+
+
+.aria-switch {
+  display: flex;
+  align-items: center;
+  gap: adapter.get-spacing-size(xs);
+  cursor: pointer;
+
+  &[data-disabled] {
+    cursor: not-allowed;
+  }
+
+  .-label {
+    cursor: pointer;
+  }
+
+  &[data-disabled] .-label {
+    opacity: adapter.get-disabled-surface-opacity();
+    cursor: default;
+  }
+}
+
+.wip-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: background-color 200ms, border-color 200ms;
+  forced-color-adjust: none;
+  background: none;
+  border: $switch-border-size solid adapter.get-field-border-color(neutral, enabled);
+
+  // Size variants
+  &.-size-s {
+    width: get-switch-width($size: s);
+    height: get-switch-height($size: s);
+    border-radius: $switch-radius-size;
+  }
+
+  &.-size-m {
+    width: get-switch-width($size: m);
+    height: get-switch-height($size: m);
+    border-radius: $switch-radius-size;
+  }
+
+  &.-size-l {
+    width: get-switch-width($size: l);
+    height: get-switch-height($size: l);
+    border-radius: $switch-radius-size;
+  }
+
+  // Thumb
+  ._thumb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0.25rem;
+    background: get-switch-thumb-color(default);
+    transition: transform 200ms ease-in-out, box-shadow 300ms ease-out, opacity 200ms ease-in-out;
+  }
+
+  &.-size-s ._thumb {
+    width: get-switch-thumb-size(s);
+    height: get-switch-thumb-size(s);
+  }
+
+  &.-size-m ._thumb {
+    width: get-switch-thumb-size(m);
+    height: get-switch-thumb-size(m);
+  }
+
+  &.-size-l ._thumb {
+    width: get-switch-thumb-size(l);
+    height: get-switch-thumb-size(l);
+  }
+
+  // Selected state - thumb position
+  .aria-switch[data-selected] &.-size-s ._thumb {
+    transform: translate(0.75rem, -50%);
+  }
+
+  .aria-switch[data-selected] &.-size-m ._thumb {
+    transform: translate(1rem, -50%);
+  }
+
+  .aria-switch[data-selected] &.-size-l ._thumb {
+    transform: translate(1.25rem, -50%);
+  }
+
+  // Disabled state
+  .aria-switch[data-disabled] & {
+    opacity: adapter.get-disabled-surface-opacity();
+    background: none;
+    border: $switch-border-size solid adapter.get-field-border-color(neutral, disabled);
+
+    ._thumb {
+      background: get-switch-thumb-color(disabled);
+    }
+  }
+
+  .aria-switch[data-selected][data-disabled] & {
+    background: adapter.get-semantic-color(neutral, 400);
+    border: $switch-border-size solid adapter.get-field-border-color(neutral, disabled);
+
+    ._thumb {
+      background: get-switch-thumb-color(selected-disabled);
+    }
+  }
+
+  // Focus state
+  .aria-switch[data-focus-visible]:not([data-disabled]) & {
+    outline: 0.25rem solid color-mix(in lch, adapter.get-semantic-color(neutral, 500) 15%, transparent);
+    outline-offset: 0.125rem;
+  }
+
+  // Hover state
+  .aria-switch[data-hovered]:not([data-disabled]) & ._thumb {
+    opacity: 0.8;
+  }
+
+  // Pressed state
+  .aria-switch[data-pressed]:not([data-disabled]):not([data-selected]) & ._thumb {
+    opacity: 0.6;
+    box-shadow: 
+      0 0 0 0.75rem color-mix(in lch, get-switch-color(neutral) 80%, transparent),
+      0 0 0 1.25rem color-mix(in lch, get-switch-color(neutral) 50%, transparent),
+      0 0 0 1.75rem color-mix(in lch, get-switch-color(neutral) 20%, transparent);
+  }
+
+  // Color variants
+  &.-color-neutral {
+    .aria-switch[data-selected] & {
+      background: get-switch-color(neutral);
+      border: $switch-border-size solid get-switch-color(neutral);
+
+      ._thumb {
+        background: get-switch-thumb-color(selected);
+      }
+    }
+
+    .aria-switch[data-selected][data-focus-visible]:not([data-disabled]) & {
+      outline-color: color-mix(in lch, get-switch-color(neutral) 15%, transparent);
+    }
+
+    .aria-switch[data-pressed][data-selected]:not([data-disabled]) & ._thumb {
+      opacity: 0.6;
+      box-shadow: 
+        0 0 0 0.75rem color-mix(in lch, get-switch-color(neutral) 80%, transparent),
+        0 0 0 1.25rem color-mix(in lch, get-switch-color(neutral) 50%, transparent),
+        0 0 0 1.75rem color-mix(in lch, get-switch-color(neutral) 20%, transparent);
+    }
+  }
+
+  &.-color-interactive {
+    .aria-switch[data-selected] & {
+      background: get-switch-color(interactive);
+      border: $switch-border-size solid get-switch-color(interactive);
+
+      ._thumb {
+        background: get-switch-thumb-color(selected);
+      }
+    }
+
+    .aria-switch[data-selected][data-focus-visible]:not([data-disabled]) & {
+      outline-color: color-mix(in lch, get-switch-color(interactive) 15%, transparent);
+    }
+
+    .aria-switch[data-pressed][data-selected]:not([data-disabled]) & ._thumb {
+      opacity: 0.6;
+      box-shadow: 
+        0 0 0 0.75rem color-mix(in lch, get-switch-color(interactive) 80%, transparent),
+        0 0 0 1.25rem color-mix(in lch, get-switch-color(interactive) 40%, transparent),
+        0 0 0 1.75rem color-mix(in lch, get-switch-color(interactive) 10%, transparent);
+    }
+  }
+
+  &.-color-negative {
+    .aria-switch[data-selected] & {
+      background: get-switch-color(negative);
+      border: $switch-border-size solid get-switch-color(negative);
+
+      ._thumb {
+        background: get-switch-thumb-color(selected);
+      }
+    }
+
+    .aria-switch[data-selected][data-focus-visible]:not([data-disabled]) & {
+      outline-color: color-mix(in lch, get-switch-color(negative) 15%, transparent);
+    }
+
+    .aria-switch[data-pressed][data-selected]:not([data-disabled]) & ._thumb {
+      opacity: 0.6;
+      box-shadow: 
+        0 0 0 0.75rem color-mix(in lch, get-switch-color(negative) 80%, transparent),
+        0 0 0 1.25rem color-mix(in lch, get-switch-color(negative) 40%, transparent),
+        0 0 0 1.75rem color-mix(in lch, get-switch-color(negative) 10%, transparent);
+    }
+  }
+}

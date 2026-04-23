@@ -1,0 +1,6 @@
+@use '@pepabo-inhouse/table' as table;
+@use "@pepabo-inhouse/adapter/functions" as adapter-functions;
+
+.wip-table {
+  @include table.style;
+}

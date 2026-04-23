@@ -1,0 +1,80 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-snackbar-region {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: adapter.get-gap-size(xs);
+  align-items: flex-end;
+  pointer-events: none;
+
+  .wip-snackbar {
+    @include adapter.text($level: s);
+    view-transition-class: toast;
+    min-width: 320px;
+    width: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: auto;
+    gap: adapter.get-gap-size(m);
+    padding: adapter.get-spacing-size(m);
+    border-radius: adapter.get-radius-size(m);
+    box-shadow: adapter.get-elevation-box-shadow(2);
+
+    &.-state-positive {
+      background: adapter.get-semantic-color(positive, 50);
+      color: adapter.get-semantic-color(positive, 800);
+    }
+    &.-state-negative {
+      background: adapter.get-semantic-color(negative, 200);
+      color: adapter.get-semantic-color(negative, 700);
+    }
+    &.-state-notice {
+      background: adapter.get-semantic-color(notice, 100);
+      color: adapter.get-semantic-color(notice, 900);
+    }
+    &.-state-neutral {
+      background: adapter.get-semantic-color(neutral, 50);
+      color: adapter.get-semantic-color(neutral, 800);
+    }
+
+    .wip-snackbar-content {
+      display: flex;
+      align-items: center;
+      gap: adapter.get-gap-size(m);
+
+      .wip-snackbar-icon {
+        font-size: adapter.get-font-size(l);
+      }
+    }
+
+    .wip-snackbar-close-button {
+      font-weight: bold;
+    }
+  }
+}
+
+::view-transition-new(.toast):only-child {
+  animation: slide-in 400ms;
+}
+
+::view-transition-old(.toast):only-child {
+  animation: slide-out 400ms;
+}
+
+@keyframes slide-out {
+  to {
+    translate: 100% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    translate: 100% 0;
+    opacity: 0;
+  }
+}

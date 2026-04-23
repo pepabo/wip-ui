@@ -1,0 +1,9 @@
+// Storybook用のアイコンフォント上書き
+@font-face {
+  font-weight: 400;
+  font-family: "Inhouse Icons";
+  font-style: normal;
+  src:
+    url("../node_modules/@pepabo-inhouse/icon/dist/inhouse-icons.woff2") format("woff2"),
+    url("../node_modules/@pepabo-inhouse/icon/dist/inhouse-icons.woff") format("woff");
+}

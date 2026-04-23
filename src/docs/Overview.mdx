@@ -1,0 +1,53 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+import { Table, TableHeader, TableBody, Column, Row, Cell } from '../Table'
+
+<Meta title="Introduction/Overview" summary="wip-ui の概要と inhouse デザインシステムとの関係" />
+
+# wip-ui
+
+wip-ui は、GMO ペパボの共通基盤デザインシステム [inhouse](https://design.pepabo.com/inhouse/) をベースにした React コンポーネントライブラリです。
+
+## inhouse とは
+
+inhouse は、ペパボが展開する複数サービスに共通するデザイン原則・ガイドライン・アセットを統一した共通基盤デザインシステムです。プロダクトデザインとコミュニケーションデザインの両方をカバーし、サービスごとのブランドを維持しながら一貫性を担保します。
+
+詳細は [design.pepabo.com/inhouse](https://design.pepabo.com/inhouse/) を参照してください。
+
+## フレーバー
+
+inhouse の中核となる仕組みが **フレーバー（Flavor）** です。フレーバーは、ブランドごとに上書き可能なデザイントークンの集合で、以下の 5 つのカテゴリで構成されます。
+
+<Table aria-label="フレーバーカテゴリ一覧">
+  <TableHeader>
+    <Column id="category" isRowHeader>カテゴリ</Column>
+    <Column id="content">内容</Column>
+  </TableHeader>
+  <TableBody>
+    <Row><Cell>**Color**</Cell><Cell>プリミティブカラーとセマンティックカラー</Cell></Row>
+    <Row><Cell>**Elevation**</Cell><Cell>影によるZ軸方向の奥行き表現（レベル 0〜6）</Cell></Row>
+    <Row><Cell>**Icon**</Cell><Cell>Material Design ベースのアイコングリッド</Cell></Row>
+    <Row><Cell>**Sizing**</Cell><Cell>スペーシング、ボタン高さ、角丸、線幅</Cell></Row>
+    <Row><Cell>**Typography**</Cell><Cell>フォントサイズ、行間、フォントファミリー</Cell></Row>
+  </TableBody>
+</Table>
+
+wip-ui では以下のフレーバーが利用可能です。Storybook のツールバーから切り替えて確認できます。
+
+- **Pepper**（デフォルト）
+- **Minne**
+- **Apollo**
+- **Nachiguro**
+- **Flippers**
+- **Kung-pu**
+- **Lolipop**
+
+セットアップ方法は [Getting Started](?path=/docs/introduction-getting-started--docs) を参照してください。
+
+## トークンの 2 層構造
+
+デザイントークンはプリミティブトークンとセマンティックトークンの 2 層で管理されます。
+
+- **プリミティブトークン**: 具体的な値を直接定義（例: `$blue-600: #3e6f99`）
+- **セマンティックトークン**: 意味を持つ名前でプリミティブトークンを参照（例: `$informative-color: $blue-600`）
+
+コンポーネントではセマンティックトークンを使用してください。フレーバーを切り替えた際に、プリミティブトークンの値が変わってもセマンティックな意味が保たれます。

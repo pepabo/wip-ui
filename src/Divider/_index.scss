@@ -1,0 +1,58 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-divider {
+  border: none;
+  margin: 0;
+
+  &.-orientation-horizontal {
+    width: 100%;
+    border-bottom: adapter.get-border-size(m) solid adapter.get-border-color(light, high_emphasis);
+
+    &.-variant-fullWidth {
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    &.-variant-inset {
+      margin-left: adapter.get-spacing-size(m);
+    }
+
+    &.-variant-middle {
+      margin-left: adapter.get-spacing-size(m);
+      margin-right: adapter.get-spacing-size(m);
+    }
+  }
+
+  &.-orientation-vertical {
+    width: auto;
+    height: 100%;
+    border-left: adapter.get-border-size(m) solid adapter.get-border-color(light, high_emphasis);
+    display: inline-block;
+
+    &.-variant-fullWidth {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    &.-variant-inset {
+      margin-top: adapter.get-spacing-size(m);
+    }
+
+    &.-variant-middle {
+      margin-top: adapter.get-spacing-size(m);
+      margin-bottom: adapter.get-spacing-size(m);
+    }
+  }
+
+  &.--absolute {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100;
+  }
+
+  &.--flex-item {
+    align-self: stretch;
+    height: auto;
+  }
+}

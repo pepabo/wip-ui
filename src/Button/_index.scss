@@ -1,0 +1,5 @@
+@use "@pepabo-inhouse/button" as button;
+
+.wip-button {
+  @include button.style;
+}

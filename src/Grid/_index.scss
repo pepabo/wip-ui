@@ -1,0 +1,171 @@
+@use "@pepabo-inhouse/adapter/functions" as adapter;
+@use "@pepabo-inhouse/adapter/mixins" as adapter-mixins;
+@use "sass:map";
+@use "sass:math";
+
+$grid-directions: (
+  row: row,
+  row-reverse: row-reverse,
+  column: column,
+  column-reverse: column-reverse,
+);
+
+$grid-wraps: (
+  nowrap: nowrap,
+  wrap-reverse: wrap-reverse,
+);
+
+$grid-align-content: (
+  start: flex-start,
+  end: flex-end,
+  center: center,
+  stretch: stretch,
+  space-around: space-around,
+  space-between: space-between,
+);
+
+$grid-justify-content: (
+  start: flex-start,
+  end: flex-end,
+  center: center,
+  stretch: stretch,
+  space-around: space-around,
+  space-between: space-between,
+);
+
+$grid-spacings: (xxs, xs, s, m, l, xl, xxl, xxxl);
+$grid-columns: 12;
+$grid-breakpoints: (xs, s, m, l, xl, xxl);
+
+.wip-grid-container {
+  display: flex;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+
+  @each $name, $value in $grid-directions {
+    &.-direction-#{$name} {
+      flex-direction: $value;
+    }
+  }
+
+  @each $name, $value in $grid-wraps {
+    &.-wrap-#{$name} {
+      flex-wrap: $value;
+    }
+  }
+
+  @each $name, $value in $grid-align-content {
+    &.-align-content-#{$name} {
+      align-content: $value;
+    }
+  }
+
+  @each $name, $value in $grid-justify-content {
+    &.-justify-content-#{$name} {
+      justify-content: $value;
+    }
+  }
+
+  @each $spacing in $grid-spacings {
+    &.-spacing-#{$spacing} {
+      gap: adapter.get-gap-size($spacing);
+    }
+  }
+
+  @each $breakpoint in $grid-breakpoints {
+    @include adapter-mixins.mq-boundary(up, $breakpoint) {
+      @each $spacing in $grid-spacings {
+        &.-spacing-#{$breakpoint}-#{$spacing} {
+          gap: adapter.get-gap-size($spacing);
+        }
+      }
+    }
+  }
+
+  &.-is-gapless {
+    gap: 0;
+  }
+}
+
+.wip-grid-item {
+  box-sizing: border-box;
+  flex-grow: 0;
+  flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+
+  @for $i from 1 through $grid-columns {
+    &.-col-#{$i} {
+      flex-basis: calc(#{math.div($i, $grid-columns) * 100%});
+      max-width: calc(#{math.div($i, $grid-columns) * 100%});
+    }
+  }
+
+  @for $i from 0 through ($grid-columns - 1) {
+    &.-offset-#{$i} {
+      margin-left: calc(#{math.div($i, $grid-columns) * 100%});
+    }
+  }
+
+  @each $breakpoint in $grid-breakpoints {
+    @include adapter-mixins.mq-boundary(up, $breakpoint) {
+      @for $i from 1 through $grid-columns {
+        &.-col-#{$breakpoint}-#{$i} {
+          flex-basis: calc(#{math.div($i, $grid-columns) * 100%});
+          max-width: calc(#{math.div($i, $grid-columns) * 100%});
+        }
+      }
+
+      @for $i from 0 through ($grid-columns - 1) {
+        &.-offset-#{$breakpoint}-#{$i} {
+          margin-left: calc(#{math.div($i, $grid-columns) * 100%});
+        }
+      }
+    }
+  }
+}
+
+// gapを考慮してアイテム幅を調整する
+// 計算式: width = (columns / 12) * 100% - gap + (gap * columns / 12)
+.wip-grid-container:not(.-is-gapless) {
+  .wip-grid-item {
+    @for $i from 1 through $grid-columns {
+      &.-col-#{$i} {
+        flex-basis: calc(#{math.div($i, $grid-columns) * 100%} - var(--wip-grid-gap, 0px) + var(--wip-grid-gap, 0px) * #{math.div($i, $grid-columns)});
+        max-width: calc(#{math.div($i, $grid-columns) * 100%} - var(--wip-grid-gap, 0px) + var(--wip-grid-gap, 0px) * #{math.div($i, $grid-columns)});
+      }
+    }
+
+    @each $breakpoint in $grid-breakpoints {
+      @include adapter-mixins.mq-boundary(up, $breakpoint) {
+        @for $i from 1 through $grid-columns {
+          &.-col-#{$breakpoint}-#{$i} {
+            flex-basis: calc(#{math.div($i, $grid-columns) * 100%} - var(--wip-grid-gap, 0px) + var(--wip-grid-gap, 0px) * #{math.div($i, $grid-columns)});
+            max-width: calc(#{math.div($i, $grid-columns) * 100%} - var(--wip-grid-gap, 0px) + var(--wip-grid-gap, 0px) * #{math.div($i, $grid-columns)});
+          }
+        }
+      }
+    }
+  }
+}
+
+.wip-grid-container {
+  @each $spacing in $grid-spacings {
+    &.-spacing-#{$spacing} {
+      --wip-grid-gap: #{adapter.get-gap-size($spacing)};
+    }
+  }
+
+  @each $breakpoint in $grid-breakpoints {
+    @include adapter-mixins.mq-boundary(up, $breakpoint) {
+      @each $spacing in $grid-spacings {
+        &.-spacing-#{$breakpoint}-#{$spacing} {
+          --wip-grid-gap: #{adapter.get-gap-size($spacing)};
+        }
+      }
+    }
+  }
+}

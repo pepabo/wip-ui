@@ -1,0 +1,83 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks'
+import { Table, TableHeader, TableBody, Column, Row, Cell } from '../Table'
+import * as ColorStories from './Color.stories'
+
+<Meta title="Foundations/Colors" summary="カラートークンの体系と使い分けガイド" />
+
+# Colors
+
+wip-ui のカラーシステムは [inhouse のカラートークン](https://design.pepabo.com/inhouse/flavors/color/) に基づいています。プリミティブカラーとセマンティックカラーの 2 層で構成され、フレーバーごとに異なるパレットが適用されます。
+
+## プリミティブカラー
+
+色名とレベル（明度段階）の組み合わせで定義される直接的な色値です。
+
+<Table aria-label="プリミティブカラー一覧">
+  <TableHeader>
+    <Column id="name" isRowHeader>色名</Column>
+    <Column id="range">レベル範囲</Column>
+  </TableHeader>
+  <TableBody>
+    <Row><Cell>Black / White</Cell><Cell>1000</Cell></Row>
+    <Row><Cell>Gray</Cell><Cell>50〜900</Cell></Row>
+    <Row><Cell>Blue</Cell><Cell>50〜900</Cell></Row>
+    <Row><Cell>Green</Cell><Cell>50〜900</Cell></Row>
+    <Row><Cell>Red</Cell><Cell>50〜900</Cell></Row>
+    <Row><Cell>Yellow</Cell><Cell>50〜900</Cell></Row>
+  </TableBody>
+</Table>
+
+レベルの数値が大きいほど暗くなります。コンポーネント実装では直接使用せず、セマンティックカラーを使用してください。
+
+## セマンティックカラー
+
+意図（intention）に基づいた名前で定義される色です。コンポーネントの `color` prop はこの体系に対応しています。
+
+<Table aria-label="セマンティックカラー一覧">
+  <TableHeader>
+    <Column id="name" isRowHeader>セマンティック名</Column>
+    <Column id="meaning">意味</Column>
+    <Column id="usage">使用場面</Column>
+  </TableHeader>
+  <TableBody>
+    <Row><Cell>**Neutral**</Cell><Cell>中立</Cell><Cell>標準の背景、ボーダー、テキスト</Cell></Row>
+    <Row><Cell>**Informative**</Cell><Cell>情報提供</Cell><Cell>ヘルプ、案内、リンク</Cell></Row>
+    <Row><Cell>**Positive**</Cell><Cell>肯定・成功</Cell><Cell>完了メッセージ、成功状態</Cell></Row>
+    <Row><Cell>**Negative**</Cell><Cell>否定・エラー</Cell><Cell>エラーメッセージ、削除</Cell></Row>
+    <Row><Cell>**Notice**</Cell><Cell>注意・警告</Cell><Cell>警告メッセージ、注意喚起</Cell></Row>
+  </TableBody>
+</Table>
+
+### Implication カラー
+
+慣例的に色の意味が定着しているケースに使用します。
+
+<Table aria-label="Implication カラー一覧">
+  <TableHeader>
+    <Column id="name" isRowHeader>名前</Column>
+    <Column id="meaning">意味</Column>
+    <Column id="example">例</Column>
+  </TableHeader>
+  <TableBody>
+    <Row><Cell>**Interactive**</Cell><Cell>インタラクティブ要素</Cell><Cell>ハイパーリンク</Cell></Row>
+    <Row><Cell>**Favorite**</Cell><Cell>お気に入り</Cell><Cell>ハートアイコン</Cell></Row>
+  </TableBody>
+</Table>
+
+## カラートークン一覧
+
+ツールバーのフレーバー切り替えで各テーマのカラーを確認できます。
+
+<Canvas of={ColorStories.Swatches} sourceState="none" />
+
+## コンポーネントでの使い方
+
+多くのコンポーネントが `color` prop でセマンティックカラーを受け付けます。
+
+- **Button**: `neutral`、`interactive`、`negative`
+- **Callout**: `informative`、`neutral`、`negative`、`notice`、`positive`
+- **Typography**: `high_emphasis`、`medium_emphasis`、`low_emphasis`、`informative`、`positive`、`notice`、`negative`
+
+## アクセシビリティ
+
+色だけで情報を伝えないでください。色覚に依存しないよう、アイコンやテキストなど他の区別手段を併用してください。

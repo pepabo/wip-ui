@@ -1,0 +1,85 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: var(--visual-viewport-height);
+  background: adapter.get-scrim-background-color();
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: adapter.get-major-stack-z-index(1);
+
+  &[data-entering] {
+    animation: modal-fade 200ms;
+  }
+
+  &[data-exiting] {
+    animation: modal-fade 150ms reverse ease-in;
+  }
+}
+
+@keyframes modal-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-zoom {
+  from {
+    transform: scale(0.8);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+.wip-dialog-modal {
+  &[data-entering] {
+    animation: modal-zoom 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+}
+
+.wip-dialog {
+  background: adapter.get-surface-color(light, primary);
+  padding: adapter.get-spacing-size(l);
+  border-radius: adapter.get-radius-size(m);
+  box-shadow: adapter.get-elevation-box-shadow(3);
+  max-height: inherit;
+  box-sizing: border-box;
+  overflow: auto;
+  outline: none;
+}
+
+.wip-dialog-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: adapter.get-gap-size(xs);
+  margin-bottom: adapter.get-spacing-size(l);
+}
+
+.wip-dialog-title {
+  @include adapter.text($level: xl);
+  color: adapter.get-text-color(light, high_emphasis);
+  font-weight: bold;
+}
+
+.wip-dialog-description {
+  @include adapter.text($level: m, $density: comfort);
+  color: adapter.get-text-color(light, mid_emphasis);
+}
+
+.wip-dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: adapter.get-gap-size(xs);
+  margin-top: adapter.get-spacing-size(l);
+}

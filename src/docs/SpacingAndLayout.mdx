@@ -1,0 +1,88 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks'
+import { Table, TableHeader, TableBody, Column, Row, Cell } from '../Table'
+import * as SpacingStories from './Spacing.stories'
+
+<Meta title="Foundations/Spacing" summary="スペーシングトークンとレイアウトコンポーネントの使い分け" />
+
+# Spacing
+
+wip-ui のスペーシングは [inhouse のサイジングトークン](https://design.pepabo.com/inhouse/flavors/sizing/) に基づいています。16px と 24px を基準値として、タイポグラフィから導出されたスケールで統一されています。
+
+## スペーシングスケール
+
+コンポーネントの `gap`・`spacing` prop で使用するスケールです。
+
+<Canvas of={SpacingStories.Scale} sourceState="none" />
+
+## Gap の比較
+
+Stack の `gap` prop を変えたときの間隔の違いです。
+
+<Canvas of={SpacingStories.GapComparison} sourceState="none" />
+
+## レイアウトコンポーネントの使い分け
+
+### Stack — 1 次元の配列
+
+子要素を縦または横に並べるシンプルなレイアウトに使います。
+
+- ボタングループ、フォーム項目の縦並び、インライン要素の横並び
+- `flexDirection` で方向、`gap` で間隔、`alignItems` / `justifyContent` で配置を制御
+
+```tsx
+<Stack flexDirection="row" gap="m" alignItems="center">
+  <Button>キャンセル</Button>
+  <Button color="interactive">保存</Button>
+</Stack>
+```
+
+### Grid — 2 次元のグリッド
+
+12 カラムグリッドによる複雑なレイアウトに使います。
+
+- ページレイアウト（メイン + サイドバー）、カード一覧、ダッシュボード
+- `GridItem` の `size` でカラム数を指定（合計 12）
+- `offset` で開始位置をずらせる
+
+```tsx
+<Grid spacing="l">
+  <GridItem size={8}>メインコンテンツ</GridItem>
+  <GridItem size={4}>サイドバー</GridItem>
+</Grid>
+```
+
+### Container — コンテンツ幅の制約
+
+コンテンツの最大幅を制限するラッパーです。Grid や Stack の外側で使います。
+
+<Table aria-label="Container サイズ一覧">
+  <TableHeader>
+    <Column id="size" isRowHeader>サイズ</Column>
+    <Column id="usage">用途</Column>
+  </TableHeader>
+  <TableBody>
+    <Row><Cell><code>xs</code></Cell><Cell>ナロー幅（ログインフォームなど）</Cell></Row>
+    <Row><Cell><code>s</code></Cell><Cell>記事本文</Cell></Row>
+    <Row><Cell><code>m</code></Cell><Cell>標準的なページ</Cell></Row>
+    <Row><Cell><code>l</code></Cell><Cell>ワイドなページ</Cell></Row>
+    <Row><Cell><code>xl</code></Cell><Cell>フル幅に近いレイアウト</Cell></Row>
+  </TableBody>
+</Table>
+
+## レスポンシブ対応
+
+Stack・Grid ともにレスポンシブ対応しています。オブジェクトを渡すことで、ブレークポイントごとに値を変更できます。
+
+```tsx
+{/* モバイルでは縦並び、デスクトップでは横並び */}
+<Stack flexDirection={{ xxs: 'column', m: 'row' }} gap={{ xxs: 's', m: 'l' }}>
+  ...
+</Stack>
+
+{/* モバイルでは1列、タブレットで2列、デスクトップで4列 */}
+<Grid spacing="m">
+  <GridItem size={{ xxs: 12, s: 6, m: 4, l: 3 }}>...</GridItem>
+</Grid>
+```
+
+ブレークポイントの定義は [Foundations/Breakpoints](?path=/docs/foundations-breakpoints--docs) を参照してください。

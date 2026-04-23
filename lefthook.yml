@@ -1,0 +1,10 @@
+# Lefthook configuration
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  commands:
+    frontend-biome:
+      glob: 'src/**/*.{ts,tsx,js,jsx,json,css,scss}'
+      run: npm run check {staged_files}
+      stage_fixed: true

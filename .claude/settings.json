@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run biome*:*)",
+      "Bash(npm run build-storybook:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(head:*)",
+      "Bash(find:*)",
+      "Bash(diff:*)"
+    ],
+    "deny": [
+      "Bash(git push origin main*)",
+      "Bash(git push origin master*)",
+      "Bash(git push *--force*)",
+      "Bash(git push *-f *)",
+      "Bash(git reset --hard:*)",
+      "Bash(git commit --amend:*)",
+      "Bash(npm publish*)",
+      "Bash(npm uninstall*)",
+      "Bash(npm remove*)",
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)",
+      "Read(**/.env*)",
+      "Read(**/node_modules/**)",
+      "Read(**/storybook-static/**)",
+      "Read(**/dist/**)",
+      "Read(**/.DS_Store)",
+      "Read(**/.idea/**)",
+      "Read(**/.vscode/**)",
+      "Write(.env*)",
+      "Write(**/secrets/**)"
+    ]
+  }
+}

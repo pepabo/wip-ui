@@ -1,0 +1,75 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: adapter.get-gap-size(m);
+
+  &__spinner {
+    border-radius: 50%;
+    border: adapter.get-border-size(m) solid currentColor;
+    border-top:  adapter.get-border-size(m) solid transparent;
+    animation: wip-loader-spin 1s linear infinite;
+    opacity: 0.7;
+  }
+
+  &.-size-s &__spinner {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &.-size-m &__spinner {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  &.-size-l &__spinner {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  &.-size-xl &__spinner {
+    width: 3rem;
+    height: 3rem;
+    border-width: adapter.get-border-size(l);
+  }
+
+  &.-size-xxl &__spinner {
+    width: 5rem;
+    height: 5rem;
+    border-width: adapter.get-border-size(l);
+  }
+
+  &__message {
+    color: inherit;
+    font-size: adapter.get-font-size(s);
+    text-align: center;
+  }
+
+  &.-size-s &__message {
+    font-size: adapter.get-font-size(s);
+  }
+
+  &.-size-m &__message,
+  &.-size-l &__message {
+    font-size: adapter.get-font-size(m);
+  }
+
+  &.-size-xl &__message {
+    font-size: adapter.get-font-size(l);
+  }
+
+  &.-size-xxl &__message {
+    font-size: adapter.get-font-size(xl);
+  }
+}
+
+@keyframes wip-loader-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

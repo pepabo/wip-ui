@@ -1,0 +1,60 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks'
+import * as BreakpointStories from './Breakpoints.stories'
+import { Table, TableHeader, TableBody, Column, Row, Cell } from '../Table'
+
+<Meta title="Foundations/Breakpoints" summary="レスポンシブデザインのブレークポイント定義" />
+
+# Breakpoints
+
+wip-ui のレスポンシブ対応は 7 段階のブレークポイントで構成されています。
+
+ブラウザのウィンドウ幅を変更すると、アクティブなブレークポイントがリアルタイムで切り替わります。
+
+<Canvas of={BreakpointStories.Indicator} sourceState="none" />
+
+<Table aria-label="ブレークポイント一覧">
+  <TableHeader>
+    <Column id="name" isRowHeader>名前</Column>
+    <Column id="width">幅</Column>
+    <Column id="usage">主な用途</Column>
+  </TableHeader>
+  <TableBody>
+    <Row><Cell><code>xxs</code></Cell><Cell>330px〜</Cell><Cell>小型スマートフォン</Cell></Row>
+    <Row><Cell><code>xs</code></Cell><Cell>480px〜</Cell><Cell>スマートフォン</Cell></Row>
+    <Row><Cell><code>s</code></Cell><Cell>600px〜</Cell><Cell>大型スマートフォン・小型タブレット</Cell></Row>
+    <Row><Cell><code>m</code></Cell><Cell>768px〜</Cell><Cell>タブレット</Cell></Row>
+    <Row><Cell><code>l</code></Cell><Cell>1024px〜</Cell><Cell>小型デスクトップ</Cell></Row>
+    <Row><Cell><code>xl</code></Cell><Cell>1280px〜</Cell><Cell>デスクトップ</Cell></Row>
+    <Row><Cell><code>xxl</code></Cell><Cell>1400px〜</Cell><Cell>大型デスクトップ</Cell></Row>
+  </TableBody>
+</Table>
+
+## レスポンシブ Props
+
+多くのコンポーネントの prop がブレークポイントごとの指定に対応しています。単一の値を渡すと全画面幅で適用され、オブジェクトを渡すとブレークポイントごとに切り替わります。
+
+```tsx
+// 全画面幅で同じ値
+<Stack gap="m">...</Stack>
+
+// ブレークポイントごとに切り替え
+<Stack gap={{ xxs: 's', m: 'l' }}>...</Stack>
+```
+
+## Responsive 型
+
+レスポンシブ対応の prop は `Responsive<T>` 型で定義されています。
+
+```typescript
+type Responsive<T> = T | {
+  xxs?: T
+  xs?: T
+  s?: T
+  m?: T
+  l?: T
+  xl?: T
+  xxl?: T
+}
+```
+
+指定したブレークポイント以上の画面幅で値が適用されます。未指定のブレークポイントは、より小さいブレークポイントの値を継承します。
