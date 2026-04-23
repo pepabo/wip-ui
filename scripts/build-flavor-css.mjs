@@ -12,8 +12,12 @@ const DIST_DIR = path.join(ROOT, 'dist', 'css')
 
 const FLAVORS = ['pepper', 'minne', 'apollo', 'nachiguro', 'flippers', 'kung-pu', 'lolipop']
 
-// Inline PostCSS plugin to prefix selectors with [data-flavor="xxx"]
-function prefixPlugin(prefix) {
+// Inline PostCSS plugin to prefix selectors with [data-flavor="xxx"].
+// When `scopeRoot` is true, `:root` selectors are rewritten to the prefix so
+// token declarations no longer live at document level. Required for the
+// combined (`all.css`) build to avoid the last-flavor-wins cascade conflict
+// when multiple flavors' `:root { --token: ... }` blocks are concatenated.
+function prefixPlugin(prefix, { scopeRoot = false } = {}) {
   return {
     postcssPlugin: 'prefix-flavor',
     Rule(rule) {
@@ -25,9 +29,12 @@ function prefixPlugin(prefix) {
         }
       }
       rule.selectors = rule.selectors.map((sel) => {
-        // Skip :root, ::view-transition-* selectors
-        if (sel === ':root' || sel.startsWith(':root')) return sel
+        // ::view-transition-* selectors must remain at document level
         if (sel.includes('::view-transition')) return sel
+        if (sel === ':root') return scopeRoot ? prefix : sel
+        if (sel.startsWith(':root')) {
+          return scopeRoot ? prefix + sel.slice(':root'.length) : sel
+        }
         return `${prefix} ${sel}`
       })
     },
@@ -39,6 +46,8 @@ fs.mkdirSync(OUTPUT_DIR, { recursive: true })
 fs.mkdirSync(DIST_DIR, { recursive: true })
 
 console.log(`Building flavor CSS for ${FLAVORS.length} flavors...`)
+
+const combinedParts = []
 
 for (const flavor of FLAVORS) {
   const flavorVarsPath = path
@@ -92,18 +101,29 @@ for (const flavor of FLAVORS) {
     //    @media screen and (min-width: ){...} が生成される。
     css = css.replace(/@media screen and \(min-width: \)\{([^}]*\{[^}]*\})*\s*\}/g, '')
 
-    // Prefix selectors with [data-flavor="xxx"]
-    const prefixed = postcss([prefixPlugin(`[data-flavor="${flavor}"]`)]).process(css, {
-      from: undefined,
-    })
+    // Per-flavor file: `:root` remains at document level (unchanged behavior)
+    const prefixed = postcss([
+      prefixPlugin(`[data-flavor="${flavor}"]`),
+    ]).process(css, { from: undefined })
 
     fs.writeFileSync(path.join(OUTPUT_DIR, `${flavor}.css`), prefixed.css)
     fs.writeFileSync(path.join(DIST_DIR, `${flavor}.css`), prefixed.css)
+
+    // Combined build: `:root` rescoped to [data-flavor="xxx"] so concatenating
+    // all flavors does not produce cascade conflicts at :root level
+    const combined = postcss([
+      prefixPlugin(`[data-flavor="${flavor}"]`, { scopeRoot: true }),
+    ]).process(css, { from: undefined })
+    combinedParts.push(combined.css)
+
     console.log(`  ✓ ${flavor}.css`)
   } catch (err) {
     console.error(`  ✗ ${flavor}: ${err.message}`)
     process.exit(1)
   }
 }
+
+fs.writeFileSync(path.join(DIST_DIR, 'all.css'), combinedParts.join('\n'))
+console.log(`  ✓ all.css (combined, ${FLAVORS.length} flavors)`)
 
 console.log('Done!')
