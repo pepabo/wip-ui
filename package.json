@@ -1,5 +1,5 @@
 {
-  "name": "@pepabo/wip-ui",
+  "name": "wip-ui",
   "version": "0.1.0",
   "description": "WIP UI Component Library",
   "type": "module",
@@ -28,9 +28,6 @@
     "**/*.css",
     "**/*.scss"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "main": "./dist/js/index.js",
   "module": "./dist/js/index.js",
   "types": "./dist/js/index.d.ts",

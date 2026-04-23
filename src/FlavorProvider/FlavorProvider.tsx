@@ -19,7 +19,7 @@ export interface Props {
 /**
  * 配下の wip-ui コンポーネントに適用するフレーバー（デザイントークンのテーマ）を切り替えるための Provider。
  * 単一フレーバーを root で固定する用途のほか、ネストして領域ごとに異なるフレーバーを適用することもできる。
- * 利用前に `@pepabo/wip-ui/css/all.css`（全フレーバー同梱）または `@pepabo/wip-ui/css/{flavor}.css`（単一フレーバー）の import が必要。
+ * 利用前に `wip-ui/css/all.css`（全フレーバー同梱）または `wip-ui/css/{flavor}.css`（単一フレーバー）の import が必要。
  *
  * @summary フレーバー（デザイントークンのテーマ）を切り替えるProvider
  */

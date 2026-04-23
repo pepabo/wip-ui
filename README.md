@@ -1,4 +1,4 @@
-# @pepabo/wip-ui
+# wip-ui
 
 ペパボのデザインシステム UI コンポーネントライブラリ。React + TypeScript + SCSS で構築。
 
@@ -7,7 +7,7 @@
 ## インストール
 
 ```bash
-npm install @pepabo/wip-ui
+npm install wip-ui
 ```
 
 ### Peer dependencies
@@ -27,8 +27,8 @@ npm install react react-dom react-aria-components
 アプリのルートで `FlavorProvider` を配置し、全フレーバー同梱の CSS を読み込みます。`flavor` prop は省略時 `pepper` が適用されます。
 
 ```tsx
-import { FlavorProvider, Button } from '@pepabo/wip-ui'
-import '@pepabo/wip-ui/css/all.css'
+import { FlavorProvider, Button } from 'wip-ui'
+import 'wip-ui/css/all.css'
 
 export const App = () => (
   <FlavorProvider>
@@ -48,12 +48,12 @@ export const App = () => (
 コンポーネント単位でのインポートも可能です。
 
 ```tsx
-import { Button } from '@pepabo/wip-ui/Button'
+import { Button } from 'wip-ui/Button'
 ```
 
 ### 利用可能なフレーバー
 
-`@pepabo/wip-ui/css/all.css` は以下の全フレーバーを含みます。
+`wip-ui/css/all.css` は以下の全フレーバーを含みます。
 
 - `pepper`（デフォルト）
 - `minne`
@@ -63,7 +63,7 @@ import { Button } from '@pepabo/wip-ui/Button'
 - `kung-pu`
 - `lolipop`
 
-> **バンドルサイズを最適化したい場合**: 単一フレーバーのみ利用する場合は、`all.css` の代わりに `@pepabo/wip-ui/css/{flavor}.css` を読み込むこともできます。その場合は `FlavorProvider` の `flavor` と必ず一致させてください。
+> **バンドルサイズを最適化したい場合**: 単一フレーバーのみ利用する場合は、`all.css` の代わりに `wip-ui/css/{flavor}.css` を読み込むこともできます。その場合は `FlavorProvider` の `flavor` と必ず一致させてください。
 
 ## 開発
 
