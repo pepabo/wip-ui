@@ -65,22 +65,9 @@ import { Button } from 'wip-ui/Button'
 
 > **バンドルサイズを最適化したい場合**: 単一フレーバーのみ利用する場合は、`all.css` の代わりに `wip-ui/css/{flavor}.css` を読み込むこともできます。その場合は `FlavorProvider` の `flavor` と必ず一致させてください。
 
-## 開発
+## Contributing
 
-```bash
-npm install
-```
-
-### コマンド
-
-| コマンド | 説明 |
-|---------|------|
-| `npm run storybook` | Storybook 開発サーバー起動 (port 6006) |
-| `npm run build-storybook` | Storybook ビルド |
-| `npm run build` | ライブラリのビルド（dist/ 出力） |
-| `npm run typecheck` | TypeScript 型チェック |
-| `npm run lint` | 型チェック + Biome チェック |
-| `npm run lint:staged <files>` | Biome による lint（ステージング対象） |
+リポジトリのセットアップ方法・開発コマンドは [`CONTRIBUTING.md`](./CONTRIBUTING.md) を参照してください。
 
 ## License
 
