@@ -2,6 +2,8 @@
   "name": "@pepabo/wip-ui",
   "version": "0.1.0",
   "description": "WIP UI Component Library",
+  "type": "module",
+  "license": "MIT",
   "author": "GMO Pepabo, Inc.",
   "repository": {
     "type": "git",
@@ -38,6 +40,11 @@
       "import": "./dist/js/index.js",
       "default": "./dist/js/index.js"
     },
+    "./*": {
+      "types": "./dist/js/*/index.d.ts",
+      "import": "./dist/js/*/index.js",
+      "default": "./dist/js/*/index.js"
+    },
     "./css/*.css": "./dist/css/*.css"
   },
   "files": [
@@ -63,9 +70,9 @@
     "build-storybook": "storybook build"
   },
   "peerDependencies": {
-    "react": "^19.1.1",
+    "react": ">=18.2.0",
     "react-aria-components": "^1.12.2",
-    "react-dom": "^19.1.1"
+    "react-dom": ">=18.2.0"
   },
   "dependencies": {
     "@pepabo-inhouse/adapter": "^4.0.0",
