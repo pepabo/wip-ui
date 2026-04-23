@@ -63,13 +63,7 @@ import { Button } from '@pepabo/wip-ui/Button'
 - `kung-pu`
 - `lolipop`
 
-単一フレーバーのみ使用する場合は、バンドルサイズ削減のために個別 CSS を読み込むこともできます（`FlavorProvider` の `flavor` と必ず一致させる必要があります）。
-
-```tsx
-import '@pepabo/wip-ui/css/minne.css'
-
-<FlavorProvider flavor="minne">...</FlavorProvider>
-```
+> **バンドルサイズを最適化したい場合**: 単一フレーバーのみ利用する場合は、`all.css` の代わりに `@pepabo/wip-ui/css/{flavor}.css` を読み込むこともできます。その場合は `FlavorProvider` の `flavor` と必ず一致させてください。
 
 ## 開発
 
