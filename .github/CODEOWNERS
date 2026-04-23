@@ -1,0 +1,5 @@
+# Code owners for wip-ui.
+# Pull requests automatically request review from these users.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-security/customizing-your-repository/about-code-owners
+
+*   @sangun-kang @shotaro-imamura @nacal
