@@ -9,8 +9,25 @@ const NODE_MODULES = path.join(ROOT, 'node_modules')
 const ENTRY_SCSS = path.join(ROOT, 'src', '_all.scss')
 const OUTPUT_DIR = path.join(ROOT, '.storybook', 'flavors')
 const DIST_DIR = path.join(ROOT, 'dist', 'css')
+const ICON_FONT_PATH = path.join(
+  NODE_MODULES,
+  '@pepabo-inhouse',
+  'icon',
+  'dist',
+  'inhouse-icons.woff2'
+)
 
 const FLAVORS = ['pepper', 'minne', 'apollo', 'nachiguro', 'flippers', 'kung-pu', 'lolipop']
+
+// Inline the icon font as a base64 data URL so consumers get icons out of the
+// box with a single CSS import. Only woff2 is included (≥97% browser support
+// as of 2026). Storybook keeps its own @font-face override in
+// .storybook/icon-font-override.scss, so the .storybook/flavors/*.css outputs
+// intentionally omit this block to avoid double declarations.
+const iconFontFace = (() => {
+  const base64 = fs.readFileSync(ICON_FONT_PATH).toString('base64')
+  return `@font-face{font-family:"Inhouse Icons";font-weight:400;font-style:normal;src:url("data:font/woff2;base64,${base64}") format("woff2")}\n`
+})()
 
 // Inline PostCSS plugin to prefix selectors with [data-flavor="xxx"].
 // When `scopeRoot` is true, `:root` selectors are rewritten to the prefix so
@@ -106,8 +123,11 @@ for (const flavor of FLAVORS) {
       prefixPlugin(`[data-flavor="${flavor}"]`),
     ]).process(css, { from: undefined })
 
+    // Storybook output: no @font-face (Storybook has its own override)
     fs.writeFileSync(path.join(OUTPUT_DIR, `${flavor}.css`), prefixed.css)
-    fs.writeFileSync(path.join(DIST_DIR, `${flavor}.css`), prefixed.css)
+    // Published output: prepend the icon @font-face so consumers get icons
+    // when importing a single per-flavor CSS file
+    fs.writeFileSync(path.join(DIST_DIR, `${flavor}.css`), iconFontFace + prefixed.css)
 
     // Combined build: `:root` rescoped to [data-flavor="xxx"] so concatenating
     // all flavors does not produce cascade conflicts at :root level
@@ -123,7 +143,11 @@ for (const flavor of FLAVORS) {
   }
 }
 
-fs.writeFileSync(path.join(DIST_DIR, 'all.css'), combinedParts.join('\n'))
+// Combined CSS: single @font-face at the top, then all 7 flavors
+fs.writeFileSync(
+  path.join(DIST_DIR, 'all.css'),
+  iconFontFace + combinedParts.join('\n')
+)
 console.log(`  ✓ all.css (combined, ${FLAVORS.length} flavors)`)
 
 console.log('Done!')
