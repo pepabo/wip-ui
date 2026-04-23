@@ -45,6 +45,8 @@
       "import": "./dist/js/*/index.js",
       "default": "./dist/js/*/index.js"
     },
+    "./types": null,
+    "./utils": null,
     "./css/*.css": "./dist/css/*.css"
   },
   "files": [
