@@ -34,6 +34,9 @@ const iconFontFace = (() => {
 // token declarations no longer live at document level. Required for the
 // combined (`all.css`) build to avoid the last-flavor-wins cascade conflict
 // when multiple flavors' `:root { --token: ... }` blocks are concatenated.
+// When `prefix` is an empty string, non-:root selectors are left unchanged
+// so the output acts as an unscoped baseline (used to give consumers
+// styling even without <FlavorProvider>).
 function prefixPlugin(prefix, { scopeRoot = false } = {}) {
   return {
     postcssPlugin: 'prefix-flavor',
@@ -52,7 +55,7 @@ function prefixPlugin(prefix, { scopeRoot = false } = {}) {
         if (sel.startsWith(':root')) {
           return scopeRoot ? prefix + sel.slice(':root'.length) : sel
         }
-        return `${prefix} ${sel}`
+        return prefix ? `${prefix} ${sel}` : sel
       })
     },
   }
@@ -136,6 +139,17 @@ for (const flavor of FLAVORS) {
     ]).process(css, { from: undefined })
     combinedParts.push(combined.css)
 
+    // Baseline: emit pepper with no prefix at the top of all.css so consumers
+    // get styled components even without wrapping with <FlavorProvider>.
+    // Specificity of `[data-flavor="xxx"] .foo` (0,0,1,1) beats `.foo`
+    // (0,0,1,0), so an explicit FlavorProvider still overrides the baseline.
+    if (flavor === 'pepper') {
+      const baseline = postcss([prefixPlugin('')]).process(css, {
+        from: undefined,
+      })
+      combinedParts.unshift(baseline.css)
+    }
+
     console.log(`  ✓ ${flavor}.css`)
   } catch (err) {
     console.error(`  ✗ ${flavor}: ${err.message}`)
@@ -143,11 +157,13 @@ for (const flavor of FLAVORS) {
   }
 }
 
-// Combined CSS: single @font-face at the top, then all 7 flavors
+// Combined CSS: @font-face + pepper baseline (unscoped) + 7 flavors scoped
 fs.writeFileSync(
   path.join(DIST_DIR, 'all.css'),
   iconFontFace + combinedParts.join('\n')
 )
-console.log(`  ✓ all.css (combined, ${FLAVORS.length} flavors)`)
+console.log(
+  `  ✓ all.css (pepper baseline + ${FLAVORS.length} flavors scoped)`
+)
 
 console.log('Done!')

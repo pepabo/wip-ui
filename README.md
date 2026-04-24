@@ -24,25 +24,26 @@ npm install react react-dom react-aria-components
 
 ## 使い方
 
-アプリのルートで `FlavorProvider` を配置し、全フレーバー同梱の CSS を読み込みます。`flavor` prop は省略時 `pepper` が適用されます。
+CSS をインポートするだけで、デフォルトの `pepper` フレーバーでコンポーネントが描画されます。
+
+```tsx
+import { Button } from 'wip-ui'
+import 'wip-ui/css/all.css'
+
+export const App = () => <Button>クリック</Button>
+```
+
+別のフレーバーを適用したい場合、あるいは領域ごとに異なるフレーバーを切り替えたい場合は `FlavorProvider` で対象領域を囲みます。
 
 ```tsx
 import { FlavorProvider, Button } from 'wip-ui'
 import 'wip-ui/css/all.css'
 
 export const App = () => (
-  <FlavorProvider>
+  <FlavorProvider flavor="minne">
     <Button>クリック</Button>
   </FlavorProvider>
 )
-```
-
-別のフレーバーに切り替える場合は `flavor` prop を指定します。ネストして領域ごとに異なるフレーバーを適用することもできます。
-
-```tsx
-<FlavorProvider flavor="minne">
-  <Button>クリック</Button>
-</FlavorProvider>
 ```
 
 コンポーネント単位でのインポートも可能です。
@@ -50,6 +51,8 @@ export const App = () => (
 ```tsx
 import { Button } from 'wip-ui/Button'
 ```
+
+> **中の `FlavorProvider` で切り替える場合の注意**: フレーバーを入れ子にしたとき、CSS の詳細度が同じためソース順序が後ろ（`pepper` < `minne` < `apollo` < `nachiguro` < `flippers` < `kung-pu` < `lolipop` の順）のフレーバーが勝ちます。「外側 `lolipop` + 内側 `pepper`」のような組み合わせでは、内側が外側を上書きできない点にご注意ください。
 
 ### 利用可能なフレーバー
 
