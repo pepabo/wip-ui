@@ -28,7 +28,7 @@ CSS をインポートするだけで、デフォルトの `pepper` フレーバ
 
 ```tsx
 import { Button } from 'wip-ui'
-import 'wip-ui/css/all.css'
+import 'wip-ui/styles.css'
 
 export const App = () => <Button>クリック</Button>
 ```
@@ -37,7 +37,7 @@ export const App = () => <Button>クリック</Button>
 
 ```tsx
 import { FlavorProvider, Button } from 'wip-ui'
-import 'wip-ui/css/all.css'
+import 'wip-ui/styles.css'
 
 export const App = () => (
   <FlavorProvider flavor="minne">
@@ -56,7 +56,7 @@ import { Button } from 'wip-ui/Button'
 
 ### 利用可能なフレーバー
 
-`wip-ui/css/all.css` は以下の全フレーバーを含みます。
+`wip-ui/styles.css` は以下の全フレーバーを含みます。
 
 - `pepper`（デフォルト）
 - `minne`

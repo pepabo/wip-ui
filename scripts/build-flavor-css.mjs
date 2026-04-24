@@ -9,6 +9,7 @@ const NODE_MODULES = path.join(ROOT, 'node_modules')
 const ENTRY_SCSS = path.join(ROOT, 'src', '_all.scss')
 const OUTPUT_DIR = path.join(ROOT, '.storybook', 'flavors')
 const DIST_DIR = path.join(ROOT, 'dist', 'css')
+const DIST_ROOT = path.join(ROOT, 'dist')
 const ICON_FONT_PATH = path.join(
   NODE_MODULES,
   '@pepabo-inhouse',
@@ -62,8 +63,13 @@ function prefixPlugin(prefix, { scopeRoot = false } = {}) {
 }
 prefixPlugin.postcss = true
 
+// Clean stale CSS outputs so renames/removals don't leave leftovers in dist/
+fs.rmSync(DIST_DIR, { recursive: true, force: true })
+fs.rmSync(path.join(DIST_ROOT, 'styles.css'), { force: true })
+
 fs.mkdirSync(OUTPUT_DIR, { recursive: true })
 fs.mkdirSync(DIST_DIR, { recursive: true })
+fs.mkdirSync(DIST_ROOT, { recursive: true })
 
 console.log(`Building flavor CSS for ${FLAVORS.length} flavors...`)
 
@@ -157,13 +163,16 @@ for (const flavor of FLAVORS) {
   }
 }
 
-// Combined CSS: @font-face + pepper baseline (unscoped) + 7 flavors scoped
+// Combined CSS: @font-face + pepper baseline (unscoped) + 7 flavors scoped.
+// Emitted at dist/styles.css to match modern convention
+// (e.g. Mantine's `@mantine/core/styles.css`, Radix Themes' `@radix-ui/themes/styles.css`)
+// and to signal "this is the default stylesheet consumers should import".
 fs.writeFileSync(
-  path.join(DIST_DIR, 'all.css'),
+  path.join(DIST_ROOT, 'styles.css'),
   iconFontFace + combinedParts.join('\n')
 )
 console.log(
-  `  ✓ all.css (pepper baseline + ${FLAVORS.length} flavors scoped)`
+  `  ✓ styles.css (pepper baseline + ${FLAVORS.length} flavors scoped)`
 )
 
 console.log('Done!')
