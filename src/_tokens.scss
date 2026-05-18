@@ -1,0 +1,34 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+// Publish inhouse design tokens as CSS custom properties so consumer
+// applications can reference them directly (e.g. `var(--wip-color-...)`)
+// without hardcoding hex values. The build pipeline in
+// `scripts/build-flavor-css.mjs` resolves adapter calls per flavor and
+// rescopes `:root` to `[data-flavor="xxx"]` for the combined stylesheet.
+
+// Color names are quoted so Sass treats them as identifiers in interpolation
+// (unquoted `red`, `green`, etc. would be parsed as the CSS color value).
+// Adapter functions also accept unquoted strings, so they continue to work.
+$primitive-mono: ('black', 'white');
+$primitive-spectrum: ('gray', 'blue', 'green', 'red', 'yellow');
+$spectrum-levels: (50, 100, 200, 300, 400, 500, 600, 700, 800, 900);
+
+$semantic-intents: ('neutral', 'informative', 'positive', 'negative', 'notice');
+
+:root {
+  @each $name in $primitive-mono {
+    --wip-color-primitive-#{$name}-1000: #{adapter.get-primitive-color($name, 1000)};
+  }
+
+  @each $name in $primitive-spectrum {
+    @each $level in $spectrum-levels {
+      --wip-color-primitive-#{$name}-#{$level}: #{adapter.get-primitive-color($name, $level)};
+    }
+  }
+
+  @each $name in $semantic-intents {
+    @each $level in $spectrum-levels {
+      --wip-color-semantic-#{$name}-#{$level}: #{adapter.get-semantic-color($name, $level)};
+    }
+  }
+}

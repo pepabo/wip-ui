@@ -1,4 +1,5 @@
 // Master SCSS entry for flavor build - imports all component styles
+@use './tokens';
 @use './AppBar';
 @use './Avatar';
 @use './Breadcrumbs';
