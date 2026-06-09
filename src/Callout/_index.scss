@@ -38,7 +38,8 @@
 
       &.-appearance-outline {
         background-color: transparent;
-        border: adapter.get-border-size(s) solid adapter.get-semantic-color(negative, 800);
+        color: adapter.get-semantic-color(negative, 600);
+        border: adapter.get-border-size(s) solid adapter.get-semantic-color(negative, 600);
       }
     }
     &-notice {
