@@ -3,7 +3,7 @@
 .wip-callout {
   @include adapter.text($level: s);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: adapter.get-spacing-size(s);
   border-radius: adapter.get-radius-size(m);
   gap: adapter.get-gap-size(s);
