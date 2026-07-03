@@ -11,12 +11,14 @@
 .wip-radio {
   @include adapter.text($level: m);
   display: flex;
-  position: relative;
   align-items: center;
   gap: adapter.get-gap-size(xs);
   forced-color-adjust: none;
   cursor: pointer;
 
+  // ドット（選択マーク）は擬似要素のオーバーレイではなく、輪(:before)自身の
+  // background に radial-gradient で描く。絶対配置だとルートの label に
+  // padding を当てたときに輪（フロー配置）とずれるため。
   &:before {
     content: '';
     display: block;
@@ -24,28 +26,17 @@
     height: adapter.get-radio-child-background-height();
     border-radius: 50%;
     box-shadow: 0 0 0 .0625rem adapter.get-radio-border-color();
-  }
-
-  &:after {
-    content: '';
-    position: absolute;
-    left: calc((adapter.get-radio-child-background-width() - adapter.get-radio-child-foreground-width()) / 2);
-    top: 50%;
-    transform: translateY(-50%) scale(0);
-    width: adapter.get-radio-child-foreground-width();
-    height: adapter.get-radio-child-foreground-height();
-    background: adapter.get-primitive-color(blue, 800);
-    border-radius: 50%;
-    transition: transform 200ms;
+    background-image: radial-gradient(circle closest-side, adapter.get-primitive-color(blue, 800) 98%, transparent);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 0 0;
+    transition: background-size 200ms;
   }
 
   &[data-selected] {
     &:before {
       box-shadow: 0 0 0 .0625rem adapter.get-primitive-color(blue, 800);
-    }
-
-    &:after {
-      transform: translateY(-50%) scale(1);
+      background-size: adapter.get-radio-child-foreground-width() adapter.get-radio-child-foreground-height();
     }
   }
 
