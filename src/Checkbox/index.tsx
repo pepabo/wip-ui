@@ -60,7 +60,7 @@ const useCheckboxState = (ref: React.RefObject<HTMLLabelElement | null>) => {
  *
  * @summary 複数選択用のチェックボックス
  */
-const Checkbox = ({ children, ...props }: CheckboxProps) => {
+const Checkbox = ({ children, className, ...props }: CheckboxProps) => {
   const ariaRef = useRef<HTMLLabelElement>(null)
   const { isSelected, isIndeterminate, isDisabled, isHovered, isFocused } =
     useCheckboxState(ariaRef)
@@ -78,7 +78,7 @@ const Checkbox = ({ children, ...props }: CheckboxProps) => {
   })
 
   return (
-    <AriaCheckbox {...props} ref={ariaRef} className="aria-checkbox">
+    <AriaCheckbox {...props} ref={ariaRef} className={clsx('aria-checkbox', className)}>
       <div className={checkboxClasses} />
       {children && (
         <Typography component="span" className={labelClasses}>
