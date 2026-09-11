@@ -1,8 +1,12 @@
 import type { ComponentProps } from 'react'
 
+export type PaperPadding = 'none' | 's' | 'm' | 'l'
+
 export interface PaperProps extends ComponentProps<'div'> {
   /** 影の強さ（0-6）。値が大きいほど浮き上がって見える */
   elevation?: 0 | 1 | 2 | 3 | 4 | 5 | 6
+  /** 内側の余白。noneのままだと内容が面の端に接するため、カードとして使う場合は指定する */
+  padding?: PaperPadding
   /** trueにするとボーダー表示になり影が無効化される */
   outlined?: boolean
   /** trueにすると角丸を無効化する */
@@ -19,6 +23,7 @@ export function Paper({
   elevation = 1,
   outlined = false,
   square = false,
+  padding = 'none',
   className,
   ...props
 }: PaperProps) {
@@ -26,7 +31,8 @@ export function Paper({
   const elevationClass = `wip-paper--elevation-${effectiveElevation}`
   const outlinedClass = outlined ? 'wip-paper--outlined' : ''
   const squareClass = square ? 'wip-paper--square' : ''
-  const classes = ['wip-paper', elevationClass, outlinedClass, squareClass, className]
+  const paddingClass = padding === 'none' ? '' : `wip-paper--padding-${padding}`
+  const classes = ['wip-paper', elevationClass, outlinedClass, squareClass, paddingClass, className]
     .filter(Boolean)
     .join(' ')
 

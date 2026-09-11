@@ -127,6 +127,7 @@ for (const flavor of FLAVORS) {
     //    @media screen and (min-width: ){...} が生成される。
     css = css.replace(/@media screen and \(min-width: \)\{([^}]*\{[^}]*\})*\s*\}/g, '')
 
+
     // Per-flavor file: `:root` remains at document level (unchanged behavior)
     const prefixed = postcss([
       prefixPlugin(`[data-flavor="${flavor}"]`),

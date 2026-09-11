@@ -1,0 +1,12 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+// フレーバーのページ地を塗る唯一の場所。
+// これまで background トークン（get-background-color）は
+// どのコンポーネントからも参照されておらず、apollo のようなダークフレーバーに
+// 切り替えても地色が白のまま残っていた。
+.wip-page {
+  background: adapter.get-background-color(light);
+  color: adapter.get-text-color(light, high_emphasis);
+  min-height: 100vh;
+  display: flow-root;
+}

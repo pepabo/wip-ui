@@ -14,6 +14,8 @@ import './flavors/nachiguro.css'
 import './flavors/flippers.css'
 import './flavors/kung-pu.css'
 import './flavors/lolipop.css'
+// Import flavor CSS custom properties for template usage
+import './flavor-tokens.css'
 
 const flavorDecorator: Decorator = (Story, context) => {
   const flavor = (context.globals.flavor as string) ?? 'pepper'
@@ -66,6 +68,8 @@ const preview: Preview = {
             'Feedback',
             'Navigation',
           ],
+          'Templates',
+          ['Apollo', 'Dashboard', 'Login', 'EmptyStates'],
         ],
       },
     },

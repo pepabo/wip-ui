@@ -2,7 +2,7 @@
 
 .wip-paper {
   border-radius: adapter.get-radius-size(l);
-  background: adapter.get-surface-color(light, primary);
+  background: var(--wip-color-paper, #{adapter.get-surface-color(light, primary)});
 
   &--elevation-0 {
     box-shadow: none;
@@ -38,5 +38,10 @@
 
   &--square {
     border-radius: 0;
+  }
+  @each $level in (s, m, l) {
+    &--padding-#{$level} {
+      padding: adapter.get-spacing-size($level);
+    }
   }
 }

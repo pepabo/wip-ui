@@ -1,0 +1,146 @@
+/*
+ * Flavor CSS Custom Properties
+ *
+ * Design tokens exposed as CSS custom properties per flavor.
+ * Values are derived from @pepabo-inhouse/tokens for each flavor.
+ *
+ * Templates and page-level layouts reference these variables for surfaces,
+ * borders, and text colors. Component-level styling goes through the adapter
+ * and pre-built flavor CSS — not these variables.
+ *
+ * TODO: Generate this file from style-dictionary build when a CSS custom
+ * properties platform is added to @pepabo-inhouse/tokens.
+ */
+
+/* ── pepper ── */
+[data-flavor="pepper"] {
+  --wip-color-paper: #ffffff;
+  --wip-color-surface-base: #ffffff;
+  --wip-color-surface-container: #f7f8fa;
+  --wip-color-surface-interactive: #f5faff;
+  --wip-color-surface-positive: #f5fffb;
+  --wip-color-surface-negative: #fffafa;
+  --wip-color-surface-notice: #fffdf5;
+  --wip-color-surface-informative: #f5faff;
+  --wip-color-surface-attention: #fff7f2;
+  --wip-color-surface-neutral: #f7f8fa;
+  --wip-color-border-low_emphasis: rgba(57, 60, 65, 0.1);
+  --wip-color-border-mid_emphasis: rgba(57, 60, 65, 0.2);
+  --wip-color-text-high_emphasis: #393c41;
+  --wip-color-text-mid_emphasis: rgba(57, 60, 65, 0.6);
+  --wip-color-text-low_emphasis: rgba(57, 60, 65, 0.3);
+}
+
+/* ── minne ── */
+[data-flavor="minne"] {
+  --wip-color-paper: #ffffff;
+  --wip-color-surface-base: #ffffff;
+  --wip-color-surface-container: #fafafa;
+  --wip-color-surface-interactive: #ebf3fa;
+  --wip-color-surface-positive: #e4f7f3;
+  --wip-color-surface-negative: #fee7e7;
+  --wip-color-surface-notice: #fffbe5;
+  --wip-color-surface-informative: #fafafa;
+  --wip-color-surface-attention: #fff2e5;
+  --wip-color-surface-neutral: #fafafa;
+  --wip-color-border-low_emphasis: rgba(20, 20, 20, 0.1);
+  --wip-color-border-mid_emphasis: rgba(20, 20, 20, 0.2);
+  --wip-color-text-high_emphasis: #141414;
+  --wip-color-text-mid_emphasis: rgba(20, 20, 20, 0.6);
+  --wip-color-text-low_emphasis: rgba(20, 20, 20, 0.3);
+}
+
+/* ── apollo ── */
+[data-flavor="apollo"] {
+  --wip-color-paper: #121e32;
+  --wip-color-surface-base: #04132b;
+  --wip-color-surface-container: #121e32;
+  --wip-color-surface-interactive: rgba(138, 115, 240, 0.15);
+  --wip-color-surface-positive: rgba(4, 177, 123, 0.15);
+  --wip-color-surface-negative: rgba(254, 97, 173, 0.15);
+  --wip-color-surface-notice: rgba(202, 145, 0, 0.15);
+  --wip-color-surface-informative: rgba(84, 159, 240, 0.15);
+  --wip-color-surface-attention: rgba(233, 128, 43, 0.15);
+  --wip-color-surface-neutral: rgba(242, 243, 248, 0.06);
+  --wip-color-border-low_emphasis: rgba(242, 243, 248, 0.1);
+  --wip-color-border-mid_emphasis: rgba(242, 243, 248, 0.2);
+  --wip-color-text-high_emphasis: #f2f3f8;
+  --wip-color-text-mid_emphasis: rgba(242, 243, 248, 0.7);
+  --wip-color-text-low_emphasis: rgba(242, 243, 248, 0.38);
+}
+
+/* ── nachiguro ── */
+[data-flavor="nachiguro"] {
+  --wip-color-paper: #ffffff;
+  --wip-color-surface-base: #ffffff;
+  --wip-color-surface-container: #fafcfc;
+  --wip-color-surface-interactive: #edf9ff;
+  --wip-color-surface-positive: #f2fff3;
+  --wip-color-surface-negative: #fff3f2;
+  --wip-color-surface-notice: #fff9eb;
+  --wip-color-surface-informative: #edf9ff;
+  --wip-color-surface-attention: #fff8f2;
+  --wip-color-surface-neutral: #fafcfc;
+  --wip-color-border-low_emphasis: rgba(57, 60, 65, 0.1);
+  --wip-color-border-mid_emphasis: rgba(57, 60, 65, 0.2);
+  --wip-color-text-high_emphasis: #393c41;
+  --wip-color-text-mid_emphasis: rgba(57, 60, 65, 0.6);
+  --wip-color-text-low_emphasis: rgba(57, 60, 65, 0.3);
+}
+
+/* ── flippers ── */
+[data-flavor="flippers"] {
+  --wip-color-paper: #ffffff;
+  --wip-color-surface-base: #ffffff;
+  --wip-color-surface-container: #ededed;
+  --wip-color-surface-interactive: #eff8ff;
+  --wip-color-surface-positive: #f2fcf3;
+  --wip-color-surface-negative: #fff6f5;
+  --wip-color-surface-notice: #fff9e9;
+  --wip-color-surface-informative: #eff8ff;
+  --wip-color-surface-attention: #fff8f2;
+  --wip-color-surface-neutral: #f7f7f7;
+  --wip-color-border-low_emphasis: rgba(57, 60, 65, 0.1);
+  --wip-color-border-mid_emphasis: rgba(57, 60, 65, 0.2);
+  --wip-color-text-high_emphasis: #393c41;
+  --wip-color-text-mid_emphasis: #737578;
+  --wip-color-text-low_emphasis: #c4c4c6;
+}
+
+/* ── kung-pu ── */
+[data-flavor="kung-pu"] {
+  --wip-color-paper: #ffffff;
+  --wip-color-surface-base: #ffffff;
+  --wip-color-surface-container: #f7f8fa;
+  --wip-color-surface-interactive: #e5f4ff;
+  --wip-color-surface-positive: #e6fcf8;
+  --wip-color-surface-negative: #fff0f0;
+  --wip-color-surface-notice: #fffbe8;
+  --wip-color-surface-informative: #e5f4ff;
+  --wip-color-surface-attention: #fff1e5;
+  --wip-color-surface-neutral: #f7f8fa;
+  --wip-color-border-low_emphasis: rgba(57, 60, 65, 0.1);
+  --wip-color-border-mid_emphasis: rgba(57, 60, 65, 0.2);
+  --wip-color-text-high_emphasis: #393c41;
+  --wip-color-text-mid_emphasis: rgba(57, 60, 65, 0.6);
+  --wip-color-text-low_emphasis: rgba(57, 60, 65, 0.3);
+}
+
+/* ── lolipop ── */
+[data-flavor="lolipop"] {
+  --wip-color-paper: #ffffff;
+  --wip-color-surface-base: #ffffff;
+  --wip-color-surface-container: #f2f3f7;
+  --wip-color-surface-interactive: #f7f9ff;
+  --wip-color-surface-positive: #eaf7f1;
+  --wip-color-surface-negative: #fff7f8;
+  --wip-color-surface-notice: #fffcf1;
+  --wip-color-surface-informative: #f1f7fe;
+  --wip-color-surface-attention: #fff6f1;
+  --wip-color-surface-neutral: #f2f3f7;
+  --wip-color-border-low_emphasis: rgba(20, 20, 20, 0.1);
+  --wip-color-border-mid_emphasis: rgba(20, 20, 20, 0.2);
+  --wip-color-text-high_emphasis: #10131c;
+  --wip-color-text-mid_emphasis: rgba(20, 20, 20, 0.6);
+  --wip-color-text-low_emphasis: rgba(20, 20, 20, 0.3);
+}
