@@ -1,5 +1,6 @@
 import type { Decorator, Preview } from '@storybook/react-vite'
 import { createElement } from 'react'
+import { INITIAL_VIEWPORTS } from 'storybook/viewport'
 
 // Import icon font override for Storybook
 import './icon-font-override.scss'
@@ -66,8 +67,35 @@ const preview: Preview = {
             'Feedback',
             'Navigation',
           ],
+          'Templates',
+          // 並びは利用者の導線順。テンプレートを追加したらここにも追記する
+          [
+            'LolipopAuth',
+            'Lolipop',
+            'Apollo',
+            'DeployNow',
+            'AiGateway',
+            'Hosting',
+            [
+              'Auth',
+              'Home',
+              'Onboarding',
+              'Overview',
+              'Domains',
+              'SiteSettings',
+              'FileManager',
+              'Usage',
+              'Backup',
+              'Billing',
+              'Account',
+            ],
+          ],
         ],
       },
+    },
+    // モバイル幅のストーリーは globals.viewport.value で端末を指定する
+    viewport: {
+      options: INITIAL_VIEWPORTS,
     },
     controls: {
       matchers: {
