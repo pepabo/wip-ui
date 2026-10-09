@@ -27,6 +27,10 @@ const meta = {
       control: 'select',
       options: ['auto', 'half', 'third', 'full'],
     },
+    shape: {
+      control: 'select',
+      options: ['square', 'circle'],
+    },
     isDisabled: {
       control: 'boolean',
     },
@@ -137,6 +141,18 @@ export const FullWidth: Story = {
 }
 
 /**
+ * 角丸を高さの半分にした丸いボタン。フレーバーの角丸より丸く見せたい場面で使用。
+ *
+ * @summary 角を丸くしたい場面向け
+ */
+export const Circle: Story = {
+  args: {
+    children: 'Circle Button',
+    shape: 'circle',
+  },
+}
+
+/**
  * 全propsを自由に変更できるプレイグラウンド。開発時の動作確認用。
  */
 export const Playground: Story = {
@@ -147,6 +163,7 @@ export const Playground: Story = {
     color: 'neutral',
     size: 'm',
     width: 'auto',
+    shape: 'square',
     isDisabled: false,
   },
 }
