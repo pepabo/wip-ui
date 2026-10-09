@@ -24,8 +24,37 @@ const flavorDecorator: Decorator = (Story, context) => {
   )
 }
 
+// コンポーネントを載せる面を切り替える。brightness の確認に使う
+const BACKGROUNDS: Record<string, string> = {
+  'apollo-page': '#04132B',
+  'apollo-dialog': '#28354A',
+  white: '#ffffff',
+  well: '#f2f3f8',
+}
+
+const backgroundDecorator: Decorator = (Story, context) => {
+  const color = BACKGROUNDS[context.globals.background as string]
+  if (!color) return createElement(Story)
+  return createElement('div', { style: { background: color, padding: '32px' } }, createElement(Story))
+}
+
 const preview: Preview = {
   globalTypes: {
+    background: {
+      description: 'Surface the component sits on',
+      toolbar: {
+        title: 'Background',
+        icon: 'photo',
+        items: [
+          { value: 'none', title: 'なし' },
+          { value: 'apollo-page', title: 'apollo ページ #04132B' },
+          { value: 'apollo-dialog', title: 'apollo ダイアログ #28354A' },
+          { value: 'white', title: '白 #ffffff' },
+          { value: 'well', title: 'well #f2f3f8' },
+        ],
+        dynamicTitle: true,
+      },
+    },
     flavor: {
       description: 'Design token flavor / theme',
       toolbar: {
@@ -46,8 +75,9 @@ const preview: Preview = {
   },
   initialGlobals: {
     flavor: 'pepper',
+    background: 'none',
   },
-  decorators: [flavorDecorator],
+  decorators: [flavorDecorator, backgroundDecorator],
   parameters: {
     options: {
       storySort: {
