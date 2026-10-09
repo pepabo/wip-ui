@@ -4,7 +4,7 @@ import { Button as AriaButton, type ButtonProps as AriaButtonProps } from 'react
 import clsx from 'clsx'
 
 import type { FC, ReactNode } from 'react'
-import type { ButtonAppearance, ButtonColor, ButtonSize, ButtonWidth } from './types'
+import type { ButtonAppearance, ButtonColor, ButtonShape, ButtonSize, ButtonWidth } from './types'
 
 interface Props extends AriaButtonProps {
   /** ボタンの外観スタイル */
@@ -15,6 +15,8 @@ interface Props extends AriaButtonProps {
   size?: ButtonSize
   /** ボタンの幅 */
   width?: ButtonWidth
+  /** ボタンの形。circle は角丸を高さの半分にする */
+  shape?: ButtonShape
   /**
    * アイコンのみ表示する際はtrueを指定し、適切なaria-labelなどを付与してください
    */
@@ -41,6 +43,7 @@ export const Button: FC<Props> = ({
   color = 'neutral',
   size = 'm',
   width = 'auto',
+  shape = 'square',
   iconOnly = false,
   leading,
   trailing,
@@ -52,6 +55,7 @@ export const Button: FC<Props> = ({
     `-appearance-${appearance}`,
     `-color-${color}`,
     `-size-${size}`,
+    `-shape-${shape}`,
     `-width-${width}`,
     className
   )
