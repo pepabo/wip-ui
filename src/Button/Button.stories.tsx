@@ -168,7 +168,7 @@ export const OnDarkSurface: Story = {
     brightness: 'dark',
   },
   globals: {
-    background: 'apollo-page',
+    backgrounds: { value: 'dark' },
   },
 }
 
