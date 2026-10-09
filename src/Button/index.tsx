@@ -9,6 +9,7 @@ import type {
   ButtonAppearance,
   ButtonBrightness,
   ButtonColor,
+  ButtonShape,
   ButtonSize,
   ButtonWidth,
 } from './types'
@@ -19,6 +20,7 @@ export type {
   ButtonBrightness,
   ButtonColor,
   ButtonProps,
+  ButtonShape,
   ButtonSize,
   ButtonWidth,
   LinkButtonProps,
