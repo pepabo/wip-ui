@@ -27,6 +27,10 @@ const meta = {
       control: 'select',
       options: ['auto', 'half', 'third', 'full'],
     },
+    brightness: {
+      control: 'select',
+      options: ['light', 'dark'],
+    },
     isDisabled: {
       control: 'boolean',
     },
@@ -137,6 +141,22 @@ export const FullWidth: Story = {
 }
 
 /**
+ * 暗い面の上に置くボタン。brightness に dark を指定すると、outlined は面を持たずに背景を透かし、hover などの重ね色も明るい色になる。
+ *
+ * @summary 暗い面の上に置く場合
+ */
+export const OnDarkSurface: Story = {
+  args: {
+    children: 'Outlined Button',
+    appearance: 'outlined',
+    brightness: 'dark',
+  },
+  globals: {
+    background: 'apollo-page',
+  },
+}
+
+/**
  * 全propsを自由に変更できるプレイグラウンド。開発時の動作確認用。
  */
 export const Playground: Story = {
@@ -147,6 +167,7 @@ export const Playground: Story = {
     color: 'neutral',
     size: 'm',
     width: 'auto',
+    brightness: 'light',
     isDisabled: false,
   },
 }
