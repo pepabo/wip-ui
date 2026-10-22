@@ -78,6 +78,22 @@ wip-ui のカラーシステムは [inhouse のカラートークン](https://de
 - **Callout**: `informative`、`neutral`、`negative`、`notice`、`positive`
 - **Typography**: `high_emphasis`、`medium_emphasis`、`low_emphasis`、`informative`、`positive`、`notice`、`negative`
 
+## CSS 変数として参照する
+
+`wip-ui/styles.css` または `wip-ui/css/{flavor}.css` を読み込むと、カラートークンが CSS カスタムプロパティとして公開されます。アプリ側の CSS から直接参照できるので、`#f4f4f5` のようなハードコードは不要です。
+
+```css
+.my-card {
+  background-color: var(--wip-color-semantic-neutral-100);
+  color: var(--wip-color-semantic-neutral-800);
+}
+```
+
+- セマンティックカラー: `--wip-color-semantic-{intent}-{level}`（例: `--wip-color-semantic-neutral-100`）
+- プリミティブカラー: `--wip-color-primitive-{color}-{level}`（例: `--wip-color-primitive-gray-100`）
+
+コンポーネント実装と同様、アプリ側でも基本はセマンティックカラーを使用してください。
+
 ## アクセシビリティ
 
 色だけで情報を伝えないでください。色覚に依存しないよう、アイコンやテキストなど他の区別手段を併用してください。
