@@ -9,12 +9,6 @@ export interface PaperProps extends ComponentProps<'div'> {
   square?: boolean
 }
 
-/**
- * 影やボーダーで浮き上がった面を表現するサーフェスコンポーネント。
- * カード的なUIの背景として使用。
- *
- * @summary 影付きサーフェス（カード背景）
- */
 export function Paper({
   elevation = 1,
   outlined = false,

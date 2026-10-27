@@ -32,12 +32,6 @@ interface Props extends HTMLAttributes<HTMLElement> {
   component?: ElementType
 }
 
-/**
- * テキストの表示に使用するタイポグラフィコンポーネント。
- * サイズ・密度・色・太さを統一的に管理し、レスポンシブ対応も可能。
- *
- * @summary テキスト表示のためのタイポグラフィ
- */
 export const Typography: FC<Props> = ({
   children,
   size = 'm',

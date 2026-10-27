@@ -21,12 +21,6 @@ type AvatarProps<TElementType extends 'img' | React.ComponentType<unknown>> = Om
   children?: React.ReactNode
 } & AvatarVariants
 
-/**
- * ユーザーのプロフィール画像を表示するアバターコンポーネント。
- * ユーザー一覧やコメント欄などで使用。
- *
- * @summary ユーザープロフィール画像
- */
 const Avatar = forwardRef(function Avatar<
   TElementType extends 'img' | React.ComponentType<unknown> = 'img',
 >(

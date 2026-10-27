@@ -26,12 +26,6 @@ export interface Props {
   className?: string
 }
 
-/**
- * Flexboxベースのレイアウトコンポーネント。
- * 子要素を縦または横方向に等間隔で並べる。
- *
- * @summary Flexboxベースの等間隔レイアウト
- */
 export const Stack: FC<Props> = ({
   children,
   flexDirection = 'column',

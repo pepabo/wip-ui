@@ -72,7 +72,7 @@ const GapDemo = () => (
 
 const meta: Meta = {
   title: 'Foundations/Spacing/Demos',
-  tags: ['!manifest'],
+  tags: ['!manifest', '!dev'],
 }
 
 export default meta

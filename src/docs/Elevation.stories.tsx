@@ -16,11 +16,14 @@ const levels = [
   { elevation: 6 as const, usage: 'ダイアログ、ドロワー' },
 ]
 
+// 高さをそろえつつ、padding を足しても枠からはみ出さないようにする
+const cardStyle = { padding: '24px', boxSizing: 'border-box', height: '100%' } as const
+
 const ElevationDemo = () => (
   <Grid spacing="l" columns={12}>
     {levels.map(({ elevation, usage }) => (
       <GridItem key={elevation} size={{ xxs: 6, m: 4, l: 3 }}>
-        <Paper elevation={elevation} style={{ padding: '24px', height: '100%' }}>
+        <Paper elevation={elevation} style={cardStyle}>
           <Stack gap="xs">
             <Typography size="xl" fontWeight="bold">
               {elevation}
@@ -33,7 +36,7 @@ const ElevationDemo = () => (
       </GridItem>
     ))}
     <GridItem size={{ xxs: 6, m: 4, l: 3 }}>
-      <Paper outlined style={{ padding: '24px', height: '100%' }}>
+      <Paper outlined style={cardStyle}>
         <Stack gap="xs">
           <Typography size="xl" fontWeight="bold">
             Outlined
@@ -49,7 +52,7 @@ const ElevationDemo = () => (
 
 const meta: Meta = {
   title: 'Foundations/Elevation/Demos',
-  tags: ['!manifest'],
+  tags: ['!manifest', '!dev'],
 }
 
 export default meta

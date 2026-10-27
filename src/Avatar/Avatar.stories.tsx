@@ -1,3 +1,4 @@
+import { Stack } from '../Stack'
 import { Avatar } from './index'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -24,43 +25,23 @@ const meta: Meta<AvatarStoryProps> = {
 export default meta
 type Story = StoryObj<AvatarStoryProps>
 
-/**
- * ユーザー一覧やコメント欄など、一般的な場面で使用する標準サイズ。
- *
- * @summary 一般的な場面で使用する標準サイズ
- */
-export const Default: Story = {
+export const Playground: Story = {
   render: (args) => <Avatar {...args} />,
   args: {
     src: 'https://i.pravatar.cc/150?img=1',
-    alt: 'User avatar',
+    alt: '山田 花子',
+    size: 'm',
   },
 }
 
-/**
- * チャットのメッセージ欄やリスト内など、密な配置で使用。
- *
- * @summary 密な配置やインライン表示向け
- */
-export const Small: Story = {
-  render: (args) => <Avatar {...args} />,
-  args: {
-    src: 'https://i.pravatar.cc/150?img=3',
-    alt: 'User avatar',
-    size: 's',
-  },
-}
-
-/**
- * プロフィールページやユーザー詳細など、ユーザーを目立たせたい場面で使用。
- *
- * @summary プロフィールなどユーザーを目立たせたい場面向け
- */
-export const Large: Story = {
-  render: (args) => <Avatar {...args} />,
-  args: {
-    src: 'https://i.pravatar.cc/150?img=4',
-    alt: 'User avatar',
-    size: 'l',
-  },
+export const Size: Story = {
+  name: 'size',
+  render: () => (
+    <Stack flexDirection="row" gap="s" alignItems="center">
+      <Avatar src="https://i.pravatar.cc/150?img=2" alt="鈴木 太郎" size="xs" />
+      <Avatar src="https://i.pravatar.cc/150?img=3" alt="佐藤 次郎" size="s" />
+      <Avatar src="https://i.pravatar.cc/150?img=1" alt="山田 花子" size="m" />
+      <Avatar src="https://i.pravatar.cc/150?img=4" alt="田中 由紀" size="l" />
+    </Stack>
+  ),
 }

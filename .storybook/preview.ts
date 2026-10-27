@@ -1,6 +1,8 @@
 import type { Decorator, Preview } from '@storybook/react-vite'
 import { createElement } from 'react'
 
+import { ComponentDocsPage } from './ComponentDocsPage'
+
 // Import icon font override for Storybook
 import './icon-font-override.scss'
 // Import docs page spacing overrides
@@ -49,6 +51,9 @@ const preview: Preview = {
   },
   decorators: [flavorDecorator],
   parameters: {
+    docs: {
+      page: ComponentDocsPage,
+    },
     options: {
       storySort: {
         order: [

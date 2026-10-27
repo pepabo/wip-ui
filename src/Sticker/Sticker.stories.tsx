@@ -1,3 +1,4 @@
+import { Stack } from '../Stack'
 import { Sticker } from './index'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -19,110 +20,41 @@ const meta = {
       options: ['s', 'm'],
     },
   },
+  args: {
+    children: 'Sticker',
+  },
 } satisfies Meta<typeof Sticker>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-/**
- * タグやラベルなど、ステータスを持たない分類表示に使用する基本形。
- *
- * @summary ステータスを持たない分類表示向け
- */
-export const Default: Story = {
+export const Playground: Story = {
   args: {
-    children: 'Default',
+    color: 'neutral',
+    size: 'm',
   },
 }
 
-/**
- * 「ベータ版」「新機能」など、情報を補足するラベルとして使用。
- *
- * @summary 情報を補足するラベルとして使用
- */
-export const Informative: Story = {
-  args: {
-    color: 'informative',
-    children: 'Informative',
-  },
-}
-
-/**
- * 「稼働中」「承認済み」など、正常・肯定的な状態を示すラベルとして使用。
- *
- * @summary 正常・肯定的な状態を示すラベル
- */
-export const Positive: Story = {
-  args: {
-    color: 'positive',
-    children: 'Positive',
-  },
-}
-
-/**
- * 「停止中」「エラー」など、異常・否定的な状態を示すラベルとして使用。
- *
- * @summary 異常・否定的な状態を示すラベル
- */
-export const Negative: Story = {
-  args: {
-    color: 'negative',
-    children: 'Negative',
-  },
-}
-
-/**
- * 「要確認」「期限切れ間近」など、注意が必要な状態を示すラベルとして使用。
- *
- * @summary 注意が必要な状態を示すラベル
- */
-export const Notice: Story = {
-  args: {
-    color: 'notice',
-    children: 'Notice',
-  },
-}
-
-/**
- * 「おすすめ」「人気」など、ユーザーの注意を積極的に引きたい場合に使用。
- *
- * @summary ユーザーの注意を積極的に引きたい場合
- */
-export const Attention: Story = {
-  args: {
-    color: 'attention',
-    children: 'Attention',
-  },
-}
-
-/**
- * テーブル内やリスト項目など、スペースが限られる場面で使用。
- *
- * @summary スペースが限られる場面向け
- */
-export const Small: Story = {
-  args: {
-    size: 's',
-    children: 'Small',
-  },
-}
-
-/**
- * 全カラーの一覧表示。カラー選定時のリファレンス用。
- */
-export const AllColors: Story = {
-  tags: ['!manifest'],
-  args: {
-    children: 'Sticker',
-  },
+export const Color: Story = {
+  name: 'color',
   render: () => (
-    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-      <Sticker color="neutral">Neutral</Sticker>
-      <Sticker color="informative">Informative</Sticker>
-      <Sticker color="positive">Positive</Sticker>
-      <Sticker color="negative">Negative</Sticker>
-      <Sticker color="notice">Notice</Sticker>
-      <Sticker color="attention">Attention</Sticker>
-    </div>
+    <Stack flexDirection="row" gap="s">
+      <Sticker color="neutral">neutral</Sticker>
+      <Sticker color="informative">informative</Sticker>
+      <Sticker color="positive">positive</Sticker>
+      <Sticker color="negative">negative</Sticker>
+      <Sticker color="notice">notice</Sticker>
+      <Sticker color="attention">attention</Sticker>
+    </Stack>
+  ),
+}
+
+export const Size: Story = {
+  name: 'size',
+  render: () => (
+    <Stack flexDirection="row" gap="s" alignItems="center">
+      <Sticker size="s">s</Sticker>
+      <Sticker size="m">m</Sticker>
+    </Stack>
   ),
 }

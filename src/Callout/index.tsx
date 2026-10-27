@@ -31,12 +31,6 @@ const getIcon = (color: CalloutColor) => {
   }
 }
 
-/**
- * 重要な情報やステータスをユーザーに伝えるコールアウトコンポーネント。
- * 色でメッセージの種類（情報・成功・警告・エラー）を表現。
- *
- * @summary 重要情報の通知バナー
- */
 export const Callout = ({
   color = 'informative',
   appearance = 'flat',

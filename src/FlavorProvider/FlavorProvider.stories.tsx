@@ -1,19 +1,53 @@
 import { Button } from '../Button'
+import { Stack } from '../Stack'
+import { Sticker } from '../Sticker'
+import { TextField } from '../TextField'
+import { Typography } from '../Typography'
 import { FlavorProvider } from './FlavorProvider'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
+
+const flavors = [
+  { flavor: 'lolipop', label: 'lolipop（ロリポップ！）' },
+  { flavor: 'apollo', label: 'apollo（ゲーマーズ）' },
+  { flavor: 'pepper', label: 'pepper（既定・利用実績なし）' },
+  { flavor: 'minne', label: 'minne（利用実績なし）' },
+  { flavor: 'nachiguro', label: 'nachiguro（利用実績なし）' },
+  { flavor: 'flippers', label: 'flippers（利用実績なし）' },
+  { flavor: 'kung-pu', label: 'kung-pu（利用実績なし）' },
+] as const
+
+const Sample = () => (
+  <Stack gap="m">
+    <Typography component="span" size="xl" fontWeight="bold">
+      見出し
+    </Typography>
+    <Typography>本文のテキストです。フレーバーによって、色や形が変わります。</Typography>
+    <Stack flexDirection="row" gap="s">
+      <Button color="interactive">保存</Button>
+      <Button appearance="outlined">キャンセル</Button>
+      <Button color="negative">削除</Button>
+    </Stack>
+    <TextField label="メールアドレス" placeholder="email@example.com" />
+    <Stack flexDirection="row" gap="s">
+      <Sticker color="positive">稼働中</Sticker>
+      <Sticker color="notice">要確認</Sticker>
+      <Sticker color="negative">停止中</Sticker>
+    </Stack>
+  </Stack>
+)
 
 const meta = {
   title: 'Introduction/FlavorProvider',
   component: FlavorProvider,
   parameters: {
-    layout: 'centered',
+    layout: 'padded',
   },
   tags: ['autodocs'],
   argTypes: {
     flavor: {
       control: 'select',
-      options: ['pepper', 'minne', 'apollo', 'nachiguro', 'flippers', 'kung-pu', 'lolipop'],
+      options: flavors.map(({ flavor }) => flavor),
     },
     children: {
       control: false,
@@ -24,43 +58,27 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/**
- * アプリ全体で単一のフレーバーを固定したい場合に使用。
- * 多くのアプリは1つのフレーバーで完結するため、これが最も基本的なパターン。
- *
- * @summary アプリ全体に単一フレーバーを適用
- */
-export const Default: Story = {
+export const Playground: Story = {
   args: {
-    flavor: 'pepper',
-    children: <Button color="interactive">Action</Button>,
+    flavor: 'lolipop',
+    children: <Sample />,
   },
 }
 
-/**
- * マルチブランドサイトや既存フレーバーから新フレーバーへの段階移行など、
- * 1ページ内で領域ごとに異なるフレーバーを適用したい場合に使用。
- *
- * @summary 1ページ内で複数フレーバーを併用
- */
-export const Coexistence: Story = {
-  args: {
-    flavor: 'pepper',
-  },
-  parameters: {
-    controls: { disable: true },
-  },
+export const Flavor: Story = {
+  name: 'flavor',
   render: () => (
-    <div style={{ display: 'flex', gap: 16 }}>
-      <FlavorProvider flavor="pepper">
-        <Button color="interactive">pepper</Button>
-      </FlavorProvider>
-      <FlavorProvider flavor="minne">
-        <Button color="interactive">minne</Button>
-      </FlavorProvider>
-      <FlavorProvider flavor="apollo">
-        <Button color="interactive">apollo</Button>
-      </FlavorProvider>
-    </div>
+    <Stack gap="xl">
+      {flavors.map(({ flavor, label }) => (
+        <Stack key={flavor} gap="s">
+          <Typography component="h3" size="l" fontWeight="bold">
+            {label}
+          </Typography>
+          <FlavorProvider flavor={flavor}>
+            <Sample />
+          </FlavorProvider>
+        </Stack>
+      ))}
+    </Stack>
   ),
 }
