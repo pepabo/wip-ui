@@ -35,12 +35,6 @@ interface Props extends Omit<AriaTextFieldProps, 'children'> {
   component?: TextFieldElementType
 }
 
-/**
- * テキスト入力のためのフォームコンポーネント。
- * 単一行入力とテキストエリア（複数行）の両方に対応。
- *
- * @summary テキスト入力フォーム
- */
 export const TextField: FC<Props> = (props) => {
   const {
     label,

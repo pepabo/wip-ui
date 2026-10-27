@@ -1,6 +1,11 @@
 import { Stack } from './Stack'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { ReactNode } from 'react'
+
+const gaps = ['xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl'] as const
+const alignItemsValues = ['flex-start', 'center', 'flex-end', 'stretch'] as const
+const justifyContentValues = ['flex-start', 'center', 'flex-end', 'space-between'] as const
 
 const meta = {
   title: 'Components/Layout/Stack',
@@ -16,15 +21,15 @@ const meta = {
     },
     gap: {
       control: 'select',
-      options: ['xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl'],
+      options: gaps,
     },
     alignItems: {
       control: 'select',
-      options: ['flex-start', 'center', 'flex-end', 'stretch'],
+      options: alignItemsValues,
     },
     justifyContent: {
       control: 'select',
-      options: ['flex-start', 'center', 'flex-end', 'space-between'],
+      options: justifyContentValues,
     },
   },
 } satisfies Meta<typeof Stack>
@@ -32,26 +37,68 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-const Box = ({ children }: { children: React.ReactNode }) => (
+const Box = ({ children, height }: { children: ReactNode; height?: string }) => (
   <div
     style={{
       background: '#e0e0e0',
       padding: '20px',
       borderRadius: '4px',
+      height,
     }}
   >
     {children}
   </div>
 )
 
-/**
- * フォーム項目やセクションを縦に並べる、最も基本的なレイアウト。
- *
- * @summary 要素を縦に並べる基本レイアウト
- */
-export const Default: Story = {
+const Frame = ({ label, children }: { label: string; children: ReactNode }) => (
+  <div>
+    <div style={{ marginBottom: '4px', fontSize: '12px' }}>{label}</div>
+    <div style={{ border: '1px dashed #999', padding: '8px' }}>{children}</div>
+  </div>
+)
+
+export const Playground: Story = {
+  args: {
+    flexDirection: 'column',
+    gap: 'm',
+    alignItems: 'stretch',
+    justifyContent: 'flex-start',
+    children: (
+      <>
+        <Box>Item 1</Box>
+        <Box>Item 2</Box>
+        <Box>Item 3</Box>
+      </>
+    ),
+  },
+}
+
+export const FlexDirection: Story = {
+  name: 'flexDirection',
   render: () => (
-    <Stack>
+    <Stack gap="l">
+      <Frame label="column">
+        <Stack flexDirection="column" gap="s">
+          <Box>Item 1</Box>
+          <Box>Item 2</Box>
+          <Box>Item 3</Box>
+        </Stack>
+      </Frame>
+      <Frame label="row">
+        <Stack flexDirection="row" gap="s">
+          <Box>Item 1</Box>
+          <Box>Item 2</Box>
+          <Box>Item 3</Box>
+        </Stack>
+      </Frame>
+    </Stack>
+  ),
+}
+
+export const FlexDirectionResponsive: Story = {
+  name: 'flexDirection (responsive)',
+  render: () => (
+    <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="s">
       <Box>Item 1</Box>
       <Box>Item 2</Box>
       <Box>Item 3</Box>
@@ -59,117 +106,25 @@ export const Default: Story = {
   ),
 }
 
-/**
- * ボタングループやタグ一覧など、要素を横に並べたい場合に使用。
- *
- * @summary 要素を横に並べたい場合
- */
-export const Row: Story = {
+export const Gap: Story = {
+  name: 'gap',
   render: () => (
-    <Stack flexDirection="row">
-      <Box>Item 1</Box>
-      <Box>Item 2</Box>
-      <Box>Item 3</Box>
+    <Stack gap="l">
+      {gaps.map((gap) => (
+        <Frame key={gap} label={gap}>
+          <Stack flexDirection="row" gap={gap}>
+            <Box>Item 1</Box>
+            <Box>Item 2</Box>
+            <Box>Item 3</Box>
+          </Stack>
+        </Frame>
+      ))}
     </Stack>
   ),
 }
 
-/**
- * ラベルとヘルプテキストの間など、密に配置したい場合に使用。
- *
- * @summary 密に配置したい場合
- */
-export const SmallGap: Story = {
-  render: () => (
-    <Stack gap="s">
-      <Box>Item 1</Box>
-      <Box>Item 2</Box>
-      <Box>Item 3</Box>
-    </Stack>
-  ),
-}
-
-/**
- * ページ内のセクション間など、大きな余白で視覚的に分離したい場合に使用。
- *
- * @summary 大きな余白で視覚的に分離したい場合
- */
-export const LargeGap: Story = {
-  render: () => (
-    <Stack gap="xl">
-      <Box>Item 1</Box>
-      <Box>Item 2</Box>
-      <Box>Item 3</Box>
-    </Stack>
-  ),
-}
-
-/**
- * 異なる幅の要素を中央揃えで統一感を出したい場合に使用。
- *
- * @summary 異なる幅の要素を中央揃えにしたい場合
- */
-export const AlignCenter: Story = {
-  render: () => (
-    <Stack alignItems="center">
-      <Box>Short</Box>
-      <Box>A bit longer item</Box>
-      <Box>Long</Box>
-    </Stack>
-  ),
-}
-
-/**
- * ヘッダーのロゴとメニュー配置など、要素を両端に散らしたい場合に使用。
- *
- * @summary 要素を両端に散らしたい場合
- */
-export const JustifySpaceBetween: Story = {
-  render: () => (
-    <Stack flexDirection="row" justifyContent="space-between">
-      <Box>Item 1</Box>
-      <Box>Item 2</Box>
-      <Box>Item 3</Box>
-    </Stack>
-  ),
-}
-
-/**
- * ページ中央にボタングループを配置するなど、横並び要素を中央寄せしたい場合に使用。
- *
- * @summary 横並び要素を中央寄せしたい場合
- */
-export const RowCentered: Story = {
-  render: () => (
-    <Stack flexDirection="row" alignItems="center" justifyContent="center">
-      <Box>Item 1</Box>
-      <Box>Item 2</Box>
-      <Box>Item 3</Box>
-    </Stack>
-  ),
-}
-
-/**
- * ブレークポイントごとに方向を変更。モバイルでは縦、デスクトップでは横に並ぶ。
- *
- * @summary レスポンシブな方向変更
- */
-export const ResponsiveDirection: Story = {
-  render: () => (
-    <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="m">
-      <Box>Item 1</Box>
-      <Box>Item 2</Box>
-      <Box>Item 3</Box>
-    </Stack>
-  ),
-}
-
-/**
- * ブレークポイントごとにスペースを変更。画面幅に応じた最適な余白を実現。
- *
- * @summary レスポンシブなスペース変更
- */
-export const ResponsiveGap: Story = {
+export const GapResponsive: Story = {
+  name: 'gap (responsive)',
   render: () => (
     <Stack gap={{ xxs: 's', m: 'l', xl: 'xxl' }}>
       <Box>Item 1</Box>
@@ -179,21 +134,36 @@ export const ResponsiveGap: Story = {
   ),
 }
 
-/**
- * 方向とスペースの両方をレスポンシブに変更する組み合わせ例。
- *
- * @summary 方向とスペースのレスポンシブ設定
- */
-export const ResponsiveDirectionAndGap: Story = {
+export const AlignItems: Story = {
+  name: 'alignItems',
   render: () => (
-    <Stack
-      flexDirection={{ xxs: 'column', m: 'row' }}
-      gap={{ xxs: 's', m: 'l' }}
-      alignItems="center"
-    >
-      <Box>Item 1</Box>
-      <Box>Item 2</Box>
-      <Box>Item 3</Box>
+    <Stack gap="l">
+      {alignItemsValues.map((alignItems) => (
+        <Frame key={alignItems} label={alignItems}>
+          <Stack flexDirection="row" gap="s" alignItems={alignItems}>
+            <Box>Item 1</Box>
+            <Box height="80px">Item 2</Box>
+            <Box>Item 3</Box>
+          </Stack>
+        </Frame>
+      ))}
+    </Stack>
+  ),
+}
+
+export const JustifyContent: Story = {
+  name: 'justifyContent',
+  render: () => (
+    <Stack gap="l">
+      {justifyContentValues.map((justifyContent) => (
+        <Frame key={justifyContent} label={justifyContent}>
+          <Stack flexDirection="row" gap="s" justifyContent={justifyContent}>
+            <Box>Item 1</Box>
+            <Box>Item 2</Box>
+            <Box>Item 3</Box>
+          </Stack>
+        </Frame>
+      ))}
     </Stack>
   ),
 }

@@ -16,12 +16,6 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode
 }
 
-/**
- * ステータスやカテゴリを示す小さなラベルコンポーネント。
- * タグやバッジとして情報の分類表示に使用。
- *
- * @summary ステータスやカテゴリのラベル
- */
 export const Sticker: FC<Props> = ({
   color = 'neutral',
   size = 'm',

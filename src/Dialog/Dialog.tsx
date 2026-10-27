@@ -14,12 +14,6 @@ export type DialogProps = Omit<ModalOverlayProps, 'children'> & {
   role?: AriaDialogProps['role']
 }
 
-/**
- * モーダルダイアログコンポーネント。
- * 確認メッセージやフォーム入力など、ユーザーの注意を集中させる操作に使用。
- *
- * @summary モーダルダイアログ
- */
 export const Dialog = ({
   className,
   isDismissable = true,

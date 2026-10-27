@@ -125,33 +125,9 @@ const IconGridDemo = () => (
   </Grid>
 )
 
-const SizeDemoComponent = () => (
-  <Stack flexDirection="row" gap="xxl" alignItems="flex-end">
-    {[
-      { size: 's' as const, label: 'Small', px: '16px' },
-      { size: 'm' as const, label: 'Medium', px: '24px' },
-      { size: 'l' as const, label: 'Large', px: '32px' },
-    ].map(({ size, label, px }) => (
-      <Stack key={size} gap="s" alignItems="center">
-        <Paper outlined style={{ padding: '24px' }}>
-          <Icon name="heart" size={size} />
-        </Paper>
-        <Stack gap="xxs" alignItems="center">
-          <Typography size="xs" fontWeight="bold">
-            {label}
-          </Typography>
-          <Typography size="xxs" color="medium_emphasis">
-            {px}
-          </Typography>
-        </Stack>
-      </Stack>
-    ))}
-  </Stack>
-)
-
 const meta: Meta = {
   title: 'Foundations/Icons/Demos',
-  tags: ['!manifest'],
+  tags: ['!manifest', '!dev'],
 }
 
 export default meta
@@ -163,13 +139,4 @@ export default meta
  */
 export const AllIcons: StoryObj = {
   render: () => <IconGridDemo />,
-}
-
-/**
- * 3 段階のアイコンサイズ比較。
- *
- * @summary アイコンサイズの比較
- */
-export const SizeComparison: StoryObj = {
-  render: () => <SizeDemoComponent />,
 }

@@ -1,9 +1,11 @@
 import { useState } from 'react'
 
 import { Button } from '../Button/Button'
+import { Stack } from '../Stack'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './index'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { DialogProps } from './index'
 
 const meta = {
   title: 'Components/Feedback/Dialog',
@@ -17,88 +19,86 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/**
- * ユーザーに情報を提示し、確認後に閉じるシンプルなダイアログ。
- *
- * @summary 情報提示のみのシンプルなダイアログ
- */
-export const Default: Story = {
-  render: () => {
-    const [isOpen, setIsOpen] = useState(false)
-
-    return (
-      <>
-        <Button onPress={() => setIsOpen(true)}>Open Dialog</Button>
-        <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-          <DialogHeader>
-            <DialogTitle>Dialog Title</DialogTitle>
-          </DialogHeader>
-          <DialogDescription>This is a dialog with a title and description.</DialogDescription>
-          <DialogFooter>
-            <Button onPress={() => setIsOpen(false)}>Close</Button>
-          </DialogFooter>
-        </Dialog>
-      </>
-    )
-  },
+type ExampleProps = Omit<DialogProps, 'isOpen' | 'onOpenChange' | 'children'> & {
+  triggerLabel: string
 }
 
-/**
- * 削除や送信など取り消しにくい操作の前にユーザーに確認を求める場面で使用。
- *
- * @summary 取り消しにくい操作の確認を求める場合
- */
-export const WithActions: Story = {
-  render: () => {
-    const [isOpen, setIsOpen] = useState(false)
+const InfoDialog = ({ triggerLabel, ...props }: ExampleProps) => {
+  const [isOpen, setIsOpen] = useState(false)
 
-    return (
-      <>
-        <Button onPress={() => setIsOpen(true)}>Open Dialog</Button>
-        <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-          <DialogHeader>
-            <DialogTitle>Confirm Action</DialogTitle>
-          </DialogHeader>
-          <DialogDescription>Are you sure you want to proceed with this action?</DialogDescription>
-          <DialogFooter>
-            <Button appearance="outlined" onPress={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button color="interactive" onPress={() => setIsOpen(false)}>
-              Confirm
-            </Button>
-          </DialogFooter>
-        </Dialog>
-      </>
-    )
-  },
+  return (
+    <>
+      <Button onPress={() => setIsOpen(true)}>{triggerLabel}</Button>
+      <Dialog {...props} isOpen={isOpen} onOpenChange={setIsOpen}>
+        <DialogHeader>
+          <DialogTitle>メンテナンスのお知らせ</DialogTitle>
+        </DialogHeader>
+        <DialogDescription>10月30日 2:00〜4:00 は、管理画面を利用できません。</DialogDescription>
+        <DialogFooter>
+          <Button onPress={() => setIsOpen(false)}>閉じる</Button>
+        </DialogFooter>
+      </Dialog>
+    </>
+  )
 }
 
-/**
- * 背景クリックやEscapeキーで閉じられないダイアログ。
- * 重要な操作の確認など、ユーザーに明示的な選択を求める場面で使用。
- *
- * @summary 閉じられないダイアログ
- */
-export const NotDismissable: Story = {
-  render: () => {
-    const [isOpen, setIsOpen] = useState(false)
+const ConfirmDialog = ({ triggerLabel, ...props }: ExampleProps) => {
+  const [isOpen, setIsOpen] = useState(false)
 
-    return (
-      <>
-        <Button onPress={() => setIsOpen(true)}>Open Dialog</Button>
-        <Dialog isOpen={isOpen} onOpenChange={setIsOpen} isDismissable={false}>
-          <DialogHeader>
-            <DialogTitle>Non-Dismissable Dialog</DialogTitle>
-          </DialogHeader>
-          <DialogDescription>
-            This dialog cannot be closed by clicking outside or pressing Escape.
-          </DialogDescription>
-          <DialogFooter>
-            <Button onPress={() => setIsOpen(false)}>Close</Button>
-          </DialogFooter>
-        </Dialog>
-      </>
-    )
+  return (
+    <>
+      <Button onPress={() => setIsOpen(true)}>{triggerLabel}</Button>
+      <Dialog {...props} isOpen={isOpen} onOpenChange={setIsOpen}>
+        <DialogHeader>
+          <DialogTitle>このファイルを削除しますか？</DialogTitle>
+        </DialogHeader>
+        <DialogDescription>削除したファイルは元に戻せません。</DialogDescription>
+        <DialogFooter>
+          <Button appearance="outlined" onPress={() => setIsOpen(false)} autoFocus>
+            キャンセル
+          </Button>
+          <Button color="negative" onPress={() => setIsOpen(false)}>
+            削除
+          </Button>
+        </DialogFooter>
+      </Dialog>
+    </>
+  )
+}
+
+export const Playground: Story = {
+  args: {
+    isDismissable: true,
+    role: 'dialog',
   },
+  argTypes: {
+    isDismissable: {
+      control: 'boolean',
+    },
+    role: {
+      control: 'select',
+      options: ['dialog', 'alertdialog'],
+    },
+  },
+  render: (args) => <InfoDialog {...args} triggerLabel="ダイアログを開く" />,
+}
+
+export const IsDismissable: Story = {
+  name: 'isDismissable',
+  render: () => (
+    <Stack flexDirection="row" gap="s">
+      <InfoDialog isDismissable triggerLabel="true" />
+      <ConfirmDialog isDismissable={false} triggerLabel="false" />
+    </Stack>
+  ),
+}
+
+export const Role: Story = {
+  name: 'role',
+  render: () => (
+    <Stack flexDirection="row" gap="s">
+      <InfoDialog role="dialog" triggerLabel="dialog" />
+      <ConfirmDialog role="alertdialog" isDismissable={false} triggerLabel="alertdialog" />
+    </Stack>
+  ),
 }

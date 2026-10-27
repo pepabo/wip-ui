@@ -9,11 +9,6 @@ interface Props extends AriaTabListProps<object> {
   ref?: React.Ref<HTMLDivElement>
 }
 
-/**
- * Tab項目を横並びに配置するコンテナ。Tabs内で使用する。
- *
- * @summary タブ項目のコンテナ
- */
 export const TabList = ({ ref, children, ...props }: Props) => {
   return (
     <AriaTabList className="_list" ref={ref} {...props}>

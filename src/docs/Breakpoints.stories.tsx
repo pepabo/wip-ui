@@ -83,7 +83,7 @@ const BreakpointIndicatorDemo = () => {
 
 const meta: Meta = {
   title: 'Foundations/Breakpoints/Demos',
-  tags: ['!manifest'],
+  tags: ['!manifest', '!dev'],
 }
 
 export default meta

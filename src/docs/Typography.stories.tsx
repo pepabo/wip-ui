@@ -144,7 +144,7 @@ const ColorDemo = () => (
 
 const meta: Meta = {
   title: 'Foundations/Typography/Demos',
-  tags: ['!manifest'],
+  tags: ['!manifest', '!dev'],
 }
 
 export default meta

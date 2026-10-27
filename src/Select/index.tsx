@@ -34,12 +34,6 @@ interface Props<T extends object> extends Omit<AriaSelectProps<T>, 'children'> {
   children: React.ReactNode
 }
 
-/**
- * ドロップダウン形式の選択コンポーネント。
- * 複数の選択肢から1つを選ぶフォーム要素。
- *
- * @summary ドロップダウン形式の選択フォーム
- */
 export const Select = <T extends object>(props: Props<T>) => {
   const {
     label,
