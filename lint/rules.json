@@ -1,0 +1,84 @@
+{
+  "rules": [
+    {
+      "id": "button",
+      "element": "button",
+      "component": "Button（ページ遷移なら LinkButton）",
+      "message": "素の <button> ではなく wip-ui の Button を使ってください。ページ遷移なら LinkButton です。",
+      "doc": "dist/js/Button/Button.md"
+    },
+    {
+      "id": "select",
+      "element": "select",
+      "component": "Select",
+      "message": "素の <select> ではなく wip-ui の Select を使ってください。",
+      "doc": "dist/js/Select/Select.md"
+    },
+    {
+      "id": "textarea",
+      "element": "textarea",
+      "component": "TextField（`component=\"textarea\"`）",
+      "message": "素の <textarea> ではなく wip-ui の TextField（component=textarea）を使ってください。",
+      "doc": "dist/js/TextField/TextField.md"
+    },
+    {
+      "id": "inputCheckbox",
+      "element": "input",
+      "types": [
+        "checkbox"
+      ],
+      "component": "Checkbox（即時に反映する設定なら Switch）",
+      "message": "素の <input type=checkbox> ではなく wip-ui の Checkbox を使ってください。即時に反映する設定なら Switch です。",
+      "doc": "dist/js/Checkbox/Checkbox.md"
+    },
+    {
+      "id": "inputRadio",
+      "element": "input",
+      "types": [
+        "radio"
+      ],
+      "component": "RadioGroup + Radio",
+      "message": "素の <input type=radio> ではなく wip-ui の RadioGroup と Radio を使ってください。",
+      "doc": "dist/js/Radio/Radio.md"
+    },
+    {
+      "id": "inputText",
+      "element": "input",
+      "label": "テキスト入力の `<input>`（type 指定なし、text、email、password、search、tel、url、number）",
+      "types": [
+        "text",
+        "email",
+        "password",
+        "search",
+        "tel",
+        "url",
+        "number"
+      ],
+      "typeOmitted": true,
+      "component": "TextField",
+      "message": "素のテキスト入力の <input> ではなく wip-ui の TextField を使ってください。",
+      "doc": "dist/js/TextField/TextField.md"
+    },
+    {
+      "id": "table",
+      "element": "table",
+      "component": "Table",
+      "message": "素の <table> ではなく wip-ui の Table を使ってください。",
+      "doc": "dist/js/Table/Table.md"
+    },
+    {
+      "id": "hr",
+      "element": "hr",
+      "component": "Divider",
+      "message": "素の <hr> ではなく wip-ui の Divider を使ってください。",
+      "doc": "dist/js/Divider/Divider.md"
+    },
+    {
+      "id": "dialog",
+      "element": "dialog",
+      "component": "Dialog",
+      "message": "素の <dialog> ではなく wip-ui の Dialog を使ってください。",
+      "doc": "dist/js/Dialog/Dialog.md"
+    }
+  ]
+}

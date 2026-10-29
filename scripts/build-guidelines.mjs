@@ -5,11 +5,12 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { withCustomConfig } from 'react-docgen-typescript'
 
+import { rules as lintRules } from '../lint/rules.js'
+
 const ROOT = path.resolve(import.meta.dirname, '..')
 const SRC_DIR = path.join(ROOT, 'src')
 const DIST_DIR = path.join(ROOT, 'dist', 'js')
 const SELECTOR_PATH = path.join(ROOT, 'guidelines', 'selector.md')
-const LINT_PATH = path.join(ROOT, 'lint', 'biome', 'no-raw-element.grit')
 
 const CATEGORIES = [
   'Actions',
@@ -195,16 +196,14 @@ const buildSelector = (folders) => {
   fs.writeFileSync(SELECTOR_PATH, `${content.trimEnd()}\n`)
 }
 
-// lint のメッセージに書いた md のパスが、実際に生成される md を指しているか確かめる
+// lint の元データ（lint/rules.json）に書いた md のパスが、実際に生成される md を指しているか確かめる
 const checkLintPaths = (folders) => {
   const generated = new Set(
     folders.flatMap(({ folder, mds }) => mds.map(({ file }) => `dist/js/${folder}/${file}`))
   )
-  const missing = [...fs.readFileSync(LINT_PATH, 'utf8').matchAll(/wip-ui\/(dist\/js\/\S+?\.md)/g)]
-    .map(([, docPath]) => docPath)
-    .filter((docPath) => !generated.has(docPath))
+  const missing = lintRules.map((rule) => rule.doc).filter((docPath) => !generated.has(docPath))
   if (missing.length > 0) {
-    console.error(`lint のメッセージに、存在しない md のパスがあります: ${missing.join(', ')}`)
+    console.error(`lint/rules.json に、存在しない md のパスがあります: ${missing.join(', ')}`)
     process.exit(1)
   }
 }
