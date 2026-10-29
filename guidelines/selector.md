@@ -12,6 +12,7 @@
 |---|---|---|
 | Button | ユーザーのアクションを受け付けるボタン | `dist/js/Button/Button.md` |
 | LinkButton | ページ遷移を伴うボタン風リンク | `dist/js/Button/LinkButton.md` |
+| Menu | ボタンから開く、操作の一覧のメニュー | `dist/js/Menu/Menu.md` |
 
 ## Forms
 
