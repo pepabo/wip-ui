@@ -45,12 +45,14 @@
     "./types": null,
     "./utils": null,
     "./styles.css": "./dist/styles.css",
-    "./css/*.css": "./dist/css/*.css"
+    "./css/*.css": "./dist/css/*.css",
+    "./lint/eslint": "./lint/eslint/index.js"
   },
   "files": [
     "dist",
     "guidelines",
-    "lint"
+    "lint",
+    "!lint/__tests__"
   ],
   "scripts": {
     "biome:check": "biome check .",
@@ -65,7 +67,8 @@
     "build:flavors": "node scripts/build-flavor-css.mjs",
     "build:js": "node scripts/build-js.mjs",
     "build:guidelines": "node scripts/build-guidelines.mjs",
-    "build": "npm run build:js && npm run build:flavors && npm run build:guidelines",
+    "build:lint": "node scripts/build-lint.mjs",
+    "build": "npm run build:js && npm run build:flavors && npm run build:lint && npm run build:guidelines",
     "prestorybook": "npm run build:flavors",
     "prebuild-storybook": "npm run build:flavors",
     "prepublishOnly": "npm run build",
@@ -73,9 +76,15 @@
     "build-storybook": "storybook build"
   },
   "peerDependencies": {
+    "eslint": ">=9.0.0",
     "react": ">=18.2.0",
     "react-aria-components": "^1.12.2",
     "react-dom": ">=18.2.0"
+  },
+  "peerDependenciesMeta": {
+    "eslint": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@pepabo-inhouse/adapter": "^4.2.1",
@@ -104,6 +113,7 @@
     "@storybook/react-vite": "^10.3.3",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "eslint": "^9.39.5",
     "lefthook": "^2.0.4",
     "sass-embedded": "^1.93.3",
     "storybook": "^10.3.3",
