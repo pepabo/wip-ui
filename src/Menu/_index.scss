@@ -1,0 +1,97 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-menu-popover {
+  min-width: 12rem;
+  max-width: 20rem;
+  padding: adapter.get-spacing-size(xxs);
+  background-color: adapter.get-surface-color(light, primary);
+  border: adapter.get-border-size(m) solid adapter.get-border-color(light, low_emphasis);
+  border-radius: adapter.get-radius-size(m);
+  box-shadow: adapter.get-elevation-box-shadow(2);
+  // 画面に収まらないときは、react-aria が付ける max-height の中でスクロールさせる
+  overflow: auto;
+}
+
+.wip-menu {
+  margin: 0;
+  padding: 0;
+  outline: none;
+}
+
+.wip-menu-item {
+  @include adapter.text($level: s, $density: normal);
+  display: flex;
+  align-items: center;
+  gap: adapter.get-gap-size(xs);
+  padding: adapter.get-spacing-size(xs) adapter.get-spacing-size(s);
+  border-radius: adapter.get-radius-size(m);
+  color: adapter.get-text-color(light, high_emphasis);
+  cursor: pointer;
+  outline: none;
+
+  &.-color-negative {
+    color: adapter.get-semantic-color(negative, 500);
+  }
+
+  // マウスが乗っているときと、キーボードで選んでいるときに、inhouse の hover の状態の色を重ねる
+  &[data-hovered],
+  &[data-focused] {
+    background-color: adapter.get-background-overlay-color(light, $state: hover);
+  }
+
+  &[data-focus-visible] {
+    outline: 0.125rem solid adapter.get-semantic-color(informative, 500);
+    outline-offset: -0.125rem;
+  }
+
+  &[data-disabled] {
+    color: adapter.get-text-color(light, low_emphasis);
+    cursor: default;
+  }
+
+  // アイコンの大きさが違っても、ラベルの開始位置がそろうように幅を固定する
+  ._leading,
+  ._trailing {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    min-width: 1rem;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  ._body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  ._description {
+    @include adapter.text($level: xs, $density: dense);
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+
+  &[data-disabled] ._description {
+    color: adapter.get-text-color(light, low_emphasis);
+  }
+}
+
+.wip-menu-section {
+  // 見出しの上を広く、下を詰めて、見出しが下の項目のまとまりに付いて見えるようにする
+  ._title {
+    @include adapter.text($level: xs, $density: dense);
+    display: block;
+    padding: adapter.get-spacing-size(s) adapter.get-spacing-size(s) 0;
+    color: adapter.get-text-color(light, mid_emphasis);
+    font-weight: bold;
+  }
+}
+
+.wip-menu-divider {
+  height: adapter.get-border-size(m);
+  margin: adapter.get-spacing-size(xxs) 0;
+  border: none;
+  background-color: adapter.get-border-color(light, low_emphasis);
+}
