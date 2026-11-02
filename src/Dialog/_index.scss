@@ -50,7 +50,7 @@
 .wip-dialog {
   background: adapter.get-surface-color(light, primary);
   padding: adapter.get-spacing-size(l);
-  border-radius: adapter.get-radius-size(m);
+  border-radius: adapter.get-radius-size(l) * 2; // 1rem。浮いている面なので Paper より一段やわらかくする
   box-shadow: adapter.get-elevation-box-shadow(3);
   max-height: inherit;
   box-sizing: border-box;

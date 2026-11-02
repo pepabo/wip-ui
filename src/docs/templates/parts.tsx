@@ -1,19 +1,14 @@
-import { Breadcrumb, Breadcrumbs } from '../../../Breadcrumbs'
-import { Button } from '../../../Button'
-import { Divider } from '../../../Divider'
-import { Grid, GridItem } from '../../../Grid'
-import { Icon } from '../../../Icon'
-import { Paper } from '../../../Paper'
-import { RadioGroup } from '../../../Radio'
-import { Stack } from '../../../Stack'
-import { Sticker } from '../../../Sticker'
-import { Typography } from '../../../Typography'
+import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
+import { Button } from '../../Button'
+import { Icon } from '../../Icon'
+import { Paper } from '../../Paper'
+import { RadioGroup } from '../../Radio'
+import { Stack } from '../../Stack'
+import { Typography } from '../../Typography'
 
 import type { ReactNode } from 'react'
-import type { IconName } from '../../../Icon'
-import type { PaperProps } from '../../../Paper'
-import type { RadioGroupProps } from '../../../Radio'
-import type { StickerColor } from '../../../Sticker'
+import type { PaperProps } from '../../Paper'
+import type { RadioGroupProps } from '../../Radio'
 
 /**
  * テンプレート共通の部品。
@@ -27,12 +22,11 @@ import type { StickerColor } from '../../../Sticker'
 // GAP-1 Paper に padding が無く、内容が面の端に接する。→ Card で div を 1 枚かぶせている。
 //       padding の 24px は adapter.get-spacing-size(l) の代わりに置いた暫定値で、
 //       トークンに裏付けが無い。Paper に padding prop が付いたら Card ごと不要になる。
-// GAP-2 Stepper（ウィザードの進行表示）が無い。→ StepIndicator を Sticker と Divider で組んでいる。
-//       段と段をつなぐ線に縦罫（Divider orientation="vertical"）を流用しており、本来は横のコネクタ。
+// GAP-2 Stepper（ウィザードの進行表示）が無い。
 // GAP-3 「選択できるカード」（MUI の CardActionArea 相当）が無い。→ Paper + Button で組んでいる。
 // GAP-4 Divider にラベルを入れられない（hr を描画するため children 不可）。
 //       → ログインの「または」は線と文字を分けて組んでいる。
-// GAP-5 アイコンセットに Google が無い。→ launch で代用している（identityProviders）。
+// GAP-5 アイコンセットに Google が無い。→ launch で代用している（Auth の外部アカウント）。
 // GAP-6 Avatar が img 固定でアイコンや頭文字を入れられない。
 //       → AppShell の initialAvatar が SVG のデータ URI を作っている。
 //         この SVG の 2 色だけはトークンではなく生の hex で、テンプレート層で唯一の例外。
@@ -131,73 +125,12 @@ export const PageHeader = ({
   </Stack>
 )
 
-export const SectionTitle = ({ children, action }: { children: ReactNode; action?: ReactNode }) => (
-  <Stack flexDirection="row" gap="m" alignItems="center" justifyContent="space-between">
-    <Typography size="l" fontWeight="bold" component="h2">
-      {children}
-    </Typography>
-    {action}
-  </Stack>
-)
-
-/** 項目名の見え方を 1 箇所に集める。Stat / DefinitionRow / RadioField が共有する。 */
-export const FieldLabel = ({ children }: { children: ReactNode }) => (
+/** 項目名の見え方。RadioField が使う。 */
+const FieldLabel = ({ children }: { children: ReactNode }) => (
   <Typography size="s" color="medium_emphasis" component="span">
     {children}
   </Typography>
 )
-
-export const Stat = ({
-  label,
-  value,
-  unit,
-  caption,
-}: {
-  label: string
-  value: string
-  unit: string
-  caption?: ReactNode
-}) => (
-  <Stack gap="xxs">
-    <FieldLabel>{label}</FieldLabel>
-    <Stack flexDirection="row" gap="xxs" alignItems="flex-end">
-      <Typography size="xxxl" fontWeight="bold" component="span">
-        {value}
-      </Typography>
-      <Typography size="s" color="medium_emphasis" component="span">
-        {unit}
-      </Typography>
-    </Stack>
-    {caption}
-  </Stack>
-)
-
-/**
- * 項目名と値の組。inline は 4:8 の 2 カラム、stacked は名前の下に値を置く。
- * 2 つの見せ方があること自体をここで名前付きにしておく。
- */
-export const DefinitionRow = ({
-  term,
-  direction = 'inline',
-  children,
-}: {
-  term: string
-  direction?: 'inline' | 'stacked'
-  children: ReactNode
-}) =>
-  direction === 'stacked' ? (
-    <Stack gap="xxs">
-      <FieldLabel>{term}</FieldLabel>
-      {children}
-    </Stack>
-  ) : (
-    <Grid spacing="s">
-      <GridItem size={{ xxs: 12, s: 4 }}>
-        <FieldLabel>{term}</FieldLabel>
-      </GridItem>
-      <GridItem size={{ xxs: 12, s: 8 }}>{children}</GridItem>
-    </Grid>
-  )
 
 /** 値とコピーボタンの組。GAP-9 の Menu が無いぶん、行内の操作はこの形に寄せる。 */
 export const CopyableValue = ({ value, label }: { value: string; label: string }) => (
@@ -234,64 +167,5 @@ export const RadioField = ({
         children
       )}
     </RadioGroup>
-  </Stack>
-)
-
-export type IdentityProvider = { id: string; label: string; icon: IconName }
-
-/** GAP-5: Google のアイコンが無いため launch で代用している。 */
-export const identityProviders: IdentityProvider[] = [
-  { id: 'google', label: 'Google', icon: 'launch' },
-  { id: 'apple', label: 'Apple', icon: 'apple' },
-  { id: 'x', label: 'X', icon: 'x' },
-  { id: 'line', label: 'LINE', icon: 'line' },
-  { id: 'discord', label: 'Discord', icon: 'discord' },
-]
-
-export type ServiceStatus = 'active' | 'pending' | 'expired' | 'error' | 'disabled' | 'paid'
-
-const statusPresentation: Record<ServiceStatus, { label: string; color: StickerColor }> = {
-  active: { label: '有効', color: 'positive' },
-  pending: { label: '設定中', color: 'informative' },
-  expired: { label: '期限切れ', color: 'negative' },
-  error: { label: 'エラー', color: 'negative' },
-  disabled: { label: '無効', color: 'neutral' },
-  paid: { label: '支払い済み', color: 'positive' },
-}
-
-export const StatusSticker = ({ status }: { status: ServiceStatus }) => {
-  const { label, color } = statusPresentation[status]
-  return (
-    <Sticker color={color} size="s">
-      {label}
-    </Sticker>
-  )
-}
-
-export const StepIndicator = ({ steps, current }: { steps: string[]; current: number }) => (
-  <Stack flexDirection="row" gap="s" alignItems="center">
-    {steps.map((step, index) => {
-      const state = index < current ? 'done' : index === current ? 'current' : 'todo'
-      return (
-        <Stack key={step} flexDirection="row" gap="s" alignItems="center">
-          {/* GAP-2: 段をつなぐ横のコネクタが無いため縦罫を流用している */}
-          {index > 0 && <Divider orientation="vertical" flexItem />}
-          <Sticker
-            color={state === 'current' ? 'informative' : state === 'done' ? 'positive' : 'neutral'}
-            size="s"
-          >
-            {state === 'done' ? <Icon name="check" size="s" /> : index + 1}
-          </Sticker>
-          <Typography
-            component="span"
-            size="s"
-            fontWeight={state === 'current' ? 'bold' : 'normal'}
-            color={state === 'todo' ? 'low_emphasis' : 'high_emphasis'}
-          >
-            {step}
-          </Typography>
-        </Stack>
-      )
-    })}
   </Stack>
 )

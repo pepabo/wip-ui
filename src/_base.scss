@@ -1,0 +1,9 @@
+// コンポーネントに共通の土台
+// inhouse は書体を指定しておらず、ブラウザの既定（多くは明朝体）で表示されるため、読みやすいゴシック体を指定する。
+// フレーバーのビルドでは :root がフレーバーの範囲（[data-flavor="xxx"]）に置き換わるので、その配下に継承される。
+:root {
+  font-family: system-ui, -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  // TODO(フレーバー対応): 値をベタ書きしている。あとでトークンに置き換える
+  // ページの地を薄いグレーにして、白い面（Paper）との明るさの差で区切る
+  background: #f2f3f7;
+}

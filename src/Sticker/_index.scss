@@ -5,7 +5,8 @@
   width: fit-content;
   height: fit-content;
   font-weight: bold;
-  border-radius: adapter.get-radius-size(m);
+  // 丸い形にして、角のあるボタンと見分けやすくする
+  border-radius: 9999px;
 
   @each $color in (neutral, informative, positive, negative, notice, attention) {
     &.-color-#{$color} {

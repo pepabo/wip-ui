@@ -43,6 +43,7 @@
   }
 
   & ._select {
+    border-radius: adapter.get-radius-size(l); // 0.5rem。ボタン・入力欄とそろえる
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -70,7 +71,7 @@
   &-popover {
     background-color: adapter.get-primitive-color(white);
     border: 1px solid adapter.get-field-border-color(neutral, enabled);
-    border-radius: adapter.get-radius-size(m); // figma上で6pxになってるの確認
+    border-radius: adapter.get-radius-size(l); // 0.5rem。トリガーとそろえる
     min-width: var(--trigger-width);
 
     @each $size in (s, m, l) {

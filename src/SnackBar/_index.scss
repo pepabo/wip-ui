@@ -21,7 +21,7 @@
     pointer-events: auto;
     gap: adapter.get-gap-size(m);
     padding: adapter.get-spacing-size(m);
-    border-radius: adapter.get-radius-size(m);
+    border-radius: adapter.get-radius-size(l); // 0.5rem。ボタンとそろえる
     box-shadow: adapter.get-elevation-box-shadow(2);
 
     &.-state-positive {

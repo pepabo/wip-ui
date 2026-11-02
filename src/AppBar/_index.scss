@@ -3,6 +3,24 @@
 .wip-app-bar {
   @include app-bar.style;
 
+  // TODO(フレーバー対応): 値をベタ書きしている。あとでトークンに置き換える
+  // 影を外して線 1 本で地と分ける。filled の地色は、操作の色（濃紺）にそろえる
+  &.-appearance-white,
+  &.-appearance-filled {
+    box-shadow: none;
+    border-bottom: 1px solid #dddfea;
+  }
+
+  &.-appearance-filled {
+    background-color: #0b3893;
+    border-bottom-color: #0b3893;
+
+    // 色面の上では、色を指定していない文字（high_emphasis）を白にして読めるようにする
+    .wip-typography.-color-high_emphasis {
+      color: #ffffff;
+    }
+  }
+
   ._content {
     justify-content: space-between;
   }
