@@ -1,6 +1,7 @@
 import { Canvas, Meta } from '@storybook/addon-docs/blocks'
 import { Table, TableHeader, TableBody, Column, Row, Cell } from '../Table'
 import * as ColorStories from './Color.stories'
+import { PrimitiveColorTable } from './PrimitiveColorTable'
 
 <Meta title="Foundations/Colors" summary="カラートークンの体系と使い分けガイド" />
 
@@ -10,22 +11,9 @@ wip-ui のカラーシステムは [inhouse のカラートークン](https://de
 
 ## プリミティブカラー
 
-色名とレベル（明度段階）の組み合わせで定義される直接的な色値です。
+色名とレベル（明度段階）の組み合わせで定義される直接的な色値です。色の系統はフレーバーによって違い、下の表はツールバーで選んでいるフレーバーの系統です。
 
-<Table aria-label="プリミティブカラー一覧">
-  <TableHeader>
-    <Column id="name" isRowHeader>色名</Column>
-    <Column id="range">レベル範囲</Column>
-  </TableHeader>
-  <TableBody>
-    <Row><Cell>Black / White</Cell><Cell>1000</Cell></Row>
-    <Row><Cell>Gray</Cell><Cell>50〜900</Cell></Row>
-    <Row><Cell>Blue</Cell><Cell>50〜900</Cell></Row>
-    <Row><Cell>Green</Cell><Cell>50〜900</Cell></Row>
-    <Row><Cell>Red</Cell><Cell>50〜900</Cell></Row>
-    <Row><Cell>Yellow</Cell><Cell>50〜900</Cell></Row>
-  </TableBody>
-</Table>
+<PrimitiveColorTable />
 
 レベルの数値が大きいほど暗くなります。コンポーネント実装では直接使用せず、セマンティックカラーを使用してください。
 
