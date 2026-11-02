@@ -32,6 +32,8 @@ export * from './Paper'
 export * from './Radio'
 // Select
 export * from './Select'
+// SideNavigation
+export * from './SideNavigation'
 // SnackBar
 export * from './SnackBar'
 // Stack
