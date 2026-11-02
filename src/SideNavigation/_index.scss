@@ -40,6 +40,12 @@
       outline: 0.125rem solid adapter.get-semantic-color(informative, 500);
       outline-offset: -0.125rem;
     }
+
+    // 使えない状態は、Checkbox や Select と同じ inhouse の透明度で示す
+    &[data-disabled] {
+      opacity: adapter.get-disabled-surface-opacity();
+      cursor: default;
+    }
   }
 
   // アイコンの大きさが違っても、ラベルの開始位置がそろうように幅を固定する
