@@ -4,9 +4,13 @@
 @use '@pepabo-inhouse/flavor/tokens' as tokens;
 
 // ページ全体の地の色。
-// brown はフレーバーによって無い（lolipop と nachiguro にだけある）ため、無いフレーバーでは地の色を変えない
-@if map.has-key(meta.module-variables(tokens), 'color-primitive-brown-50') {
-  :root {
+// brown はフレーバーによって無い（lolipop と nachiguro にだけある）ため、無いフレーバーでは地の色を変えない。
+// :root に直接書くと、複数のフレーバーの CSS を読み込んだとき（Storybook など）に最後のフレーバーが勝つため、
+// そのフレーバーの data-flavor を持つ要素がページにあるときだけ当てる
+$flavor-name: map.get(meta.module-variables(tokens), 'wip-flavor-name');
+
+@if $flavor-name and map.has-key(meta.module-variables(tokens), 'color-primitive-brown-50') {
+  :root:has([data-flavor='#{$flavor-name}']) {
     background: adapter.get-primitive-color(brown, 50);
   }
 }

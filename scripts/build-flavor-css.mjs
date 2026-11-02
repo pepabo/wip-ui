@@ -50,6 +50,8 @@ function prefixPlugin(prefix, { scopeRoot = false } = {}) {
         }
       }
       rule.selectors = rule.selectors.map((sel) => {
+        // フレーバー名を自分で持つセレクタ（ページの地の色など）は、そのまま残す
+        if (sel.includes('[data-flavor=')) return sel
         // ::view-transition-* selectors must remain at document level
         if (sel.includes('::view-transition')) return sel
         if (sel === ':root') return scopeRoot ? prefix : sel
@@ -96,7 +98,7 @@ for (const flavor of FLAVORS) {
     load(canonicalUrl) {
       if (canonicalUrl.href === 'flavor-tokens:override') {
         return {
-          contents: `@forward "${flavorVarsPath}";`,
+          contents: `@forward "${flavorVarsPath}";\n$wip-flavor-name: "${flavor}";`,
           syntax: 'scss',
         }
       }
