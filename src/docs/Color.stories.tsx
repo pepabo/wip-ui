@@ -1,6 +1,5 @@
 import { Divider } from '../Divider'
 import { Stack } from '../Stack'
-import { Cell, Column, Row, Table, TableBody, TableHeader } from '../Table'
 import { type FlavorName, getColorsByFlavor } from '../Token/Color/byFlavor'
 import { Typography } from '../Typography'
 
@@ -105,48 +104,5 @@ export const Swatches: StoryObj = {
   render: (_args, { globals }) => {
     const flavor = (globals.flavor as FlavorName) ?? 'pepper'
     return <AllColorSwatches flavor={flavor} />
-  },
-}
-
-// プリミティブカラーの系統とレベルの範囲。系統はフレーバーによって違う（lolipop には brown がある など）
-const PrimitiveList = ({ flavor }: { flavor: FlavorName }) => {
-  const { primitive } = getColorsByFlavor(flavor)
-  const rows = Object.entries(primitive).map(([name, colorObj]) => {
-    const levels = Object.keys(colorObj)
-      .map((level) => Number.parseInt(level, 10))
-      .sort((a, b) => a - b)
-    const first = levels[0]
-    const last = levels[levels.length - 1]
-    return { name: capitalize(name), range: first === last ? `${first}` : `${first}〜${last}` }
-  })
-  return (
-    <Table aria-label="プリミティブカラー一覧">
-      <TableHeader>
-        <Column id="name" isRowHeader>
-          色名
-        </Column>
-        <Column id="range">レベル範囲</Column>
-      </TableHeader>
-      <TableBody>
-        {rows.map((row) => (
-          <Row key={row.name}>
-            <Cell>{row.name}</Cell>
-            <Cell>{row.range}</Cell>
-          </Row>
-        ))}
-      </TableBody>
-    </Table>
-  )
-}
-
-/**
- * プリミティブカラーの系統とレベル範囲。ツールバーのフレーバーに合わせて切り替わります。
- *
- * @summary フレーバーごとのプリミティブカラーの系統
- */
-export const Primitives: StoryObj = {
-  render: (_args, { globals }) => {
-    const flavor = (globals.flavor as FlavorName) ?? 'pepper'
-    return <PrimitiveList flavor={flavor} />
   },
 }
