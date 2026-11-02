@@ -1,6 +1,7 @@
 import { Canvas, Meta } from '@storybook/addon-docs/blocks'
 import { Table, TableHeader, TableBody, Column, Row, Cell } from '../Table'
 import * as ColorStories from './Color.stories'
+import { PrimitiveColorTable } from './PrimitiveColorTable'
 
 <Meta title="Foundations/Colors" summary="カラートークンの体系と使い分けガイド" />
 
@@ -14,7 +15,7 @@ wip-ui のカラーシステムは [inhouse のカラートークン](https://de
 
 色の系統はフレーバーによって違います（例：lolipop と nachiguro には Brown がある）。下の表は、ツールバーで選んでいるフレーバーの系統です。
 
-<Canvas of={ColorStories.Primitives} sourceState="none" />
+<PrimitiveColorTable />
 
 レベルの数値が大きいほど暗くなります。コンポーネント実装では直接使用せず、セマンティックカラーを使用してください。
 
