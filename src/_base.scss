@@ -1,0 +1,12 @@
+@use 'sass:map';
+@use 'sass:meta';
+@use '@pepabo-inhouse/adapter' as adapter;
+@use '@pepabo-inhouse/flavor/tokens' as tokens;
+
+// ページ全体の地の色。
+// brown はフレーバーによって無い（lolipop と nachiguro にだけある）ため、無いフレーバーでは地の色を変えない
+@if map.has-key(meta.module-variables(tokens), 'color-primitive-brown-50') {
+  :root {
+    background: adapter.get-primitive-color(brown, 50);
+  }
+}
