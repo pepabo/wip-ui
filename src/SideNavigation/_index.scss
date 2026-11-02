@@ -1,0 +1,87 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-side-navigation {
+  width: 100%;
+
+  ._list {
+    display: flex;
+    flex-direction: column;
+    gap: adapter.get-gap-size(xxs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+.wip-side-navigation-item {
+  ._link {
+    @include adapter.text($level: s, $density: normal);
+    display: flex;
+    align-items: center;
+    gap: adapter.get-gap-size(xs);
+    padding: adapter.get-spacing-size(xs) adapter.get-spacing-size(s);
+    border-radius: adapter.get-radius-size(m);
+    color: adapter.get-text-color(light, high_emphasis);
+    text-decoration: none;
+    cursor: pointer;
+    outline: none;
+
+    &[data-hovered] {
+      background-color: adapter.get-background-overlay-color(light, $state: hover);
+    }
+
+    // 現在地は、hover より濃い selected の状態の色と太字で示す
+    &[aria-current='page'] {
+      background-color: adapter.get-background-overlay-color(light, $state: selected);
+      font-weight: bold;
+    }
+
+    &[data-focus-visible] {
+      outline: 0.125rem solid adapter.get-semantic-color(informative, 500);
+      outline-offset: -0.125rem;
+    }
+
+    // 使えない状態は、Checkbox や Select と同じ inhouse の透明度で示す
+    &[data-disabled] {
+      opacity: adapter.get-disabled-surface-opacity();
+      cursor: default;
+    }
+  }
+
+  // アイコンの大きさが違っても、ラベルの開始位置がそろうように幅を固定する
+  ._leading,
+  ._trailing {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    min-width: 1rem;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  ._label {
+    flex: 1;
+    min-width: 0;
+  }
+
+  ._trailing {
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+}
+
+.wip-side-navigation-section {
+  // まとまりの間を空け、見出しが下の項目に付いて見えるようにする
+  & + &,
+  .wip-side-navigation-item + & {
+    margin-top: adapter.get-spacing-size(s);
+  }
+
+  ._title {
+    @include adapter.text($level: xs, $density: dense);
+    display: block;
+    padding: adapter.get-spacing-size(xs) adapter.get-spacing-size(s);
+    color: adapter.get-text-color(light, mid_emphasis);
+    font-weight: bold;
+  }
+}
