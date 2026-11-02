@@ -9,6 +9,7 @@ import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
+import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
@@ -17,7 +18,8 @@ import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
-import { Card, Inset, PageHeader } from './parts'
+import buyImage from './assets/gamers/buy.svg'
+import { Card, PageHeader } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -70,13 +72,10 @@ const Meter = ({ ratio, tone }: { ratio: number; tone: TypographyColor }) => (
   </Typography>
 )
 
-// GAP-1: 一覧の行。実物は px-6 py-3.5（行）と px-6 py-3（列見出し）。
-const projectRowStyle = { paddingBlock: 14, paddingInline: 24 }
-const projectHeaderStyle = { paddingBlock: 12, paddingInline: 24 }
-
-// GAP-NEW: TabPanel と本文のあいだに間隔が無く、タブの下線に本文が接する。実物は Grid の mt={2}（16px）。
-const panelStyle = { paddingTop: 16 }
-const Panel = ({ children }: { children: ReactNode }) => <div style={panelStyle}>{children}</div>
+// GAP-1: 一覧の行の余白（実物は px-6 py-3.5 の行と px-6 py-3 の列見出し）。Paper / Stack に padding が無く、
+// inline style を当てない方針のため未対応。行と列見出しは面の端に接する。
+// GAP-NEW: TabPanel に本文との間隔（実物は Grid の mt={2}・16px）が無い。inline style を当てない方針のため未対応で、
+// タブの下線に本文が接する。
 
 // ─── データ：ゲームサーバー（形は apollo の API レスポンスに合わせ、値はダミー）───
 
@@ -418,9 +417,9 @@ const EmptyServersView = () => (
   <Container size="s">
     <Card elevation={0}>
       <Stack gap="l">
-        {/* GAP-NEW: 画像の枠が無い。実アプリは buy.svg（購入のイラスト）を 12em 角で置いている */}
+        {/* GAP-NEW: 画像の枠（Image）が無い。実アプリは buy.svg を 12em 角（192px）で置いている */}
         <Stack alignItems="center">
-          <Icon name="cart" size="l" />
+          <img src={buyImage} alt="購入のイラスト" width={192} height={192} />
         </Stack>
         <Stack gap="xs">
           <Typography>契約中のサーバーがありません</Typography>
@@ -511,15 +510,21 @@ const BackupListTable = ({ items }: { items: Backup[] }) => (
                 >
                   復元
                 </Button>
-                {/* GAP-9: 実アプリは ⋮ で「削除」1 項目のメニューが開く */}
-                <Button
-                  appearance="transparent"
-                  size="s"
-                  iconOnly
-                  aria-label={`${b.name}のメニュー`}
-                >
-                  <Icon name="ellipsis_vertical" size="m" />
-                </Button>
+                <MenuTrigger>
+                  <Button
+                    appearance="transparent"
+                    size="s"
+                    iconOnly
+                    aria-label={`${b.name}のメニュー`}
+                  >
+                    <Icon name="ellipsis_vertical" size="m" aria-hidden="true" />
+                  </Button>
+                  <Menu placement="bottom end">
+                    <MenuItem color="negative" leading={<Icon name="garbage_can" size="s" />}>
+                      削除
+                    </MenuItem>
+                  </Menu>
+                </MenuTrigger>
               </Stack>
             )}
             {b.status === 'FAILED' && (
@@ -656,14 +661,10 @@ const GameServersSection = ({
           </TabList>
           {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
           <TabPanel id="servers">
-            <Panel>
-              <ServerCardsList items={items} onRename={setRenaming} />
-            </Panel>
+            <ServerCardsList items={items} onRename={setRenaming} />
           </TabPanel>
           <TabPanel id="myBackups">
-            <Panel>
-              <MyBackupPaper items={backups} />
-            </Panel>
+            <MyBackupPaper items={backups} />
           </TabPanel>
         </Tabs>
       )}
@@ -785,7 +786,7 @@ const ProjectRow = ({ project }: { project: Project }) => {
     // GAP-NEW: 行全体をリンクにする一覧（stretched link / GridList）が無い。
     // 実物は行全体を覆う <Link className="absolute inset-0"> を敷き、ドメインだけ z-10 で前面に出している。
     // ここでは行の面は押せず、プロジェクト名をボタンにしている。
-    <div style={projectRowStyle}>
+    <>
       {/* GAP-NEW: Grid に alignItems が無く、右 2 列を名前ブロックの縦中央にそろえられない */}
       <Grid spacing="s">
         <GridItem size={{ xxs: 12, m: 8 }}>
@@ -866,7 +867,7 @@ const ProjectRow = ({ project }: { project: Project }) => {
           </Stack>
         </GridItem>
       </Grid>
-    </div>
+    </>
   )
 }
 
@@ -874,47 +875,43 @@ const ProjectRow = ({ project }: { project: Project }) => {
 const ProjectsBody = ({ items }: { items: Project[] }) => {
   if (items.length === 0) {
     return (
-      <Inset>
-        <Stack gap="m" alignItems="center">
-          <Stack gap="xs" alignItems="center">
-            <Typography size="m" fontWeight="bold">
-              まだプロジェクトがありません
-            </Typography>
-            <Typography size="s" color="medium_emphasis">
-              プロジェクトを作成し、アプリケーションをデプロイ
-            </Typography>
-          </Stack>
-          <Button appearance="flat" color="neutral" size="s">
-            プロジェクトを作成
-          </Button>
+      <Stack gap="m" alignItems="center">
+        <Stack gap="xs" alignItems="center">
+          <Typography size="m" fontWeight="bold">
+            まだプロジェクトがありません
+          </Typography>
+          <Typography size="s" color="medium_emphasis">
+            プロジェクトを作成し、アプリケーションをデプロイ
+          </Typography>
         </Stack>
-      </Inset>
+        <Button appearance="flat" color="neutral" size="s">
+          プロジェクトを作成
+        </Button>
+      </Stack>
     )
   }
   return (
     <Stack gap="xxs">
       {/* GAP-NEW: 表示/非表示のレスポンシブ指定が無い。実物は md 未満で列見出しを隠す */}
-      <div style={projectHeaderStyle}>
-        <Grid spacing="s">
-          <GridItem size={{ xxs: 12, m: 8 }}>
+      <Grid spacing="s">
+        <GridItem size={{ xxs: 12, m: 8 }}>
+          <Typography component="span" size="xs" color="medium_emphasis">
+            プロジェクト名
+          </Typography>
+        </GridItem>
+        <GridItem size={{ xxs: 6, m: 2 }}>
+          <Typography component="span" size="xs" color="medium_emphasis">
+            デプロイ状態
+          </Typography>
+        </GridItem>
+        <GridItem size={{ xxs: 6, m: 2 }}>
+          <Stack alignItems="flex-end">
             <Typography component="span" size="xs" color="medium_emphasis">
-              プロジェクト名
+              最終デプロイ
             </Typography>
-          </GridItem>
-          <GridItem size={{ xxs: 6, m: 2 }}>
-            <Typography component="span" size="xs" color="medium_emphasis">
-              デプロイ状態
-            </Typography>
-          </GridItem>
-          <GridItem size={{ xxs: 6, m: 2 }}>
-            <Stack alignItems="flex-end">
-              <Typography component="span" size="xs" color="medium_emphasis">
-                最終デプロイ
-              </Typography>
-            </Stack>
-          </GridItem>
-        </Grid>
-      </div>
+          </Stack>
+        </GridItem>
+      </Grid>
       {items.map((p) => (
         <Stack key={p.id} gap="xxs">
           <Divider />
@@ -1079,7 +1076,7 @@ export const Empty: Story = {
 /**
  * ホームをスマートフォン幅で見た状態。サーバーのカードは 1 カラムに落ち、
  * プロジェクトの行は状態と最終デプロイが名前の下の 1 行に並ぶ。
- * サイドナビが全幅ボタンとして縦に積まれる問題（GAP-14）もここで見える。
+ * サイドナビが本文の上に積まれる問題（GAP-14）もここで見える。
  *
  * @summary スマートフォン幅でのホーム
  */

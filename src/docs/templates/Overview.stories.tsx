@@ -7,6 +7,7 @@ import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } fr
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
+import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
 import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
@@ -19,16 +20,16 @@ import {
   CalloutBody,
   ConfigRow,
   EmptyNotice,
+  gameImages,
   isServerPreparing,
   PaperTitle,
   ServerDetailHeader,
   server,
 } from './gameServer'
-import { Card, Inset } from './parts'
+import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
-import type { IconName } from '../../Icon'
 import type { ServerStatus } from './gameServer'
 
 /**
@@ -180,59 +181,6 @@ const schedulesInitial: Schedule[] = [
 ]
 
 // ─── 部品 ───
-
-/**
- * GAP-9: Menu が無い。トリガーの直下に Paper を絶対配置で重ね、項目を transparent ボタンで並べている。
- * 外側のクリックや Esc で閉じない・矢印キーで項目を移れない・role="menu" にならない。
- * 共通化の候補: FileManager / Backup にも同じものがある
- */
-const menuAnchorStyle = { position: 'relative', display: 'inline-block' } as const // GAP-9
-const menuPanelStyle = {
-  position: 'absolute',
-  top: '100%',
-  right: 0,
-  zIndex: 10,
-  width: 220,
-} as const // GAP-9
-
-const PseudoMenu = ({
-  isOpen,
-  onOpenChange,
-  trigger,
-  items,
-}: {
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
-  trigger: (toggle: () => void) => ReactNode
-  items: { label: string; icon: IconName; onPress: () => void }[]
-}) => (
-  <div style={menuAnchorStyle}>
-    {trigger(() => onOpenChange(!isOpen))}
-    {isOpen && (
-      <div style={menuPanelStyle}>
-        <Paper elevation={3}>
-          <Stack gap="xxs">
-            {items.map((item) => (
-              <Button
-                key={item.label}
-                appearance="transparent"
-                size="s"
-                width="full"
-                leading={<Icon name={item.icon} size="s" />}
-                onPress={() => {
-                  onOpenChange(false)
-                  item.onPress()
-                }}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </Stack>
-        </Paper>
-      </div>
-    )}
-  </div>
-)
 
 // GAP-18: 進捗バー / メーターが無い。Typography で色を継承させ、currentColor で塗っている。
 // 高さ・角丸・トラックの不透明度はトークンに出典が無い暫定値。
@@ -390,26 +338,24 @@ const SelectableRow = ({
   label: string
 }) => (
   <Paper elevation={0} outlined={selected}>
-    <Inset>
-      <Stack
-        flexDirection={{ xxs: 'column', m: 'row' }}
-        gap="s"
-        justifyContent="space-between"
-        alignItems="center"
+    <Stack
+      flexDirection={{ xxs: 'column', m: 'row' }}
+      gap="s"
+      justifyContent="space-between"
+      alignItems="center"
+    >
+      {children}
+      <Button
+        appearance={selected ? 'flat' : 'outlined'}
+        color={selected ? 'interactive' : 'neutral'}
+        size="s"
+        isDisabled={isDisabled}
+        aria-label={label}
+        onPress={onPress}
       >
-        {children}
-        <Button
-          appearance={selected ? 'flat' : 'outlined'}
-          color={selected ? 'interactive' : 'neutral'}
-          size="s"
-          isDisabled={isDisabled}
-          aria-label={label}
-          onPress={onPress}
-        >
-          {selected ? '選択中' : '選択'}
-        </Button>
-      </Stack>
-    </Inset>
+        {selected ? '選択中' : '選択'}
+      </Button>
+    </Stack>
   </Paper>
 )
 
@@ -530,7 +476,7 @@ const ContractPaper = ({
               <Typography size="s" fontWeight="bold" component="h3">
                 ゲーム
               </Typography>
-              {/* GAP-NEW: 画像の枠が無い。実アプリは各ゲームの 70px 角のキービジュアルを名前の左に置く */}
+              {/* GameItem。名前の左に 70px 角のキービジュアル。GAP-NEW: 画像の枠（Image）が無い（実物は object-fit: cover） */}
               {open ? (
                 <Stack gap="xs">
                   {games.map((g) => (
@@ -540,7 +486,8 @@ const ContractPaper = ({
                       label={`${g}を選択`}
                       onPress={() => setGame(g)}
                     >
-                      <Stack flexDirection="row" gap="xs" alignItems="center">
+                      <Stack flexDirection="row" gap="s" alignItems="center">
+                        <img src={gameImages[g]} alt={g} width={70} height={70} />
                         <Typography fontWeight="bold" component="span">
                           {g}
                         </Typography>
@@ -551,11 +498,17 @@ const ContractPaper = ({
                 </Stack>
               ) : (
                 <Paper elevation={0} outlined>
-                  <Inset>
+                  <Stack flexDirection="row" gap="s" alignItems="center">
+                    <img
+                      src={gameImages[contracted.game]}
+                      alt={contracted.game}
+                      width={70}
+                      height={70}
+                    />
                     <Typography fontWeight="bold" component="span">
                       {contracted.game}
                     </Typography>
-                  </Inset>
+                  </Stack>
                 </Paper>
               )}
             </Stack>
@@ -589,14 +542,12 @@ const ContractPaper = ({
                 </Stack>
               ) : (
                 <Paper elevation={0} outlined>
-                  <Inset>
-                    <PlanItemBody
-                      spec={plan}
-                      months={contracted.months}
-                      isContracted={false}
-                      isLower={false}
-                    />
-                  </Inset>
+                  <PlanItemBody
+                    spec={plan}
+                    months={contracted.months}
+                    isContracted={false}
+                    isLower={false}
+                  />
                 </Paper>
               )}
             </Stack>
@@ -693,43 +644,41 @@ const ServerFirewallRulesPaper = () => {
         </Stack>
         {/* GAP-NEW: Accordion / Disclosure が無い。実アプリは「開放済ポート　N個」の見出しを押すと表が開く。ここでは開いた状態で固定 */}
         <Paper elevation={0} outlined>
-          <Inset>
-            <Stack gap="m">
-              <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="xl">
-                <Typography component="span">開放済ポート</Typography>
-                <Typography color="medium_emphasis" component="span">
-                  {firewallRules.length}個
-                </Typography>
-              </Stack>
-              <Table aria-label="開放済ポート">
-                <TableHeader>
-                  <Column isRowHeader allowsSorting>
-                    プロトコル
-                  </Column>
-                  <Column allowsSorting>ポート番号</Column>
-                  <Column aria-label="操作"> </Column>
-                </TableHeader>
-                <TableBody>
-                  {firewallRules.map((r) => (
-                    <Row key={`${r.protocol}-${r.port}`} id={`${r.protocol}-${r.port}`}>
-                      <Cell>{r.protocol}</Cell>
-                      <Cell>{r.port}</Cell>
-                      <Cell>
-                        <Button
-                          appearance="outlined"
-                          color="negative"
-                          size="s"
-                          leading={<Icon name="garbage_can" size="s" />}
-                        >
-                          閉鎖
-                        </Button>
-                      </Cell>
-                    </Row>
-                  ))}
-                </TableBody>
-              </Table>
+          <Stack gap="m">
+            <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="xl">
+              <Typography component="span">開放済ポート</Typography>
+              <Typography color="medium_emphasis" component="span">
+                {firewallRules.length}個
+              </Typography>
             </Stack>
-          </Inset>
+            <Table aria-label="開放済ポート">
+              <TableHeader>
+                <Column isRowHeader allowsSorting>
+                  プロトコル
+                </Column>
+                <Column allowsSorting>ポート番号</Column>
+                <Column aria-label="操作"> </Column>
+              </TableHeader>
+              <TableBody>
+                {firewallRules.map((r) => (
+                  <Row key={`${r.protocol}-${r.port}`} id={`${r.protocol}-${r.port}`}>
+                    <Cell>{r.protocol}</Cell>
+                    <Cell>{r.port}</Cell>
+                    <Cell>
+                      <Button
+                        appearance="outlined"
+                        color="negative"
+                        size="s"
+                        leading={<Icon name="garbage_can" size="s" />}
+                      >
+                        閉鎖
+                      </Button>
+                    </Cell>
+                  </Row>
+                ))}
+              </TableBody>
+            </Table>
+          </Stack>
         </Paper>
       </Stack>
     </Card>
@@ -750,7 +699,6 @@ const ServerSchedulePaper = ({
   onEdit: (s: Schedule) => void
   onDelete: (s: Schedule) => void
 }) => {
-  const [menu, setMenu] = useState<string | null>(null)
   return (
     <Card>
       <Stack gap="l">
@@ -782,25 +730,31 @@ const ServerSchedulePaper = ({
                 {/* 切り替えは編集フォームの中で行う。ここは状態の表示だけ */}
                 <Cell>{s.enabled ? '有効' : '無効'}</Cell>
                 <Cell>
-                  <PseudoMenu
-                    isOpen={menu === s.id}
-                    onOpenChange={(open) => setMenu(open ? s.id : null)}
-                    trigger={(toggle) => (
-                      <Button
-                        appearance="transparent"
-                        size="s"
-                        iconOnly
-                        aria-label={`${s.name} の操作`}
-                        onPress={toggle}
+                  <MenuTrigger>
+                    <Button
+                      appearance="transparent"
+                      size="s"
+                      iconOnly
+                      aria-label={`${s.name} の操作`}
+                    >
+                      <Icon name="ellipsis_vertical" size="m" aria-hidden="true" />
+                    </Button>
+                    <Menu placement="bottom end">
+                      <MenuItem
+                        leading={<Icon name="pencil" size="s" />}
+                        onAction={() => onEdit(s)}
                       >
-                        <Icon name="ellipsis_vertical" size="m" />
-                      </Button>
-                    )}
-                    items={[
-                      { label: '編集', icon: 'pencil', onPress: () => onEdit(s) },
-                      { label: '削除', icon: 'garbage_can', onPress: () => onDelete(s) },
-                    ]}
-                  />
+                        編集
+                      </MenuItem>
+                      <MenuItem
+                        color="negative"
+                        leading={<Icon name="garbage_can" size="s" />}
+                        onAction={() => onDelete(s)}
+                      >
+                        削除
+                      </MenuItem>
+                    </Menu>
+                  </MenuTrigger>
                 </Cell>
               </Row>
             ))}

@@ -20,12 +20,22 @@ import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
-import { Card, Inset, RadioField } from './parts'
+import complimentaryCreditGranted from './assets/ai-gateway/campaigns/complimentary-credit-granted.png'
+import welcomeCreditIllustration from './assets/ai-gateway/campaigns/welcome-credit-illustration.svg'
+import amexLogo from './assets/ai-gateway/card-brands/amex.svg'
+import dinersLogo from './assets/ai-gateway/card-brands/diners.svg'
+import jcbLogo from './assets/ai-gateway/card-brands/jcb.svg'
+import mastercardLogo from './assets/ai-gateway/card-brands/mastercard.svg'
+import visaLogo from './assets/ai-gateway/card-brands/visa.svg'
+import paypayLogo from './assets/gamers/paypay.svg'
+import surveyExcellent from './assets/gamers/survey-excellent.svg'
+import surveyGood from './assets/gamers/survey-good.svg'
+import surveyPoor from './assets/gamers/survey-poor.svg'
+import { Card, RadioField } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 import type { ButtonColor } from '../../Button'
-import type { DialogProps } from '../../Dialog'
 import type { IconName } from '../../Icon'
 import type { TypographyColor } from '../../Typography'
 
@@ -95,24 +105,8 @@ const RetryCallout = ({ message }: { message: string }) => (
   </Callout>
 )
 
-// GAP-NEW: Dialog に幅の指定が無く、中身の幅で縮む。中身を 1 枚の div で包んで幅を持たせている。
-// ゲーマーズは MUI の fullWidth（600px）、AI ゲートウェイは styles.dialog（520px）。
-// どれも外寸から Dialog の左右の padding（24px × 2）を引いた値。
-const gamersDialogStyle = { width: 552, maxWidth: '100%' } // GAP-NEW: Dialog に幅が無い
-const aiDialogStyle = { width: 472, maxWidth: '100%' } // GAP-NEW: Dialog に幅が無い
-
-const SizedDialog = ({
-  style,
-  children,
-  ...props
-}: Omit<DialogProps, 'children' | 'style'> & {
-  style: { width: number; maxWidth: string }
-  children: ReactNode
-}) => (
-  <Dialog isOpen {...props}>
-    <div style={style}>{children}</div>
-  </Dialog>
-)
+// GAP-NEW: Dialog に幅の prop が無い（ゲーマーズは MUI の fullWidth・600px、AI ゲートウェイは 520px / 400px）。
+// inline style を当てない方針のため未対応で、ダイアログは中身の幅で縮む。
 
 // ─── ゲーマーズ：データ ───
 
@@ -160,17 +154,15 @@ const TimelineStep = ({
       <Icon name={icon} size="m" />
     </Typography>
     <Paper elevation={0} outlined>
-      <Inset>
-        <Stack
-          flexDirection={{ xxs: 'column', s: 'row' }}
-          gap="m"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Stack gap="xxs">{children}</Stack>
-          {action}
-        </Stack>
-      </Inset>
+      <Stack
+        flexDirection={{ xxs: 'column', s: 'row' }}
+        gap="m"
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <Stack gap="xxs">{children}</Stack>
+        {action}
+      </Stack>
     </Paper>
   </Stack>
 )
@@ -249,10 +241,14 @@ const NextStep = ({ state }: { state: GamersState }) => (
   </TimelineStep>
 )
 
-/** components/PaymentCardDetail。GAP-NEW: カードブランド（PaymentCardBrandIcon）のアイコンが無い */
+/**
+ * components/PaymentCardDetail。カードブランドはゲーマーズでは SvgIcon の手書き（PaymentCardBrandIcon）で、
+ * 同じ図柄（780×500）の AI ゲートウェイの public/card-brands/*.svg を使う。実物は fontSize 60
+ */
 const PaymentCardDetail = () => (
   <Stack flexDirection="row" gap="m" alignItems="center">
-    <Icon name="bill" size="l" />
+    {/* GAP-NEW: 画像の枠（Image）が無い。実物は白地に角丸 0.125rem */}
+    <img src={visaLogo} alt="Visa" width={60} height={38} />
     <Stack gap="xs">
       <Typography size="s" component="span">
         **** **** **** 4242
@@ -373,7 +369,7 @@ const GamersPayment = ({ state, tab }: { state: GamersState; tab: 'detail' | 'hi
  * GAP-NEW: Icon の大きさが l 止まり。完了の段の実物は 150px の CheckCircle を置く
  */
 const RetryPaymentDialog = () => (
-  <SizedDialog style={gamersDialogStyle}>
+  <Dialog isOpen>
     <DialogHeader>
       <DialogTitle>再決済</DialogTitle>
     </DialogHeader>
@@ -382,12 +378,12 @@ const RetryPaymentDialog = () => (
       <Button appearance="transparent">閉じる</Button>
       <Button appearance="outlined">決済</Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 /** ContractCancellationDialog。停止すると続けて満足度のアンケートを出す（「今後表示しない」を選んでいなければ） */
 const ContractCancellationDialog = () => (
-  <SizedDialog style={gamersDialogStyle}>
+  <Dialog isOpen>
     <DialogHeader>
       <DialogTitle>自動更新の停止</DialogTitle>
     </DialogHeader>
@@ -403,25 +399,33 @@ const ContractCancellationDialog = () => (
         停止
       </Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 /** SatisfactionSurveyDialog/model.ts の items */
-const surveyItems = ['よかった', '普通だった', '悪かった']
+const surveyItems = [
+  { label: 'よかった', image: surveyExcellent },
+  { label: '普通だった', image: surveyGood },
+  { label: '悪かった', image: surveyPoor },
+]
 
 const SatisfactionSurveyDialog = () => (
-  <SizedDialog style={gamersDialogStyle}>
+  <Dialog isOpen>
     <DialogHeader>
       <DialogTitle>サーバーの使い心地はどうでしたか？</DialogTitle>
     </DialogHeader>
     <Stack gap="l">
-      {/* GAP-NEW: 画像を選ぶトグル（ToggleButtonGroup）が無く、選択肢の絵（survey-*.svg）も無い。
-          実物は 3 枚の絵を並べ、ラベルは alt にだけある。ここでは枠線のボタンに文字で置く */}
-      <Stack flexDirection="row" gap="m">
-        {surveyItems.map((label) => (
-          <Button key={label} appearance="outlined" size="l" width="third">
-            {label}
-          </Button>
+      {/* GAP-NEW: 画像を選ぶトグル（ToggleButtonGroup）が無い。実物は 3 枚の絵（142×180）を並べ、ラベルは alt にだけある。
+          ここでは絵を並べ、その下に枠線のボタンを文字で置く。
+          GAP-NEW: 画像の枠（Image）が無い。実物は絵を角丸 16px・グラデーションの枠のカードに入れる */}
+      <Stack flexDirection="row" gap="m" justifyContent="center">
+        {surveyItems.map((item) => (
+          <Stack key={item.label} gap="s" alignItems="center">
+            <img src={item.image} alt="" width={142} height={180} />
+            <Button appearance="outlined" size="l">
+              {item.label}
+            </Button>
+          </Stack>
         ))}
       </Stack>
       <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
@@ -429,11 +433,11 @@ const SatisfactionSurveyDialog = () => (
         <Button appearance="transparent">閉じる</Button>
       </Stack>
     </Stack>
-  </SizedDialog>
+  </Dialog>
 )
 
 const InvoiceDialog = () => (
-  <SizedDialog style={gamersDialogStyle}>
+  <Dialog isOpen>
     <DialogHeader>
       <DialogTitle>領収書の宛名</DialogTitle>
     </DialogHeader>
@@ -442,7 +446,7 @@ const InvoiceDialog = () => (
       <Button appearance="transparent">閉じる</Button>
       <Button appearance="outlined">ダウンロード</Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
@@ -452,45 +456,41 @@ const years = Array.from({ length: 10 }, (_, i) => String(2026 + i))
 // GAP-NEW: Select の placeholder の既定値が英語（Select an item）。実物（CcExpSelect）は未選択で空欄
 const RegisterPaymentCardForm = () => (
   <Paper elevation={0} outlined>
-    <Inset>
-      <Stack gap="l">
-        <Typography size="l" fontWeight="bold" component="h3">
-          クレジットカード情報
+    <Stack gap="l">
+      <Typography size="l" fontWeight="bold" component="h3">
+        クレジットカード情報
+      </Typography>
+      <TextField label="名義" autoComplete="cc-name" width="full" />
+      <TextField label="カード番号" autoComplete="cc-number" inputMode="numeric" width="full" />
+      <Grid spacing="xs">
+        <GridItem size={6}>
+          <Select label="有効期限(月)" width="full" autoComplete="cc-exp-month">
+            {months.map((m) => (
+              <SelectItem key={m} id={m}>
+                {m}
+              </SelectItem>
+            ))}
+          </Select>
+        </GridItem>
+        <GridItem size={6}>
+          <Select label="有効期限(年)" width="full" autoComplete="cc-exp-year">
+            {years.map((y) => (
+              <SelectItem key={y} id={y}>
+                {y}
+              </SelectItem>
+            ))}
+          </Select>
+        </GridItem>
+      </Grid>
+      <TextField label="セキュリティコード" type="password" autoComplete="cc-csc" width="full" />
+      <Paper elevation={0} outlined>
+        <Typography size="xs" component="p">
+          当社がお客様から収集した以下の個人情報等は、カード発行会社がおこなう不正利用検知・防止のために、お客様が利用されているカード発行会社へ提供させていただきます。氏名、電話番号、emailアドレス、請求先住所、配送先住所、インターネット利用環境に関する情報等（送信するパラメータの内容に応じて個人情報を記載ください）
+          <br />
+          お客様が利用されているカード発行会社が海外にある場合、これらの情報は当該発行会社が所属する国に移転される場合があります。お客様が未成年の場合、親権者または後見人の承諾を得た上で、本サービスを利用するものとします。
         </Typography>
-        <TextField label="名義" autoComplete="cc-name" width="full" />
-        <TextField label="カード番号" autoComplete="cc-number" inputMode="numeric" width="full" />
-        <Grid spacing="xs">
-          <GridItem size={6}>
-            <Select label="有効期限(月)" width="full" autoComplete="cc-exp-month">
-              {months.map((m) => (
-                <SelectItem key={m} id={m}>
-                  {m}
-                </SelectItem>
-              ))}
-            </Select>
-          </GridItem>
-          <GridItem size={6}>
-            <Select label="有効期限(年)" width="full" autoComplete="cc-exp-year">
-              {years.map((y) => (
-                <SelectItem key={y} id={y}>
-                  {y}
-                </SelectItem>
-              ))}
-            </Select>
-          </GridItem>
-        </Grid>
-        <TextField label="セキュリティコード" type="password" autoComplete="cc-csc" width="full" />
-        <Paper elevation={0} outlined>
-          <Inset>
-            <Typography size="xs" component="p">
-              当社がお客様から収集した以下の個人情報等は、カード発行会社がおこなう不正利用検知・防止のために、お客様が利用されているカード発行会社へ提供させていただきます。氏名、電話番号、emailアドレス、請求先住所、配送先住所、インターネット利用環境に関する情報等（送信するパラメータの内容に応じて個人情報を記載ください）
-              <br />
-              お客様が利用されているカード発行会社が海外にある場合、これらの情報は当該発行会社が所属する国に移転される場合があります。お客様が未成年の場合、親権者または後見人の承諾を得た上で、本サービスを利用するものとします。
-            </Typography>
-          </Inset>
-        </Paper>
-      </Stack>
-    </Inset>
+      </Paper>
+    </Stack>
   </Paper>
 )
 
@@ -500,7 +500,7 @@ const RegisterPaymentCardForm = () => (
  */
 const PaymentMethodChangeDialog = () => (
   // 実物は onClose を渡しておらず、外側を押しても閉じない
-  <SizedDialog style={gamersDialogStyle} isDismissable={false}>
+  <Dialog isOpen isDismissable={false}>
     <DialogHeader>
       <DialogTitle>支払い方法の変更</DialogTitle>
     </DialogHeader>
@@ -512,11 +512,21 @@ const PaymentMethodChangeDialog = () => (
       </Callout>
       <RadioField label="支払い方法" defaultValue="credit-card">
         <Stack gap="m">
-          {/* GAP-NEW: カードブランドのアイコン一覧（PaymentCardBrandIconsList）が無い */}
-          <Radio value="credit-card">クレジットカード</Radio>
+          {/* components/PaymentCardBrandIconsList。実物は 32×20 の白地の枠に SvgIcon。図柄は AI ゲートウェイの card-brands/*.svg で代える。
+              GAP-NEW: 画像の枠（Image）が無い */}
+          <Stack flexDirection="row" gap="xs" alignItems="center">
+            <Radio value="credit-card">クレジットカード</Radio>
+            <Stack flexDirection="row" gap="xxs" alignItems="center">
+              {cardBrands.map((brand) => (
+                <img key={brand.label} src={brand.logo} alt={brand.label} width={32} height={20} />
+              ))}
+            </Stack>
+          </Stack>
           <RegisterPaymentCardForm />
-          {/* GAP-NEW: PayPay のロゴが無い */}
-          <Radio value="paypay">PayPay</Radio>
+          <Stack flexDirection="row" gap="xs" alignItems="center">
+            <Radio value="paypay">PayPay</Radio>
+            <img src={paypayLogo} alt="PayPay" width={30} height={30} />
+          </Stack>
           {/* GAP-NEW: 文中のテキストリンク（Link）が無い。「利用できる支払い方法と対応ブランド」をリンクにできない */}
           <Typography size="xxs" component="p">
             ※この支払い方法は自動更新に対応していません。詳しくは利用できる支払い方法と対応ブランドをご確認ください。
@@ -528,7 +538,7 @@ const PaymentMethodChangeDialog = () => (
       <Button appearance="transparent">キャンセル</Button>
       <Button appearance="outlined">変更</Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 // ─── AI ゲートウェイ：クレジット（features/Billing）───
@@ -554,6 +564,17 @@ const historyColor: Record<string, 'negative' | 'notice' | undefined> = {
 
 // cardLabelText（ブランド名 + formatMaskedNumber）
 const card = 'Visa •••• 4242'
+// CardBrandLabel ではブランド名をロゴで出すので、番号だけを使う
+const cardNumber = '•••• 4242'
+
+// mulpay.ts の supportedCardBrands。ロゴは public/card-brands/*.svg
+const cardBrands = [
+  { label: 'Visa', logo: visaLogo },
+  { label: 'Mastercard', logo: mastercardLogo },
+  { label: 'JCB', logo: jcbLogo },
+  { label: 'American Express', logo: amexLogo },
+  { label: 'Diners Club', logo: dinersLogo },
+]
 
 // dialogs.tsx の manualChargeAmountOptions
 const chargeAmounts = [
@@ -739,10 +760,11 @@ const AiCredit = ({ view }: { view: CreditView }) => {
                 <TableBody renderEmptyState={() => '登録されているカードはありません'}>
                   <Row>
                     <Cell>
-                      {/* GAP-NEW: カードブランドのロゴが無い（CardBrandLabel） */}
+                      {/* CardBrandLabel。実物はロゴ（幅 32px）＋伏せたカード番号 */}
                       <Stack flexDirection="row" gap="xs" alignItems="center">
+                        <img src={visaLogo} alt="Visa" width={32} height={21} />
                         <Typography size="s" component="span">
-                          {card}
+                          {cardNumber}
                         </Typography>
                         <Sticker size="s" color="neutral">
                           既定
@@ -785,21 +807,19 @@ const ChargeDetail = ({
 
 const ChargeDetails = ({ amount, totalLabel }: { amount: string; totalLabel: string }) => (
   <Paper elevation={0} outlined>
-    <Inset>
-      <Stack gap="xs">
-        <ChargeDetail label="クレジット" value={amount} />
-        <ChargeDetail label="手数料" value="￥0" />
-        <ChargeDetail label="消費税" value="￥0" />
-        <Divider />
-        <ChargeDetail label={totalLabel} value={amount} total />
-      </Stack>
-    </Inset>
+    <Stack gap="xs">
+      <ChargeDetail label="クレジット" value={amount} />
+      <ChargeDetail label="手数料" value="￥0" />
+      <ChargeDetail label="消費税" value="￥0" />
+      <Divider />
+      <ChargeDetail label={totalLabel} value={amount} total />
+    </Stack>
   </Paper>
 )
 
 /** ManualChargeDialog。確定すると BillingDialogs の ConfirmDialog（「クレジットを追加しますか？」）が重なる */
 const ManualChargeDialog = () => (
-  <SizedDialog style={aiDialogStyle}>
+  <Dialog isOpen>
     <DialogHeader>
       <DialogTitle>クレジットを追加する</DialogTitle>
       <DialogDescription>追加したクレジットは、購入日から1年で失効します。</DialogDescription>
@@ -837,7 +857,7 @@ const ManualChargeDialog = () => (
       <Button appearance="transparent">閉じる</Button>
       <Button color={primaryColor}>クレジットを追加する</Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 /** 項目名とスイッチの行（styles.switchRow） */
@@ -851,7 +871,7 @@ const SwitchRow = ({ label }: { label: string }) => (
 )
 
 const AutoChargeSettingsDialog = () => (
-  <SizedDialog style={aiDialogStyle}>
+  <Dialog isOpen>
     <DialogHeader>
       <DialogTitle>自動チャージを設定する</DialogTitle>
       <DialogDescription>
@@ -894,11 +914,11 @@ const AutoChargeSettingsDialog = () => (
       <Button appearance="transparent">閉じる</Button>
       <Button color={primaryColor}>保存する</Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 const LowBalanceNotificationDialog = () => (
-  <SizedDialog style={aiDialogStyle}>
+  <Dialog isOpen>
     <DialogHeader>
       <DialogTitle>通知を設定する</DialogTitle>
       <DialogDescription>
@@ -914,15 +934,12 @@ const LowBalanceNotificationDialog = () => (
       <Button appearance="transparent">閉じる</Button>
       <Button color={primaryColor}>保存する</Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
-
-// mulpay.ts の supportedCardBrands
-const supportedCardBrands = ['Visa', 'Mastercard', 'JCB', 'American Express', 'Diners Club']
 
 /** CardRegistrationDialog ＋ CardTokenForm。実物のカード番号・有効期限・セキュリティコードは決済代行の iframe */
 const CardRegistrationDialog = () => (
-  <SizedDialog style={aiDialogStyle}>
+  <Dialog isOpen>
     <DialogHeader>
       <DialogTitle>クレジットカードを追加する</DialogTitle>
     </DialogHeader>
@@ -931,12 +948,10 @@ const CardRegistrationDialog = () => (
         <Typography size="s" color="medium_emphasis" component="span">
           以下のカードをご利用いただけます
         </Typography>
-        {/* GAP-NEW: カードブランドのロゴ（/card-brands/*.svg）が無い。名前を Sticker で並べる */}
+        {/* 実物はロゴを幅 40px で並べる。GAP-NEW: 画像の枠（Image）が無い */}
         <Stack flexDirection="row" gap="xxs">
-          {supportedCardBrands.map((brand) => (
-            <Sticker key={brand} size="s" color="neutral">
-              {brand}
-            </Sticker>
+          {cardBrands.map((brand) => (
+            <img key={brand.label} src={brand.logo} alt={brand.label} width={40} height={26} />
           ))}
         </Stack>
       </Stack>
@@ -955,15 +970,23 @@ const CardRegistrationDialog = () => (
       <Button appearance="transparent">キャンセル</Button>
       <Button color={primaryColor}>カードを登録する</Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 /** ComplimentaryCreditNotice の ComplimentaryCreditGrantedDialog */
 const ComplimentaryCreditGrantedDialog = () => (
-  <SizedDialog style={aiDialogStyle}>
+  <Dialog isOpen>
     <DialogHeader>
-      {/* 実物はキャンペーンごとの画像を見出しにし、画像が無いときだけこの文字を出す。GAP-NEW: 画像の見出しは置けない */}
-      <DialogTitle>クレジットを獲得しました！</DialogTitle>
+      {/* 実物はキャンペーンごとの画像を見出しにし、alt が見出しの名前になる。画像が無いときだけ文字を出す。
+          GAP-NEW: 画像の枠（Image）が無い。実物は CSS で幅 100%・角丸 8px。ここでは原寸（1080 角）だと収まらないので 400 角にする */}
+      <DialogTitle>
+        <img
+          src={complimentaryCreditGranted}
+          alt="条件達成 10,000円分クレジット クレジットを獲得しました！"
+          width={400}
+          height={400}
+        />
+      </DialogTitle>
       {/* キャンペーン名は例 */}
       <DialogDescription>
         条件達成キャンペーンの特典として、10,000円分のクレジットを付与しました。
@@ -979,44 +1002,44 @@ const ComplimentaryCreditGrantedDialog = () => (
       <Button appearance="transparent">閉じる</Button>
       <Button color={primaryColor}>クレジットを確認する</Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 /**
  * ComplimentaryCreditNotice の WelcomeCreditGrantedDialog。会員登録で 1,000 円分を付与したときの案内。
  * GAP-NEW: 実物は styles.welcomeCredit* の独自 CSS で、イラスト・大きな金額・右上の閉じるを組んでいる。
- * イラスト（welcome-credit-illustration.svg）は置けず、金額は Typography の最大の大きさで代用する。
+ * 金額は Typography の最大の大きさで代用する。
  */
 const WelcomeCreditGrantedDialog = () => (
-  <SizedDialog style={aiDialogStyle}>
+  <Dialog isOpen>
     <Stack gap="l">
       <Stack flexDirection="row" justifyContent="flex-end">
         <Button iconOnly appearance="transparent" aria-label="閉じる">
           <Icon name="cross" />
         </Button>
       </Stack>
+      {/* GAP-NEW: 画像の枠（Image）が無い。実物は幅 100% で、上下を負のマージンで閉じるボタンと見出しに重ねる */}
+      <img src={welcomeCreditIllustration} alt="" width={512} height={168} />
       <DialogHeader>
         <DialogTitle>会員登録ありがとうございます！</DialogTitle>
       </DialogHeader>
       <Paper elevation={0} outlined>
-        <Inset>
-          <Stack gap="xxs" alignItems="center">
-            <Typography size="s" component="p">
-              感謝の気持ちを込めて
+        <Stack gap="xxs" alignItems="center">
+          <Typography size="s" component="p">
+            感謝の気持ちを込めて
+          </Typography>
+          <Stack flexDirection="row" gap="xxs" alignItems="flex-end">
+            <Typography size="xxxl" fontWeight="bold" component="span">
+              1,000
             </Typography>
-            <Stack flexDirection="row" gap="xxs" alignItems="flex-end">
-              <Typography size="xxxl" fontWeight="bold" component="span">
-                1,000
-              </Typography>
-              <Typography size="l" fontWeight="bold" component="span">
-                円分
-              </Typography>
-            </Stack>
-            <Typography fontWeight="bold" component="p">
-              クレジットを付与しました！
+            <Typography size="l" fontWeight="bold" component="span">
+              円分
             </Typography>
           </Stack>
-        </Inset>
+          <Typography fontWeight="bold" component="p">
+            クレジットを付与しました！
+          </Typography>
+        </Stack>
       </Paper>
       <Typography component="p">
         今すぐAPIキーを発行して、
@@ -1033,7 +1056,7 @@ const WelcomeCreditGrantedDialog = () => (
         </Button>
       </Stack>
     </Stack>
-  </SizedDialog>
+  </Dialog>
 )
 
 // ─── 画面 ───

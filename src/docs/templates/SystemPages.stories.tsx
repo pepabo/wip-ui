@@ -3,6 +3,7 @@ import { Icon } from '../../Icon'
 import { Stack } from '../../Stack'
 import { Typography } from '../../Typography'
 import { AuthShell } from './AppShell'
+import chatbotImage from './assets/gamers/chatbot.svg'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -109,7 +110,6 @@ export const GamersError: Story = {
 /**
  * ゲーマーズのメンテナンス画面（components/Maintenance）。
  * 実物は見出しの上に 12em のイラスト（chatbot.svg）がある。
- * GAP-NEW: イラストを置く枠（とイラストの素材）が無いので省いている。
  *
  * @summary ゲーマーズのメンテナンス画面
  */
@@ -119,6 +119,8 @@ export const GamersMaintenance: Story = {
       <Card elevation={0}>
         <Stack gap="l">
           <Stack alignItems="center">
+            {/* GAP-NEW: 画像の枠（Image）が無い。実物は 12em 角（192px） */}
+            <img src={chatbotImage} alt="chatbotのイラスト" width={192} height={192} />
             <Typography size="m" fontWeight="bold" component="h1">
               メンテナンス中です
             </Typography>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { createContext, useContext, useState } from 'react'
 
 import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
 import { Button } from '../../Button'
@@ -9,6 +9,7 @@ import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
+import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
@@ -16,7 +17,6 @@ import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
 import { ServerDetailHeader } from './gameServer'
-import { Inset } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -200,57 +200,6 @@ const targetText = (paths: string[]) =>
 
 // ─── 部品 ───
 
-/**
- * GAP-9: Menu が無い。トリガーの直下に Paper を絶対配置で重ね、項目を transparent ボタンで並べている。
- * 外側のクリックや Esc で閉じない・矢印キーで項目を移れない・role="menu" にならない。
- */
-const menuAnchorStyle = { position: 'relative', display: 'inline-block' } as const // GAP-9
-const menuPanelStyle = {
-  position: 'absolute',
-  top: '100%',
-  right: 0,
-  zIndex: 10,
-  width: 220,
-} as const // GAP-9
-
-type MenuItem = { label: string; icon: IconName }
-
-const PseudoMenu = ({
-  isOpen,
-  onOpenChange,
-  trigger,
-  items,
-}: {
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
-  trigger: (toggle: () => void) => ReactNode
-  items: MenuItem[]
-}) => (
-  <div style={menuAnchorStyle}>
-    {trigger(() => onOpenChange(!isOpen))}
-    {isOpen && (
-      <div style={menuPanelStyle}>
-        <Paper elevation={3}>
-          <Stack gap="xxs">
-            {items.map((item) => (
-              <Button
-                key={item.label}
-                appearance="transparent"
-                size="s"
-                width="full"
-                leading={<Icon name={item.icon} size="s" />}
-                onPress={() => onOpenChange(false)}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </Stack>
-        </Paper>
-      </div>
-    )}
-  </div>
-)
-
 // GAP-NEW: TreeView が無い（実アプリは MUI x-tree-view の RichTreeView）。
 // 開閉の iconOnly ボタンとフォルダ名のボタンを並べ、階層の字下げを inline style で付けている。
 // 字下げ 22px は実アプリの itemChildrenIndentation。
@@ -350,7 +299,8 @@ const PathBreadcrumbs = ({
         <Icon name="home" size="m" />
       </Breadcrumb>
       {middle.length > 0 && (
-        // GAP-9: 実アプリは「…」で省略した階層のメニューが開く。Menu が無いので全階層を展開する
+        // GAP-NEW: 実アプリは「…」で省略した階層のメニューが開く。Breadcrumb は中身を必ず Link で包み、
+        // コレクションの項目なので MenuTrigger で包めない。メニューを置けないので全階層を展開する
         <Breadcrumb aria-label={`${middle.length}個の階層を表示`} onPress={() => setShowAll(true)}>
           …
         </Breadcrumb>
@@ -377,56 +327,72 @@ const sortRows = (rows: Resource[], sort?: SortDescriptor) => {
 // ─── ダイアログ ───
 // ボタンの見た目は lib/dialog.ts に合わせる。キャンセル = 文字だけ、確定 = 枠線、削除の確定 = 赤の枠線。
 
-// GAP-NEW: Dialog に幅の指定が無く、中身の幅で縮む。実アプリは MUI の fullWidth（最大 600px）。
-// 中身を 1 枚の div で包んで幅を持たせている。552px は 600px から Dialog の左右の padding を引いた値。
-const dialogWidthStyle = { width: 552, maxWidth: '100%' } // GAP-NEW: Dialog に幅が無い
+// GAP-NEW: Dialog に幅の prop（MUI の fullWidth・最大 600px）が無い。inline style を当てない方針のため未対応で、
+// ダイアログは中身の幅で縮む。
 
-const FullWidthDialog = ({
+/** 開いているダイアログを閉じる。メニューから開いたダイアログを、キャンセル・確定・外側のクリックで閉じる */
+const CloseDialogContext = createContext<() => void>(() => {})
+
+/** 開いた状態の Dialog。閉じる操作は CloseDialogContext から受け取る */
+const OpenDialog = ({
   children,
   role,
 }: {
   children: ReactNode
   role?: 'dialog' | 'alertdialog'
-}) => (
-  <Dialog isOpen role={role}>
-    <div style={dialogWidthStyle}>{children}</div>
-  </Dialog>
+}) => {
+  const close = useContext(CloseDialogContext)
+  return (
+    <Dialog isOpen role={role} onOpenChange={(open) => !open && close()}>
+      {children}
+    </Dialog>
+  )
+}
+
+const CancelButton = () => (
+  <Button appearance="transparent" onPress={useContext(CloseDialogContext)}>
+    キャンセル
+  </Button>
 )
 
 const DialogActions = ({ confirm, negative = false }: { confirm: string; negative?: boolean }) => (
   <DialogFooter>
-    <Button appearance="transparent">キャンセル</Button>
-    <Button appearance="outlined" color={negative ? 'negative' : 'neutral'}>
+    <CancelButton />
+    <Button
+      appearance="outlined"
+      color={negative ? 'negative' : 'neutral'}
+      onPress={useContext(CloseDialogContext)}
+    >
       {confirm}
     </Button>
   </DialogFooter>
 )
 
-/** CreateResourceDialog（新規ファイル）。新規フォルダは見出しとラベルが「フォルダ」になるだけ */
-const CreateResourceDialog = () => (
-  <FullWidthDialog>
+/** CreateResourceDialog。新規フォルダは見出しとラベルが「フォルダ」になるだけ */
+const CreateResourceDialog = ({ folder = false }: { folder?: boolean }) => (
+  <OpenDialog>
     <DialogHeader>
-      <DialogTitle>新規ファイル作成</DialogTitle>
+      <DialogTitle>{folder ? '新規フォルダ作成' : '新規ファイル作成'}</DialogTitle>
     </DialogHeader>
-    <TextField label="ファイル名" width="full" />
+    <TextField label={folder ? 'フォルダ名' : 'ファイル名'} width="full" />
     <DialogActions confirm="作成" />
-  </FullWidthDialog>
+  </OpenDialog>
 )
 
 /** ChangeNameDialog。今の名前が入った状態で開く */
 const ChangeNameDialog = ({ current }: { current: string }) => (
-  <FullWidthDialog>
+  <OpenDialog>
     <DialogHeader>
       <DialogTitle>名前変更</DialogTitle>
     </DialogHeader>
     <TextField label="名前" width="full" defaultValue={current} />
     <DialogActions confirm="保存" />
-  </FullWidthDialog>
+  </OpenDialog>
 )
 
 /** UpdateResourceDialog */
 const UpdateResourceDialog = ({ name }: { name: string }) => (
-  <FullWidthDialog>
+  <OpenDialog>
     <DialogHeader>
       <DialogTitle>「{name}」を編集</DialogTitle>
     </DialogHeader>
@@ -439,43 +405,41 @@ const UpdateResourceDialog = ({ name }: { name: string }) => (
       defaultValue={serverProperties}
     />
     <DialogActions confirm="保存" />
-  </FullWidthDialog>
+  </OpenDialog>
 )
 
 /** UploadResourceDialog。ドロップゾーンと、ファイル・フォルダの選択ボタン */
 const UploadResourceDialog = () => (
-  <FullWidthDialog>
+  <OpenDialog>
     <DialogHeader>
       <DialogTitle>アップロード</DialogTitle>
     </DialogHeader>
     {/* GAP-NEW: ドロップゾーン（DropZone / FileTrigger）が無い。outlined の Paper で面だけ作っている */}
     <Paper outlined>
-      <Inset>
-        <Stack gap="m" alignItems="center">
-          <Typography component="span" color="medium_emphasis">
-            <Icon name="upload" size="l" />
-          </Typography>
-          <Stack gap="xs" alignItems="center">
-            <Typography size="s">アップロードするファイルかフォルダをドラッグ＆ドロップ</Typography>
-            <Typography size="s">または</Typography>
-          </Stack>
-          <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap={{ xxs: 'xs', m: 'l' }}>
-            {/* GAP-NEW: UploadFile / DriveFolderUpload に当たるアイコンが無い */}
-            <Button appearance="outlined" leading={<Icon name="note" size="s" />}>
-              ファイルを選択
-            </Button>
-            <Button appearance="outlined" leading={<Icon name="folder" size="s" />}>
-              フォルダを選択
-            </Button>
-          </Stack>
-          <Typography size="xs">名前が同じ場合は上書きされます。</Typography>
+      <Stack gap="m" alignItems="center">
+        <Typography component="span" color="medium_emphasis">
+          <Icon name="upload" size="l" />
+        </Typography>
+        <Stack gap="xs" alignItems="center">
+          <Typography size="s">アップロードするファイルかフォルダをドラッグ＆ドロップ</Typography>
+          <Typography size="s">または</Typography>
         </Stack>
-      </Inset>
+        <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap={{ xxs: 'xs', m: 'l' }}>
+          {/* GAP-NEW: UploadFile / DriveFolderUpload に当たるアイコンが無い */}
+          <Button appearance="outlined" leading={<Icon name="note" size="s" />}>
+            ファイルを選択
+          </Button>
+          <Button appearance="outlined" leading={<Icon name="folder" size="s" />}>
+            フォルダを選択
+          </Button>
+        </Stack>
+        <Typography size="xs">名前が同じ場合は上書きされます。</Typography>
+      </Stack>
     </Paper>
     <DialogFooter>
-      <Button appearance="transparent">キャンセル</Button>
+      <CancelButton />
     </DialogFooter>
-  </FullWidthDialog>
+  </OpenDialog>
 )
 
 /** MoveResourceDialog。現在の場所と、移動先を選ぶディレクトリツリー */
@@ -483,7 +447,7 @@ const MoveResourceDialog = ({ targets }: { targets: string[] }) => {
   const from = parentOf(targets[0])
   const [to, setTo] = useState(from)
   return (
-    <FullWidthDialog>
+    <OpenDialog>
       <DialogHeader>
         <DialogTitle>{targetText(targets)}を移動</DialogTitle>
       </DialogHeader>
@@ -503,20 +467,18 @@ const MoveResourceDialog = ({ targets }: { targets: string[] }) => {
           </Typography>
           {/* 実アプリは高さ 332px で中をスクロールする */}
           <Paper outlined>
-            <Inset>
-              <DirectoryTree activePath={to} onSelect={setTo} label="移動先のフォルダ" />
-            </Inset>
+            <DirectoryTree activePath={to} onSelect={setTo} label="移動先のフォルダ" />
           </Paper>
         </Stack>
       </Stack>
       <DialogActions confirm="移動" />
-    </FullWidthDialog>
+    </OpenDialog>
   )
 }
 
 /** DeleteResourceDialog */
 const DeleteResourceDialog = ({ targets }: { targets: string[] }) => (
-  <FullWidthDialog role="alertdialog">
+  <OpenDialog role="alertdialog">
     <DialogHeader>
       <DialogTitle>{targetText(targets)}を削除しますか？</DialogTitle>
     </DialogHeader>
@@ -527,28 +489,57 @@ const DeleteResourceDialog = ({ targets }: { targets: string[] }) => (
       </Callout>
     </Stack>
     <DialogActions confirm="削除" negative />
-  </FullWidthDialog>
+  </OpenDialog>
 )
 
 // ─── 画面 ───
 
 /** MenuItems の項目。複数選択では編集・名前変更・パスのコピーが消え、編集できない種類では編集が消える */
-const menuItems = (targets: string[]): MenuItem[] => {
+const ResourceMenu = ({
+  targets,
+  onOpenDialog,
+}: {
+  targets: string[]
+  onOpenDialog: (dialog: ReactNode) => void
+}) => {
   const one = targets.length === 1 ? allResources.find((r) => r.path === targets[0]) : undefined
   // GAP-NEW: DriveFileMove / DriveFileRenameOutline / CopyAll に当たるアイコンが無い
-  return [
-    { label: 'ダウンロード', icon: 'download' },
-    { label: '複製', icon: 'copy' },
-    { label: '移動', icon: 'arrow_right' },
-    ...(one && isEditable(one) ? [{ label: '編集', icon: 'pencil' as const }] : []),
-    ...(one
-      ? [
-          { label: '名前変更', icon: 'note' as const },
-          { label: 'パスのコピー', icon: 'clip' as const },
-        ]
-      : []),
-    { label: '削除', icon: 'garbage_can' },
-  ]
+  return (
+    <Menu placement="bottom end">
+      <MenuItem leading={<Icon name="download" size="s" />}>ダウンロード</MenuItem>
+      <MenuItem leading={<Icon name="copy" size="s" />}>複製</MenuItem>
+      <MenuItem
+        leading={<Icon name="arrow_right" size="s" />}
+        onAction={() => onOpenDialog(<MoveResourceDialog targets={targets} />)}
+      >
+        移動
+      </MenuItem>
+      {one && isEditable(one) ? (
+        <MenuItem
+          leading={<Icon name="pencil" size="s" />}
+          onAction={() => onOpenDialog(<UpdateResourceDialog name={one.name} />)}
+        >
+          編集
+        </MenuItem>
+      ) : null}
+      {one ? (
+        <MenuItem
+          leading={<Icon name="note" size="s" />}
+          onAction={() => onOpenDialog(<ChangeNameDialog current={one.name} />)}
+        >
+          名前変更
+        </MenuItem>
+      ) : null}
+      {one ? <MenuItem leading={<Icon name="clip" size="s" />}>パスのコピー</MenuItem> : null}
+      <MenuItem
+        color="negative"
+        leading={<Icon name="garbage_can" size="s" />}
+        onAction={() => onOpenDialog(<DeleteResourceDialog targets={targets} />)}
+      >
+        削除
+      </MenuItem>
+    </Menu>
+  )
 }
 
 const bulkActions = [
@@ -569,8 +560,7 @@ const FileManager = ({
 }) => {
   const [path, setPath] = useState(initialPath)
   const [selected, setSelected] = useState<string[]>(initialSelected)
-  const [rowMenu, setRowMenu] = useState<string | null>(null)
-  const [addMenu, setAddMenu] = useState(false)
+  const [openDialog, setOpenDialog] = useState<ReactNode>(dialog)
   const [sort, setSort] = useState<SortDescriptor>()
 
   const rows = sortRows(initialFs[path] ?? [], sort)
@@ -591,70 +581,68 @@ const FileManager = ({
           {/* GAP-NEW: 幅で要素を隠す手段が無い。実アプリは lg 未満でツリーを出さないが、ここでは上に積まれる */}
           {/* GAP-NEW: GridItem に境界線を付けられず、ツリーと一覧の間の縦罫（borderRight）が無い */}
           <GridItem size={{ xxs: 12, l: 3 }}>
-            <Inset>
-              <DirectoryTree activePath={path} onSelect={navigate} label="フォルダ" />
-            </Inset>
+            <DirectoryTree activePath={path} onSelect={navigate} label="フォルダ" />
           </GridItem>
           <GridItem size={{ xxs: 12, l: 9 }}>
             <Stack gap="xxs">
               {/* FileBrowser/Header */}
-              <Inset>
-                <Stack
-                  flexDirection="row"
-                  gap="s"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <PathBreadcrumbs key={path} path={path} onNavigate={navigate} />
-                  {/* FileBrowser/Header/SingleActionButton */}
-                  <PseudoMenu
-                    isOpen={addMenu}
-                    onOpenChange={setAddMenu}
-                    trigger={(toggle) => (
-                      <Button
-                        appearance="outlined"
-                        leading={<Icon name="plus" size="s" />}
-                        trailing={<Icon name="chevron_down" size="s" />}
-                        aria-expanded={addMenu}
-                        onPress={toggle}
-                      >
-                        追加
-                      </Button>
-                    )}
-                    items={[
-                      { label: 'アップロード', icon: 'upload' },
-                      { label: '新規ファイル', icon: 'note' },
-                      { label: '新規フォルダ', icon: 'folder' },
-                    ]}
-                  />
-                </Stack>
-              </Inset>
+              <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
+                <PathBreadcrumbs key={path} path={path} onNavigate={navigate} />
+                {/* FileBrowser/Header/SingleActionButton */}
+                <MenuTrigger>
+                  <Button
+                    appearance="outlined"
+                    leading={<Icon name="plus" size="s" />}
+                    trailing={<Icon name="chevron_down" size="s" />}
+                  >
+                    追加
+                  </Button>
+                  <Menu placement="bottom end">
+                    <MenuItem
+                      leading={<Icon name="upload" size="s" />}
+                      onAction={() => setOpenDialog(<UploadResourceDialog />)}
+                    >
+                      アップロード
+                    </MenuItem>
+                    <MenuItem
+                      leading={<Icon name="note" size="s" />}
+                      onAction={() => setOpenDialog(<CreateResourceDialog />)}
+                    >
+                      新規ファイル
+                    </MenuItem>
+                    <MenuItem
+                      leading={<Icon name="folder" size="s" />}
+                      onAction={() => setOpenDialog(<CreateResourceDialog folder />)}
+                    >
+                      新規フォルダ
+                    </MenuItem>
+                  </Menu>
+                </MenuTrigger>
+              </Stack>
               <Divider />
               {/* FileBrowser/MultiActionSection */}
-              <Inset>
-                <Stack
-                  flexDirection={{ xxs: 'column', m: 'row' }}
-                  gap="s"
-                  justifyContent="space-between"
-                >
-                  <Typography size="s" component="span">
-                    {noSelection ? '未選択' : `${selected.length}個選択中`}
-                  </Typography>
-                  <Stack flexDirection="row" gap="s">
-                    {bulkActions.map(([label, icon]) => (
-                      <Button
-                        key={label}
-                        appearance="outlined"
-                        size="s"
-                        leading={<Icon name={icon} size="s" />}
-                        isDisabled={noSelection}
-                      >
-                        {label}
-                      </Button>
-                    ))}
-                  </Stack>
+              <Stack
+                flexDirection={{ xxs: 'column', m: 'row' }}
+                gap="s"
+                justifyContent="space-between"
+              >
+                <Typography size="s" component="span">
+                  {noSelection ? '未選択' : `${selected.length}個選択中`}
+                </Typography>
+                <Stack flexDirection="row" gap="s">
+                  {bulkActions.map(([label, icon]) => (
+                    <Button
+                      key={label}
+                      appearance="outlined"
+                      size="s"
+                      leading={<Icon name={icon} size="s" />}
+                      isDisabled={noSelection}
+                    >
+                      {label}
+                    </Button>
+                  ))}
                 </Stack>
-              </Inset>
+              </Stack>
               <Divider />
               {/* FileBrowser/ResourcesTable。行を押すとフォルダが開く（実アプリはダブルクリック） */}
               <Table
@@ -686,11 +674,9 @@ const FileManager = ({
                 </TableHeader>
                 <TableBody
                   renderEmptyState={() => (
-                    <Inset>
-                      <Typography size="s" color="medium_emphasis">
-                        このフォルダにはファイルがありません
-                      </Typography>
-                    </Inset>
+                    <Typography size="s" color="medium_emphasis">
+                      このフォルダにはファイルがありません
+                    </Typography>
                   )}
                 >
                   {rows.map((r) => (
@@ -718,30 +704,28 @@ const FileManager = ({
                       <Cell>{r.updatedAt}</Cell>
                       <Cell>
                         {/* FileBrowser/ResourcesTable/MenuCell。⋮ を押した行だけを選び直してメニューを開く */}
-                        <PseudoMenu
-                          isOpen={rowMenu === r.path}
+                        <MenuTrigger
                           onOpenChange={(open) => {
                             if (open && !(selected.includes(r.path) && selected.length > 1)) {
                               setSelected([r.path])
                             }
-                            setRowMenu(open ? r.path : null)
                           }}
-                          trigger={(toggle) => (
-                            <Button
-                              appearance="transparent"
-                              size="s"
-                              iconOnly
-                              aria-label={`${r.name}の操作`}
-                              aria-expanded={rowMenu === r.path}
-                              onPress={toggle}
-                            >
-                              <Icon name="ellipsis_vertical" size="m" />
-                            </Button>
-                          )}
-                          items={menuItems(
-                            selected.includes(r.path) && selected.length > 1 ? selected : [r.path]
-                          )}
-                        />
+                        >
+                          <Button
+                            appearance="transparent"
+                            size="s"
+                            iconOnly
+                            aria-label={`${r.name}の操作`}
+                          >
+                            <Icon name="ellipsis_vertical" size="m" aria-hidden="true" />
+                          </Button>
+                          <ResourceMenu
+                            targets={
+                              selected.includes(r.path) && selected.length > 1 ? selected : [r.path]
+                            }
+                            onOpenDialog={setOpenDialog}
+                          />
+                        </MenuTrigger>
                       </Cell>
                     </Row>
                   ))}
@@ -751,7 +735,9 @@ const FileManager = ({
           </GridItem>
         </Grid>
       </Paper>
-      {dialog}
+      <CloseDialogContext.Provider value={() => setOpenDialog(null)}>
+        {openDialog}
+      </CloseDialogContext.Provider>
     </AppShell>
   )
 }
@@ -763,11 +749,9 @@ const InitState = ({ state }: { state: 'loading' | 'error' }) => (
     {state === 'loading' ? (
       // GAP-NEW: Skeleton が無い。面の中央に Loader を置いて代用している
       <Paper elevation={1}>
-        <Inset>
-          <Stack alignItems="center">
-            <Loader size="l" aria-label="読み込み中" />
-          </Stack>
-        </Inset>
+        <Stack alignItems="center">
+          <Loader size="l" aria-label="読み込み中" />
+        </Stack>
       </Paper>
     ) : (
       <Callout color="negative">
@@ -789,7 +773,6 @@ const InitState = ({ state }: { state: 'loading' | 'error' }) => (
 
 /**
  * ゲームサーバーのファイル管理。左にフォルダのツリー（Root = /opt）、右にパンくず・一括操作・ファイル一覧を置く。
- * 「追加」と行の ⋮ は、Menu が無いため Paper を重ねて代用している（GAP-9）。
  *
  * @summary ツリーとファイル一覧
  */

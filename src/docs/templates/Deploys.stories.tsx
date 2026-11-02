@@ -43,15 +43,12 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// GAP-1: 一覧の行。実物は px-6 py-4（行）と px-6 py-2（列見出し）。
-const rowStyle = { paddingBlock: 16, paddingInline: 24 }
-const headerRowStyle = { paddingBlock: 8, paddingInline: 24 }
-// GAP-1: ビルドログの面。実物は px-4 pb-4。
+// GAP-1: Paper に padding が無い。一覧の行（実物は px-6 py-4）と列見出し（px-6 py-2）の余白。
+//        inline style を当てない方針のため未対応。
+// GAP-1: 余白をとる部品が無い。読み込み中・取得失敗・空の案内（実物は px-6 py-16）の余白。
+//        inline style を当てない方針のため未対応。
+// ビルドログの面（ログ表示面そのものが無い）の余白。実物は px-4 pb-4。
 const logStyle = { paddingInline: 16, paddingBlock: 10 }
-// GAP-1: 読み込み中・取得失敗・空の案内。実物は px-6 py-16。
-const noticeStyle = { paddingBlock: 64, paddingInline: 24 }
-
-const Row = ({ children }: { children: ReactNode }) => <div style={rowStyle}>{children}</div>
 
 // GAP-NEW: 行全体をリンクにする一覧（stretched link / GridList）が無い。
 // 実物は行ごと next/link で包み hover で bg-neutral-50 にしている。Paper に role="link" を付けて代える。
@@ -74,7 +71,7 @@ const RowLink = ({
       if (e.key === 'Enter') onOpen()
     }}
   >
-    <Row>{children}</Row>
+    {children}
   </Paper>
 )
 
@@ -138,22 +135,18 @@ const MetaRow = ({ label, children }: { label: string; children: ReactNode }) =>
 
 /** 実物の `flex justify-center py-16` + Loader。 */
 const LoadingBody = () => (
-  <div style={noticeStyle}>
-    <Stack alignItems="center">
-      <Loader size="m" message="読み込み中" />
-    </Stack>
-  </div>
+  <Stack alignItems="center">
+    <Loader size="m" message="読み込み中" />
+  </Stack>
 )
 
 /** 実物の `px-6 py-16 text-center` の 1 行（面を持たない）。 */
 const CenteredMessage = ({ message }: { message: string }) => (
-  <div style={noticeStyle}>
-    <Stack alignItems="center">
-      <Typography component="div" size="s" color="low_emphasis">
-        {message}
-      </Typography>
-    </Stack>
-  </div>
+  <Stack alignItems="center">
+    <Typography component="div" size="s" color="low_emphasis">
+      {message}
+    </Typography>
+  </Stack>
 )
 
 // ─── データ（実物の proto の状態と同じ区分。値はダミー） ───
@@ -459,42 +452,38 @@ const DeployList = ({
     </Stack>
     {project.deploys.length === 0 ? (
       <Paper elevation={0} outlined>
-        <div style={noticeStyle}>
-          <Stack gap="xxs" alignItems="center">
-            <Typography component="div" size="m" fontWeight="bold">
-              デプロイはまだありません
-            </Typography>
-            <Typography component="div" size="s" color="medium_emphasis">
-              <Typography component="span" size="s" fontWeight="bold">
-                lolipop deploy
-              </Typography>{' '}
-              を実行すると、ここにデプロイ履歴が表示されます
-            </Typography>
-          </Stack>
-        </div>
+        <Stack gap="xxs" alignItems="center">
+          <Typography component="div" size="m" fontWeight="bold">
+            デプロイはまだありません
+          </Typography>
+          <Typography component="div" size="s" color="medium_emphasis">
+            <Typography component="span" size="s" fontWeight="bold">
+              lolipop deploy
+            </Typography>{' '}
+            を実行すると、ここにデプロイ履歴が表示されます
+          </Typography>
+        </Stack>
       </Paper>
     ) : (
       <Paper elevation={0} outlined>
         {/* GAP-NEW: 表示/非表示のレスポンシブ指定が無い。実物は md 未満で列見出しを隠す */}
-        <div style={headerRowStyle}>
-          <Grid spacing="s">
-            <GridItem size={{ xxs: 8, m: 9 }}>
+        <Grid spacing="s">
+          <GridItem size={{ xxs: 8, m: 9 }}>
+            <Typography component="span" size="xs" color="medium_emphasis">
+              デプロイ
+            </Typography>
+          </GridItem>
+          <GridItem size={{ xxs: 4, m: 3 }}>
+            <Stack flexDirection="row" justifyContent="space-between">
               <Typography component="span" size="xs" color="medium_emphasis">
-                デプロイ
+                状態
               </Typography>
-            </GridItem>
-            <GridItem size={{ xxs: 4, m: 3 }}>
-              <Stack flexDirection="row" justifyContent="space-between">
-                <Typography component="span" size="xs" color="medium_emphasis">
-                  状態
-                </Typography>
-                <Typography component="span" size="xs" color="medium_emphasis">
-                  最終デプロイ
-                </Typography>
-              </Stack>
-            </GridItem>
-          </Grid>
-        </div>
+              <Typography component="span" size="xs" color="medium_emphasis">
+                最終デプロイ
+              </Typography>
+            </Stack>
+          </GridItem>
+        </Grid>
         {project.deploys.map((d) => (
           <Stack key={d.id}>
             <Divider />
@@ -820,30 +809,28 @@ const DeployDetail = ({
         {stagesOf(d).map((stage, i) => (
           <Stack key={stage.key}>
             {i > 0 && <Divider />}
-            <Row>
-              <Stack gap="s">
-                <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
-                  <Stack flexDirection="row" gap="xs" alignItems="center">
-                    <StageGlyph state={stage.state} />
-                    <Typography
-                      component="span"
-                      size="s"
-                      color={stage.state === 'pending' ? 'low_emphasis' : 'high_emphasis'}
-                    >
-                      {stage.label}
-                    </Typography>
-                  </Stack>
+            <Stack gap="s">
+              <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
+                <Stack flexDirection="row" gap="xs" alignItems="center">
+                  <StageGlyph state={stage.state} />
                   <Typography
                     component="span"
                     size="s"
                     color={stage.state === 'pending' ? 'low_emphasis' : 'high_emphasis'}
                   >
-                    {stage.detail}
+                    {stage.label}
                   </Typography>
                 </Stack>
-                {stage.key === 'build' && d.log && <BuildLog lines={d.log} />}
+                <Typography
+                  component="span"
+                  size="s"
+                  color={stage.state === 'pending' ? 'low_emphasis' : 'high_emphasis'}
+                >
+                  {stage.detail}
+                </Typography>
               </Stack>
-            </Row>
+              {stage.key === 'build' && d.log && <BuildLog lines={d.log} />}
+            </Stack>
           </Stack>
         ))}
       </Paper>

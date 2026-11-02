@@ -7,6 +7,7 @@ import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Paper } from '../../Paper'
+import { SideNavigation, SideNavigationItem } from '../../SideNavigation'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Typography } from '../../Typography'
@@ -39,19 +40,10 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// GAP-1: 節の面。実物は px-6 py-4。
-const sectionStyle = { paddingBlock: 16, paddingInline: 24 }
-// GAP-1: 読み込み中・取得失敗・空（px-6 py-16）と、未連携の案内（px-6 py-10）。
-const noticeStyle = { paddingBlock: 64, paddingInline: 24 }
-const emptyStyle = { paddingBlock: 40, paddingInline: 24 }
-// GAP-1: セッションの行。実物は py-3。
-const sessionRowStyle = { paddingBlock: 12 }
-
-const Section = ({ children }: { children: ReactNode }) => (
-  <Paper elevation={0} outlined>
-    <div style={sectionStyle}>{children}</div>
-  </Paper>
-)
+// GAP-1: Paper に padding が無い。節の面（実物は px-6 py-4）の余白。inline style を当てない方針のため未対応。
+// GAP-1: 余白をとる部品が無い。読み込み中・取得失敗・空（実物は px-6 py-16）と、
+//        未連携の案内（px-6 py-10）の余白。inline style を当てない方針のため未対応。
+// セッションの行（実物は py-3）の上下は、一覧の Stack の gap で付けている。
 
 const DOT_COLOR: Record<StickerColor, TypographyColor> = {
   positive: 'positive',
@@ -75,21 +67,17 @@ const StatusIndicator = ({ color, children }: { color: StickerColor; children: R
 )
 
 const LoadingBody = () => (
-  <div style={noticeStyle}>
-    <Stack alignItems="center">
-      <Loader size="m" message="読み込み中" />
-    </Stack>
-  </div>
+  <Stack alignItems="center">
+    <Loader size="m" message="読み込み中" />
+  </Stack>
 )
 
 const CenteredMessage = ({ message }: { message: string }) => (
-  <div style={noticeStyle}>
-    <Stack alignItems="center">
-      <Typography component="div" size="s" color="low_emphasis">
-        {message}
-      </Typography>
-    </Stack>
-  </div>
+  <Stack alignItems="center">
+    <Typography component="div" size="s" color="low_emphasis">
+      {message}
+    </Typography>
+  </Stack>
 )
 
 // GAP-NEW: 箇条書き（ul / li）の部品が無い。実物は ul.list-disc の中に Typography s。
@@ -143,24 +131,19 @@ const SettingsLayout = ({
     </Typography>
     <Grid spacing="l">
       <GridItem size={{ xxs: 12, m: 3 }}>
-        {/* GAP-11: 現在地を appearance でしか表せず、aria-current="page" を渡せない。
-            GAP-NEW: width="full" のボタンは中身が中央寄せで、実物の左寄せの行（px-3 py-2）にならない */}
-        <nav aria-label="デベロッパー設定">
-          <Stack gap="xxs">
-            {NAV_ITEMS.map((item) => (
-              <Button
-                key={item.page}
-                appearance={item.page === current ? 'flat' : 'transparent'}
-                color="neutral"
-                size="s"
-                width="full"
-                onPress={() => onNavigate(item.page)}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </Stack>
-        </nav>
+        {/* components/SettingsNav。実物は next/link で各ページへ移動する */}
+        <SideNavigation aria-label="デベロッパー設定">
+          {NAV_ITEMS.map((item) => (
+            <SideNavigationItem
+              key={item.page}
+              href="#"
+              isCurrent={item.page === current}
+              onPress={() => onNavigate(item.page)}
+            >
+              {item.label}
+            </SideNavigationItem>
+          ))}
+        </SideNavigation>
       </GridItem>
       <GridItem size={{ xxs: 12, m: 9 }}>{children}</GridItem>
     </Grid>
@@ -200,19 +183,17 @@ const GitHubConnectionBody = ({
   }
   if (authorization === null) {
     return (
-      <div style={emptyStyle}>
-        <Stack gap="s" alignItems="center">
-          <Stack gap="xxs" alignItems="center">
-            <Typography component="div" size="m" fontWeight="bold">
-              連携している GitHub アカウントはありません。
-            </Typography>
-            <Typography component="div" size="s" color="medium_emphasis">
-              GitHub と接続すると、リポジトリからプロジェクトを作成できます。
-            </Typography>
-          </Stack>
-          <LinkButton href="#">GitHub と接続</LinkButton>
+      <Stack gap="s" alignItems="center">
+        <Stack gap="xxs" alignItems="center">
+          <Typography component="div" size="m" fontWeight="bold">
+            連携している GitHub アカウントはありません。
+          </Typography>
+          <Typography component="div" size="s" color="medium_emphasis">
+            GitHub と接続すると、リポジトリからプロジェクトを作成できます。
+          </Typography>
         </Stack>
-      </div>
+        <LinkButton href="#">GitHub と接続</LinkButton>
+      </Stack>
     )
   }
   return (
@@ -294,7 +275,7 @@ const GitHubSettings = ({
   const [dialogOpen, setDialogOpen] = useState(initialDialogOpen)
   return (
     <>
-      <Section>
+      <Paper elevation={0} outlined>
         <Stack gap="m">
           <Typography component="h2" size="m" fontWeight="bold">
             GitHub 連携
@@ -305,7 +286,7 @@ const GitHubSettings = ({
             onDisconnect={() => setDialogOpen(true)}
           />
         </Stack>
-      </Section>
+      </Paper>
       {dialogOpen && authorization && (
         <GitHubDisconnectDialog
           githubUserLogin={authorization.githubUserLogin}
@@ -401,37 +382,35 @@ const SessionRow = ({
   onDelete: () => void
   onLogout: () => void
 }) => (
-  <div style={sessionRowStyle}>
-    <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
-      <Stack gap="xxs">
-        <Stack flexDirection="row" gap="xs" alignItems="center">
-          <Typography component="span" size="s" fontWeight="bold">
-            {session.kindLabel}
-          </Typography>
-          {session.current && (
-            <Sticker color="informative" size="s">
-              現在のセッション
-            </Sticker>
-          )}
-        </Stack>
-        <InlineFields
-          fields={[
-            { label: '作成', value: session.createdAtLabel },
-            { label: '有効期限', value: session.expiresAtLabel },
-          ]}
-        />
+  <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
+    <Stack gap="xxs">
+      <Stack flexDirection="row" gap="xs" alignItems="center">
+        <Typography component="span" size="s" fontWeight="bold">
+          {session.kindLabel}
+        </Typography>
+        {session.current && (
+          <Sticker color="informative" size="s">
+            現在のセッション
+          </Sticker>
+        )}
       </Stack>
-      {session.current ? (
-        <Button appearance="transparent" color="negative" size="s" onPress={onLogout}>
-          ログアウト
-        </Button>
-      ) : (
-        <Button appearance="transparent" color="negative" size="s" onPress={onDelete}>
-          削除
-        </Button>
-      )}
+      <InlineFields
+        fields={[
+          { label: '作成', value: session.createdAtLabel },
+          { label: '有効期限', value: session.expiresAtLabel },
+        ]}
+      />
     </Stack>
-  </div>
+    {session.current ? (
+      <Button appearance="transparent" color="negative" size="s" onPress={onLogout}>
+        ログアウト
+      </Button>
+    ) : (
+      <Button appearance="transparent" color="negative" size="s" onPress={onDelete}>
+        削除
+      </Button>
+    )}
+  </Stack>
 )
 
 const SessionSettings = ({
@@ -445,7 +424,7 @@ const SessionSettings = ({
   const [dialog, setDialog] = useState<SessionDialog>(initialDialog)
   return (
     <>
-      <Section>
+      <Paper elevation={0} outlined>
         <Stack gap="m">
           <Stack gap="xxs">
             <Typography component="h2" size="m" fontWeight="bold">
@@ -463,9 +442,9 @@ const SessionSettings = ({
           ) : sessions.length === 0 ? (
             <CenteredMessage message="有効なセッションはありません。" />
           ) : (
-            <Stack>
+            <Stack gap="s">
               {sessions.map((s, i) => (
-                <Stack key={s.id}>
+                <Stack key={s.id} gap="s">
                   {i > 0 && <Divider />}
                   <SessionRow
                     session={s}
@@ -477,7 +456,7 @@ const SessionSettings = ({
             </Stack>
           )}
         </Stack>
-      </Section>
+      </Paper>
       {dialog.kind === 'delete' && (
         <SessionDeleteDialog session={dialog.session} onClose={() => setDialog({ kind: 'none' })} />
       )}

@@ -12,16 +12,15 @@ import type { RadioGroupProps } from '../../Radio'
 
 /**
  * テンプレート共通の部品。
- * コンポーネントの組み合わせだけで作り、独自スタイルは Card の padding 1 箇所に閉じ込める。
- * ここに inline style が増えたら、それは wip-ui 側に足りない prop の候補。
+ * コンポーネントの組み合わせだけで作り、既存コンポーネントには inline style を当てない。
+ * 見た目が崩れる箇所は、そのまま wip-ui 側に足りない prop の記録として残す。
  */
 
 // ── wip-ui に足りないもの（テンプレートを実際に組んで見つかった穴の一覧）──
 // 各テンプレートで回避策を書くときは、この番号を `GAP-n` として参照する。
 //
-// GAP-1 Paper に padding が無く、内容が面の端に接する。→ Card で div を 1 枚かぶせている。
-//       padding の 24px は adapter.get-spacing-size(l) の代わりに置いた暫定値で、
-//       トークンに裏付けが無い。Paper に padding prop が付いたら Card ごと不要になる。
+// GAP-1 Paper に padding prop が無く、内容が面の端に接する。inline style を当てない方針のため未対応。
+//       Card / Inset は呼び出し側を変えずに済むよう名前だけ残している（Inset は素通し）。
 // GAP-2 Stepper（ウィザードの進行表示）が無い。
 // GAP-3 「選択できるカード」（MUI の CardActionArea 相当）が無い。→ Paper + Button で組んでいる。
 // GAP-4 Divider にラベルを入れられない（hr を描画するため children 不可）。
@@ -34,16 +33,15 @@ import type { RadioGroupProps } from '../../Radio'
 //       → RadioField が Typography でラベルを描き、aria-label と二重に文字列を持っている。
 // GAP-8 RadioGroup の orientation が効かない。型は受け取るが scss が縦並び固定。
 //       → RadioField の orientation="horizontal" が Stack で横に並べ直している。
-// GAP-9 Menu / DropdownMenu が無い。→ 行の操作は iconOnly ボタンを並べるか、
-//       開く先の無い ellipsis ボタンを置くだけになっている。
+// GAP-9 （解消）Menu が入ったので、行の操作やユーザーメニューは Menu で組んでいる。
 // GAP-10 Tab が TabPanel を再エクスポートしていないため、react-aria-components から直接 import している。
-// GAP-11 サイドナビの現在地を appearance でしか表現できず、aria-current を渡す口が無い。
+// GAP-11 （解消）SideNavigation の isCurrent で現在地を示している。
 // GAP-12 AppBar appearance="filled" の上でボタンを白くする知識が AppBar 側に無い。
 //        → AppShell が呼び出し側で appearance を出し分けている。
 // GAP-13 Container の最大幅が xl（1440px）止まりで「幅制限なし」が無く、Stack にも padding が無い。
-//        → AppShell の width="wide" が inline style で左右の余白を作っている。
-// GAP-14 Drawer / SideNavigation が無い。
-//        → モバイル幅でサイドナビが全幅ボタン 7 個として縦に積まれる（Mobile ストーリーで確認できる）。
+//        inline style を当てない方針のため未対応。AppShell の width="wide" は本文が画面の端に接する。
+// GAP-14 Drawer が無く、SideNavigation に狭い画面での切り替えも無い。
+//        → モバイル幅でサイドナビが本文の上に積まれる（Mobile ストーリーで確認できる）。
 // GAP-15 アイコンセットにファイル種別（PHP / 画像 / 書庫）のアイコンが無い。
 //        → FileManager が folder / code / image / note / clip で代用している。
 // GAP-16 Pagination が無い。→ 件数の送りを iconOnly ボタン 2 つで代用している。
@@ -57,9 +55,6 @@ import type { RadioGroupProps } from '../../Radio'
 // GAP-20 等幅フォントのトークンが無い。API キーやコマンドを出す画面で必要。
 //        hosting-deploy-now は Tailwind の font-mono を 15 箇所で直書きしている。
 
-// GAP-1 の回避策。オブジェクトを毎レンダー作らないようモジュールスコープに置く。
-const insetStyle = { padding: 24 }
-
 export const Card = ({
   children,
   outlined = false,
@@ -72,13 +67,8 @@ export const Card = ({
   square?: boolean
 }) => (
   <Paper elevation={elevation} outlined={outlined} square={square}>
-    <div style={insetStyle}>{children}</div>
+    {children}
   </Paper>
-)
-
-/** 面を持たない余白だけの枠。既に Paper の中にいる場所で Card を使うと面が二重になるため。 */
-export const Inset = ({ children }: { children: ReactNode }) => (
-  <div style={insetStyle}>{children}</div>
 )
 
 export const PageHeader = ({
@@ -132,7 +122,7 @@ const FieldLabel = ({ children }: { children: ReactNode }) => (
   </Typography>
 )
 
-/** 値とコピーボタンの組。GAP-9 の Menu が無いぶん、行内の操作はこの形に寄せる。 */
+/** 値とコピーボタンの組。 */
 export const CopyableValue = ({ value, label }: { value: string; label: string }) => (
   <Stack flexDirection="row" gap="xs" alignItems="center">
     <Typography component="span">{value}</Typography>

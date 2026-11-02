@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
 import { Checkbox } from '../../Checkbox'
@@ -6,6 +8,7 @@ import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } fr
 import { Divider } from '../../Divider'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
+import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
@@ -14,13 +17,14 @@ import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
+import discordLogo from './assets/gamers/external-idp/discord.svg'
+import googleLogo from './assets/gamers/external-idp/google.svg'
+import twitchLogo from './assets/gamers/external-idp/twitch.svg'
 import { Card, CopyableValue } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 import type { ButtonColor } from '../../Button'
-import type { DialogProps } from '../../Dialog'
-import type { IconName } from '../../Icon'
 
 /**
  * アカウント。2 つの実画面を 1 ページに置いている。節見出しはそれぞれの実画面のページ見出しそのまま。
@@ -79,25 +83,8 @@ const RetryCallout = ({ message }: { message: string }) => (
   </Callout>
 )
 
-// GAP-NEW: Dialog に幅の指定が無く、中身の幅で縮む。中身を 1 枚の div で包んで幅を持たせている。
-// ゲーマーズは MUI の fullWidth（600px）、AI ゲートウェイは styles.dialog / styles.panel（520px）と
-// ConfirmDialog（400px）。どれも外寸から Dialog の左右の padding（24px × 2）を引いた値。
-const gamersDialogStyle = { width: 552, maxWidth: '100%' } // GAP-NEW: Dialog に幅が無い
-const aiDialogStyle = { width: 472, maxWidth: '100%' } // GAP-NEW: Dialog に幅が無い
-const confirmDialogStyle = { width: 352, maxWidth: '100%' } // GAP-NEW: Dialog に幅が無い
-
-const SizedDialog = ({
-  style,
-  children,
-  ...props
-}: Omit<DialogProps, 'children' | 'style'> & {
-  style: { width: number; maxWidth: string }
-  children: ReactNode
-}) => (
-  <Dialog isOpen {...props}>
-    <div style={style}>{children}</div>
-  </Dialog>
-)
+// GAP-NEW: Dialog に幅の prop が無い（ゲーマーズは MUI の fullWidth・600px、AI ゲートウェイは 520px / 400px）。
+// inline style を当てない方針のため未対応で、ダイアログは中身の幅で縮む。
 
 /** shared/ui/ConfirmDialog。破壊的でない確定は neutral → interactive にそろえている */
 const ConfirmDialog = ({
@@ -105,22 +92,26 @@ const ConfirmDialog = ({
   description,
   confirmLabel,
   destructive = false,
+  onClose,
 }: {
   title: string
   description: string
   confirmLabel: string
   destructive?: boolean
+  onClose?: () => void
 }) => (
-  <SizedDialog style={confirmDialogStyle} role="alertdialog">
+  <Dialog isOpen role="alertdialog" onOpenChange={(open) => !open && onClose?.()}>
     <DialogHeader>
       <DialogTitle>{title}</DialogTitle>
     </DialogHeader>
     <DialogDescription>{description}</DialogDescription>
     <DialogFooter>
-      <Button appearance="transparent">キャンセル</Button>
+      <Button appearance="transparent" onPress={onClose}>
+        キャンセル
+      </Button>
       <Button color={destructive ? 'negative' : primaryColor}>{confirmLabel}</Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 // ─── ゲーマーズ：データ ───
@@ -128,12 +119,10 @@ const ConfirmDialog = ({
 const account = { id: 'ac-1f7e3b9d2c', email: 'you@example.com', newsletter: true }
 
 /** components/ExternalIdpButtons/model.ts の externalIdpProviders（Google・Discord・Twitch） */
-const externalProviders: { label: string; icon: IconName; linked?: string }[] = [
-  // GAP-5: Google のアイコンが無いので launch で代用
-  { label: 'Google', icon: 'launch', linked: 'you@example.com' },
-  { label: 'Discord', icon: 'discord', linked: 'lolipop_taro' },
-  // GAP-NEW: アイコンセットに Twitch が無いので launch で代用
-  { label: 'Twitch', icon: 'launch' },
+const externalProviders: { label: string; logo: string; linked?: string }[] = [
+  { label: 'Google', logo: googleLogo, linked: 'you@example.com' },
+  { label: 'Discord', logo: discordLogo, linked: 'lolipop_taro' },
+  { label: 'Twitch', logo: twitchLogo },
 ]
 
 // ─── ゲーマーズ：アカウント ───
@@ -200,8 +189,9 @@ const GamersAccount = () => (
                 {/* 実物はプロバイダ名の枠を 150px に固定して表示名の頭をそろえる（GAP-NEW: Stack に幅の指定が無い） */}
                 <Stack flexDirection="row" gap="l" alignItems="center">
                   <Stack flexDirection="row" gap="s" alignItems="center">
-                    {/* GAP-NEW: 各社のロゴ（public/external-idp/*.svg）が無い。アイコンセットで代用 */}
-                    <Icon name={p.icon} size="m" />
+                    {/* 実物は alt にプロバイダ名を入れるが、すぐ横に同じ名前の文字があるので alt は空にする。
+                        GAP-NEW: 画像の枠（Image）が無い。実物は object-fit: contain */}
+                    <img src={p.logo} alt="" width={22} height={22} />
                     <Typography size="s" component="span">
                       {p.label}
                     </Typography>
@@ -313,7 +303,7 @@ const UpdateNewsletterPage = () => (
 
 /** account/_components/AccountLeaveDialog。入力が一致するまで削除を押せない */
 const AccountLeaveDialog = () => (
-  <SizedDialog style={gamersDialogStyle}>
+  <Dialog isOpen>
     <DialogHeader>
       <DialogTitle>アカウント削除</DialogTitle>
     </DialogHeader>
@@ -334,7 +324,7 @@ const AccountLeaveDialog = () => (
         削除
       </Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 // ─── AI ゲートウェイ：データ ───
@@ -431,38 +421,79 @@ type MembersView = 'loading' | 'error' | 'success'
 
 // ─── AI ゲートウェイ：メンバー ───
 
-/**
- * MemberActions。GAP-9: Menu が無い。実物は「…」の ActionsMenu に
- * 「プロジェクトの権限を変更する・オーナーにする / オーナー権限を外す・削除する」を入れる。
- * ここではメニューの項目を iconOnly のボタンとして行に並べている。
- */
-const MemberActions = ({ member }: { member: Member }) => {
+/** roleChangeMessages。オーナーにする・オーナー権限を外すの確認の文言 */
+const roleChangeDialog = (member: Member, onClose: () => void) =>
+  member.role === 'オーナー' ? (
+    <ConfirmDialog
+      title="オーナー権限を外しますか？"
+      description={`${member.name} はメンバーの招待・削除、ロールの変更、請求の管理ができなくなります。`}
+      confirmLabel="オーナー権限を外す"
+      onClose={onClose}
+    />
+  ) : (
+    <ConfirmDialog
+      title="オーナーに変更しますか？"
+      description={`${member.name} はメンバーの招待・削除、ロールの変更、請求の管理ができるようになります。`}
+      confirmLabel="オーナーに変更する"
+      onClose={onClose}
+    />
+  )
+
+const removeMemberDialog = (member: Member, onClose: () => void) => (
+  <ConfirmDialog
+    title="メンバーを削除しますか？"
+    description={`${member.name} は組織とすべてのプロジェクトにアクセスできなくなります。`}
+    confirmLabel="このメンバーを削除する"
+    destructive
+    onClose={onClose}
+  />
+)
+
+/** MemberActions。項目を選ぶと、それぞれの確認ダイアログやパネルを開く */
+const MemberActions = ({
+  member,
+  onOpenDialog,
+}: {
+  member: Member
+  onOpenDialog: (dialog: ReactNode) => void
+}) => {
   const isOwner = member.role === 'オーナー'
+  const close = () => onOpenDialog(null)
   return (
-    <Stack flexDirection="row" gap="xxs" justifyContent="flex-end">
-      {/* プロジェクトの権限はオーナー以外に出す */}
-      {!isOwner && (
-        <Button
-          appearance="transparent"
-          size="s"
-          iconOnly
-          aria-label="プロジェクトの権限を変更する"
-        >
-          <Icon name="folder" size="s" />
-        </Button>
-      )}
+    <MenuTrigger>
       <Button
         appearance="transparent"
         size="s"
         iconOnly
-        aria-label={isOwner ? 'オーナー権限を外す' : 'オーナーにする'}
+        aria-label={`${member.name} の操作メニュー`}
       >
-        <Icon name={isOwner ? 'minus_on_circle' : 'person'} size="s" />
+        <Icon name="ellipsis_vertical" size="s" aria-hidden="true" />
       </Button>
-      <Button appearance="transparent" color="negative" size="s" iconOnly aria-label="削除する">
-        <Icon name="garbage_can" size="s" />
-      </Button>
-    </Stack>
+      <Menu placement="bottom end">
+        {/* プロジェクトの権限はオーナー以外に出す */}
+        {!isOwner && (
+          <MenuItem
+            leading={<Icon name="folder" size="s" />}
+            onAction={() => onOpenDialog(<MemberProjectsPanel member={member} onClose={close} />)}
+          >
+            プロジェクトの権限を変更する
+          </MenuItem>
+        )}
+        <MenuItem
+          leading={<Icon name={isOwner ? 'minus_on_circle' : 'person'} size="s" />}
+          onAction={() => onOpenDialog(roleChangeDialog(member, close))}
+        >
+          {isOwner ? 'オーナー権限を外す' : 'オーナーにする'}
+        </MenuItem>
+        <MenuItem
+          color="negative"
+          leading={<Icon name="garbage_can" size="s" />}
+          onAction={() => onOpenDialog(removeMemberDialog(member, close))}
+        >
+          削除する
+        </MenuItem>
+      </Menu>
+    </MenuTrigger>
   )
 }
 
@@ -482,7 +513,13 @@ const projectCount = (m: Member) => {
   return `${m.projects.length} プロジェクト`
 }
 
-const AiMembers = ({ view }: { view: MembersView }) => (
+const AiMembers = ({
+  view,
+  onOpenDialog,
+}: {
+  view: MembersView
+  onOpenDialog: (dialog: ReactNode) => void
+}) => (
   <Stack gap="l">
     {/* app/accounts/[accountId]/members/page.tsx の PageHeader */}
     <AppHeading title="メンバー" description="組織のメンバーを管理します" />
@@ -545,7 +582,9 @@ const AiMembers = ({ view }: { view: MembersView }) => (
                   <Cell>{projectCount(m)}</Cell>
                   <Cell>
                     {/* 自分の行と、参加中でないメンバーの行には操作を出さない */}
-                    {m.id !== viewerId && m.status === 'active' && <MemberActions member={m} />}
+                    {m.id !== viewerId && m.status === 'active' && (
+                      <MemberActions member={m} onOpenDialog={onOpenDialog} />
+                    )}
                   </Cell>
                 </Row>
               ))}
@@ -596,7 +635,7 @@ const AiMembers = ({ view }: { view: MembersView }) => (
 // ─── AI ゲートウェイ：ダイアログ ───
 
 const InviteDialog = () => (
-  <SizedDialog style={aiDialogStyle}>
+  <Dialog isOpen>
     <DialogHeader>
       <DialogTitle>メンバーを招待する</DialogTitle>
     </DialogHeader>
@@ -629,7 +668,7 @@ const InviteDialog = () => (
       <Button appearance="transparent">キャンセル</Button>
       <Button color={primaryColor}>招待メールを送信する</Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 /**
@@ -639,7 +678,7 @@ const InviteDialog = () => (
  */
 const IssuedUrlDialog = () => (
   // 実物はコピーするまで外側を押しても閉じない
-  <SizedDialog style={aiDialogStyle} isDismissable={false}>
+  <Dialog isOpen isDismissable={false}>
     <DialogHeader>
       <Stack flexDirection="row" gap="xs" alignItems="center" justifyContent="center">
         <DialogTitle>招待URLを発行しました</DialogTitle>
@@ -658,12 +697,12 @@ const IssuedUrlDialog = () => (
     <DialogFooter>
       <Button color={primaryColor}>閉じる</Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 /** MemberProjectsPanel。メンバーが参加しているプロジェクトと、それぞれのロール */
-const MemberProjectsPanel = ({ member }: { member: Member }) => (
-  <SizedDialog style={aiDialogStyle}>
+const MemberProjectsPanel = ({ member, onClose }: { member: Member; onClose?: () => void }) => (
+  <Dialog isOpen onOpenChange={(open) => !open && onClose?.()}>
     <DialogHeader>
       <DialogTitle>{member.name}</DialogTitle>
     </DialogHeader>
@@ -684,26 +723,29 @@ const MemberProjectsPanel = ({ member }: { member: Member }) => (
               <Cell>{p.name}</Cell>
               <Cell>{p.role}</Cell>
               <Cell>
-                {/* ProjectActions。GAP-9: Menu が無いので項目を iconOnly のボタンで並べる */}
-                <Stack flexDirection="row" gap="xxs" justifyContent="flex-end">
+                {/* ProjectActions */}
+                <MenuTrigger>
                   <Button
                     appearance="transparent"
                     size="s"
                     iconOnly
-                    aria-label={p.role === '管理者' ? '管理者権限を外す' : '管理者にする'}
+                    aria-label={`${p.name} の操作メニュー`}
                   >
-                    <Icon name={p.role === '管理者' ? 'minus_on_circle' : 'person'} size="s" />
+                    <Icon name="ellipsis_vertical" size="s" aria-hidden="true" />
                   </Button>
-                  <Button
-                    appearance="transparent"
-                    color="negative"
-                    size="s"
-                    iconOnly
-                    aria-label="プロジェクトから外す"
-                  >
-                    <Icon name="garbage_can" size="s" />
-                  </Button>
-                </Stack>
+                  <Menu placement="bottom end">
+                    <MenuItem
+                      leading={
+                        <Icon name={p.role === '管理者' ? 'minus_on_circle' : 'person'} size="s" />
+                      }
+                    >
+                      {p.role === '管理者' ? '管理者権限を外す' : '管理者にする'}
+                    </MenuItem>
+                    <MenuItem color="negative" leading={<Icon name="garbage_can" size="s" />}>
+                      プロジェクトから外す
+                    </MenuItem>
+                  </Menu>
+                </MenuTrigger>
               </Cell>
             </Row>
           ))}
@@ -711,9 +753,11 @@ const MemberProjectsPanel = ({ member }: { member: Member }) => (
       </Table>
     </Stack>
     <DialogFooter>
-      <Button color={primaryColor}>閉じる</Button>
+      <Button color={primaryColor} onPress={onClose}>
+        閉じる
+      </Button>
     </DialogFooter>
-  </SizedDialog>
+  </Dialog>
 )
 
 // ─── 画面 ───
@@ -724,14 +768,18 @@ const AccountScreen = ({
 }: {
   membersView?: MembersView
   dialog?: ReactNode
-}) => (
-  <AppShell active="account">
-    <GamersAccount />
-    <Divider />
-    <AiMembers view={membersView} />
-    {dialog}
-  </AppShell>
-)
+}) => {
+  // 行の操作メニューから開くダイアログ。ストーリーで渡したものを最初に開いておく
+  const [openDialog, setOpenDialog] = useState<ReactNode>(dialog ?? null)
+  return (
+    <AppShell active="account">
+      <GamersAccount />
+      <Divider />
+      <AiMembers view={membersView} onOpenDialog={setOpenDialog} />
+      {openDialog}
+    </AppShell>
+  )
+}
 
 // ─── ストーリー：ゲーマーズ ───
 
@@ -824,17 +872,7 @@ export const InviteUrlIssued: Story = {
  * @summary オーナーにする
  */
 export const MakeOwner: Story = {
-  render: () => (
-    <AccountScreen
-      dialog={
-        <ConfirmDialog
-          title="オーナーに変更しますか？"
-          description={`${sato.name} はメンバーの招待・削除、ロールの変更、請求の管理ができるようになります。`}
-          confirmLabel="オーナーに変更する"
-        />
-      }
-    />
-  ),
+  render: () => <AccountScreen dialog={roleChangeDialog(sato, () => {})} />,
 }
 
 /**
@@ -843,18 +881,7 @@ export const MakeOwner: Story = {
  * @summary メンバーの削除
  */
 export const RemoveMember: Story = {
-  render: () => (
-    <AccountScreen
-      dialog={
-        <ConfirmDialog
-          title="メンバーを削除しますか？"
-          description={`${sato.name} は組織とすべてのプロジェクトにアクセスできなくなります。`}
-          confirmLabel="このメンバーを削除する"
-          destructive
-        />
-      }
-    />
-  ),
+  render: () => <AccountScreen dialog={removeMemberDialog(sato, () => {})} />,
 }
 
 /**

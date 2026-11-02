@@ -14,7 +14,11 @@ import { Stack } from '../../Stack'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
-import { Card, Inset } from './parts'
+import paypayLogo from './assets/gamers/paypay.svg'
+import maintenanceImage from './assets/gamers/purchase-maintenance.svg'
+import soldOutImage from './assets/gamers/sold-out.svg'
+import { gameImages } from './gameServer'
+import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -124,7 +128,7 @@ const SectionTitle = ({ children }: { children: ReactNode }) => (
  * 選べるカード（PlanCard / PeriodCard）。実アプリは ToggleButtonGroup（exclusive）の ToggleButton で、
  * カード全体を押して選ぶ。選ばれると紫→青のグラデーションの枠になる。
  * GAP-3: 選択できるカードが無い。外側の RadioGroup と、カードの中身を label にした Radio で組み、
- * 中身のどこを押しても選べるようにしている。実物に無いラジオの丸が付き、カードの余白（Inset）は押せない。
+ * 中身のどこを押しても選べるようにしている。実物に無いラジオの丸が付き、カードの余白は押せない。
  * 選ばれていることは outlined の枠で示す。
  */
 const ChoiceCard = ({
@@ -137,11 +141,9 @@ const ChoiceCard = ({
   children: ReactNode
 }) => (
   <Paper elevation={0} outlined={selected}>
-    <Inset>
-      <Radio value={value}>
-        <Stack gap="s">{children}</Stack>
-      </Radio>
-    </Inset>
+    <Radio value={value}>
+      <Stack gap="s">{children}</Stack>
+    </Radio>
   </Paper>
 )
 
@@ -279,7 +281,8 @@ const GameSelect = () => {
             {/* components/GameCard（showdetail）。上半分がキービジュアル、下に名前と「3日 ○円 ~」。カード全体がボタン */}
             <Card>
               <Stack gap="s" alignItems="center">
-                {/* GAP-NEW: 画像の枠（CardMedia）が無い。ゲームのキービジュアルを出せない */}
+                {/* GAP-NEW: 画像の枠（Image）が無い。実物の CardMedia はカードの端まで広げ object-fit: cover で切り抜く */}
+                <img src={gameImages[g.name]} alt={g.name} width="100%" height={136} />
                 {/* GAP-3: カード全体を押せる面にできないので、ゲーム名をボタンにしている */}
                 <Button appearance="transparent" width="full">
                   <Typography size="l" fontWeight="bold" component="span">
@@ -330,19 +333,24 @@ const PlanSelect = () => {
             {/* GameSelectSection */}
             <Stack gap="m">
               <SectionTitle>ゲーム</SectionTitle>
-              {/* GAP-NEW: ComboBox（Autocomplete）が無い。実アプリは画像付きの候補と「○円〜」を出す検索ボックス */}
-              <Select
-                aria-label="ゲーム"
-                width="full"
-                selectedKey={game.id}
-                onSelectionChange={(k) => setGameId(String(k))}
-              >
-                {games.map((g) => (
-                  <SelectItem key={g.id} id={g.id}>
-                    {`${g.name}　${g.minPrice.toLocaleString('ja-JP')}円〜`}
-                  </SelectItem>
-                ))}
-              </Select>
+              {/* GAP-NEW: ComboBox（Autocomplete）が無い。実アプリは画像付きの候補と「○円〜」を出す検索ボックスで、
+                  選んだゲームの 80px 角のキービジュアルを入力欄の先頭に出す。ここでは Select の左に置いている */}
+              {/* GAP-NEW: 画像の枠（Image）が無い（実物は object-fit: cover と左側の角丸） */}
+              <Stack flexDirection="row" gap="s" alignItems="center">
+                <img src={gameImages[game.name]} alt={game.name} width={80} height={80} />
+                <Select
+                  aria-label="ゲーム"
+                  width="full"
+                  selectedKey={game.id}
+                  onSelectionChange={(k) => setGameId(String(k))}
+                >
+                  {games.map((g) => (
+                    <SelectItem key={g.id} id={g.id}>
+                      {`${g.name}　${g.minPrice.toLocaleString('ja-JP')}円〜`}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </Stack>
             </Stack>
 
             {/* PlanCardsSection */}
@@ -471,53 +479,49 @@ const PlanSelect = () => {
 const RegisterPaymentCardForm = () => (
   // 実アプリは一段明るい #1D2A40 の面
   <Paper elevation={0} outlined>
-    <Inset>
-      <Stack gap="l">
-        <Typography size="l" fontWeight="bold" component="h3">
-          クレジットカード情報
+    <Stack gap="l">
+      <Typography size="l" fontWeight="bold" component="h3">
+        クレジットカード情報
+      </Typography>
+      <TextField label="名義" autoComplete="cc-name" width="full" />
+      <TextField label="カード番号" autoComplete="cc-number" inputMode="numeric" width="full" />
+      <Grid spacing="xs">
+        <GridItem size={6}>
+          {/* components/CcExpSelect */}
+          <Select label="有効期限(月)" width="full">
+            {expireMonths.map((m) => (
+              <SelectItem key={m} id={m}>
+                {m}
+              </SelectItem>
+            ))}
+          </Select>
+        </GridItem>
+        <GridItem size={6}>
+          <Select label="有効期限(年)" width="full">
+            {expireYears.map((y) => (
+              <SelectItem key={y} id={y}>
+                {y}
+              </SelectItem>
+            ))}
+          </Select>
+        </GridItem>
+      </Grid>
+      <TextField
+        label="セキュリティコード"
+        type="password"
+        autoComplete="cc-csc"
+        inputMode="numeric"
+        width="full"
+      />
+      {/* 実物は rgb(255 255 255 / .05) の地。GAP-NEW: 面の地色だけを変える指定が無いので outlined で代用 */}
+      <Paper elevation={0} outlined>
+        <Typography size="xs">
+          当社がお客様から収集した以下の個人情報等は、カード発行会社がおこなう不正利用検知・防止のために、お客様が利用されているカード発行会社へ提供させていただきます。氏名、電話番号、emailアドレス、請求先住所、配送先住所、インターネット利用環境に関する情報等（送信するパラメータの内容に応じて個人情報を記載ください）
+          <br />
+          お客様が利用されているカード発行会社が海外にある場合、これらの情報は当該発行会社が所属する国に移転される場合があります。お客様が未成年の場合、親権者または後見人の承諾を得た上で、本サービスを利用するものとします。
         </Typography>
-        <TextField label="名義" autoComplete="cc-name" width="full" />
-        <TextField label="カード番号" autoComplete="cc-number" inputMode="numeric" width="full" />
-        <Grid spacing="xs">
-          <GridItem size={6}>
-            {/* components/CcExpSelect */}
-            <Select label="有効期限(月)" width="full">
-              {expireMonths.map((m) => (
-                <SelectItem key={m} id={m}>
-                  {m}
-                </SelectItem>
-              ))}
-            </Select>
-          </GridItem>
-          <GridItem size={6}>
-            <Select label="有効期限(年)" width="full">
-              {expireYears.map((y) => (
-                <SelectItem key={y} id={y}>
-                  {y}
-                </SelectItem>
-              ))}
-            </Select>
-          </GridItem>
-        </Grid>
-        <TextField
-          label="セキュリティコード"
-          type="password"
-          autoComplete="cc-csc"
-          inputMode="numeric"
-          width="full"
-        />
-        {/* 実物は rgb(255 255 255 / .05) の地。GAP-NEW: 面の地色だけを変える指定が無いので outlined で代用 */}
-        <Paper elevation={0} outlined>
-          <Inset>
-            <Typography size="xs">
-              当社がお客様から収集した以下の個人情報等は、カード発行会社がおこなう不正利用検知・防止のために、お客様が利用されているカード発行会社へ提供させていただきます。氏名、電話番号、emailアドレス、請求先住所、配送先住所、インターネット利用環境に関する情報等（送信するパラメータの内容に応じて個人情報を記載ください）
-              <br />
-              お客様が利用されているカード発行会社が海外にある場合、これらの情報は当該発行会社が所属する国に移転される場合があります。お客様が未成年の場合、親権者または後見人の承諾を得た上で、本サービスを利用するものとします。
-            </Typography>
-          </Inset>
-        </Paper>
-      </Stack>
-    </Inset>
+      </Paper>
+    </Stack>
   </Paper>
 )
 
@@ -538,8 +542,10 @@ const InitialPaymentMethodRadioGroup = () => {
           {method === 'credit-card' && <RegisterPaymentCardForm />}
         </Stack>
         <Stack gap="xs">
-          {/* GAP-NEW: PayPay のロゴを出す枠が無い */}
-          <Radio value="paypay">PayPay</Radio>
+          <Stack flexDirection="row" gap="xs" alignItems="center">
+            <Radio value="paypay">PayPay</Radio>
+            <img src={paypayLogo} alt="PayPay" width={30} height={30} />
+          </Stack>
           {/* GAP-NEW: 文中のリンクが無い。「利用できる支払い方法と対応ブランド」は本来リンク */}
           <Typography size="xxs">
             ※この支払い方法は自動更新に対応していません。詳しくは利用できる支払い方法と対応ブランドをご確認ください。
@@ -581,25 +587,23 @@ const PaymentMethodCard = ({ onChange }: { onChange: () => void }) => (
 const ConfirmPaymentCardForm = ({ onEdit }: { onEdit: () => void }) => (
   // 実物は rgb(255 255 255 / .05) の地。GAP-NEW: 面の地色だけを変える指定が無いので outlined で代用
   <Paper elevation={0} outlined>
-    <Inset>
-      <Stack
-        flexDirection={{ xxs: 'column', m: 'row' }}
-        gap="s"
-        alignItems="flex-start"
-        justifyContent="space-between"
+    <Stack
+      flexDirection={{ xxs: 'column', m: 'row' }}
+      gap="s"
+      alignItems="flex-start"
+      justifyContent="space-between"
+    >
+      <PaymentCardDetail />
+      {/* 実物は EditOutlined のアイコン付きの文字ボタン */}
+      <Button
+        appearance="transparent"
+        size="l"
+        leading={<Icon name="pencil" size="s" />}
+        onPress={onEdit}
       >
-        <PaymentCardDetail />
-        {/* 実物は EditOutlined のアイコン付きの文字ボタン */}
-        <Button
-          appearance="transparent"
-          size="l"
-          leading={<Icon name="pencil" size="s" />}
-          onPress={onEdit}
-        >
-          変更
-        </Button>
-      </Stack>
-    </Inset>
+        変更
+      </Button>
+    </Stack>
   </Paper>
 )
 
@@ -645,8 +649,10 @@ const PaymentMethodChangeDialog = ({
               )}
             </Stack>
             <Stack gap="xs">
-              {/* GAP-NEW: PayPay のロゴを出す枠が無い */}
-              <Radio value="paypay">PayPay</Radio>
+              <Stack flexDirection="row" gap="xs" alignItems="center">
+                <Radio value="paypay">PayPay</Radio>
+                <img src={paypayLogo} alt="PayPay" width={30} height={30} />
+              </Stack>
               {/* GAP-NEW: 文中のリンクが無い。「利用できる支払い方法と対応ブランド」は本来リンク */}
               <Typography size="xxs">
                 ※このお支払い方法は自動更新に対応していません。詳しくは利用できる支払い方法と対応ブランドをご確認ください。
@@ -777,7 +783,10 @@ const SoldOut = () => (
     <Typography size="xxl" fontWeight="bold" component="h1">
       売り切れ
     </Typography>
-    {/* GAP-NEW: 画像の枠が無い。実アプリは sold-out.svg（クリスマスプレゼントのイラスト）を 12em 角で置いている */}
+    {/* 実物は 12em 角。HTML の width / height は em を取れないので 16px 換算の 192 にしている */}
+    <Stack alignItems="center">
+      <img src={soldOutImage} alt="クリスマスプレゼントのイラスト" width={192} height={192} />
+    </Stack>
     <Stack gap="xs">
       <Typography>サーバーが売り切れているため購入することができません</Typography>
       <Typography>再入荷までお待ちください</Typography>
@@ -791,7 +800,9 @@ const SoldOut = () => (
 /** components/PurchaseMaintenance。実物はログイン前の GlobalHeader（isLogin=false）で、アカウントのメニューが無い */
 const PurchaseMaintenance = () => (
   <NoticeCard>
-    {/* GAP-NEW: 画像の枠が無い。実アプリは 250px 角のメンテナンスのイラスト */}
+    <Stack alignItems="center">
+      <img src={maintenanceImage} alt="メンテナンス" width={250} height={250} />
+    </Stack>
     <Stack gap="xs" alignItems="center">
       <Typography size="xl" fontWeight="bold" component="h1">
         おっと！今は準備中みたいです。

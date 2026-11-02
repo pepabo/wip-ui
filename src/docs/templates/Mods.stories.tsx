@@ -18,7 +18,7 @@ import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
 import { ServerDetailHeader, server } from './gameServer'
-import { Card, Inset } from './parts'
+import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { Key, Selection } from 'react-aria-components'
@@ -431,39 +431,32 @@ const InstalledMods = ({
         </Card>
       ) : (
         <Paper elevation={0} outlined>
-          <Inset>
-            {narrow ? (
-              // md 未満: 1 行目に「未選択」と small のアンインストール、2 行目にチップ
-              <Stack gap="s">
-                <Stack
-                  flexDirection="row"
-                  gap="m"
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
-                  {selectionLabel}
-                  <UninstallSelectedButton
-                    size="s"
-                    isDisabled={selected.size === 0}
-                    onPress={() => setTargets([...selected].map(String))}
-                  />
-                </Stack>
-                {chips}
-              </Stack>
-            ) : (
-              <Stack flexDirection="row" gap="s" justifyContent="space-between" alignItems="center">
-                <Stack flexDirection="row" gap="m" alignItems="center">
-                  {selectionLabel}
-                  {chips}
-                </Stack>
+          {narrow ? (
+            // md 未満: 1 行目に「未選択」と small のアンインストール、2 行目にチップ
+            <Stack gap="s">
+              <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
+                {selectionLabel}
                 <UninstallSelectedButton
-                  size="m"
+                  size="s"
                   isDisabled={selected.size === 0}
                   onPress={() => setTargets([...selected].map(String))}
                 />
               </Stack>
-            )}
-          </Inset>
+              {chips}
+            </Stack>
+          ) : (
+            <Stack flexDirection="row" gap="s" justifyContent="space-between" alignItems="center">
+              <Stack flexDirection="row" gap="m" alignItems="center">
+                {selectionLabel}
+                {chips}
+              </Stack>
+              <UninstallSelectedButton
+                size="m"
+                isDisabled={selected.size === 0}
+                onPress={() => setTargets([...selected].map(String))}
+              />
+            </Stack>
+          )}
           <Divider />
           {/* 実アプリは MUI x の DataGrid（行の高さ 72px、列の並べ替え、チェックボックスでの選択） */}
           <Table
@@ -573,53 +566,51 @@ const CategorySidebar = ({
   onClose?: () => void
 }) => (
   <Paper elevation={0} outlined>
-    <Inset>
-      <Stack gap="m">
-        <Stack gap="xs">
-          <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
-            <Typography size="xs" color="medium_emphasis" component="h3">
-              プラットフォーム
-            </Typography>
-            {onClose && (
-              <Button
-                appearance="transparent"
-                size="s"
-                iconOnly
-                aria-label="閉じる"
-                onPress={onClose}
-              >
-                <Icon name="cross" size="s" />
-              </Button>
-            )}
-          </Stack>
-          <Typography size="s">Modrinth</Typography>
-        </Stack>
-        <Divider />
+    <Stack gap="m">
+      <Stack gap="xs">
         <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
           <Typography size="xs" color="medium_emphasis" component="h3">
-            フィルタ
+            プラットフォーム
           </Typography>
-          <Button appearance="transparent" size="s" onPress={onClear}>
-            すべてクリア
-          </Button>
+          {onClose && (
+            <Button
+              appearance="transparent"
+              size="s"
+              iconOnly
+              aria-label="閉じる"
+              onPress={onClose}
+            >
+              <Icon name="cross" size="s" />
+            </Button>
+          )}
         </Stack>
-        {/* GAP-NEW: Collapse / Accordion が無い。実アプリは「カテゴリ」の右の ∨ で開閉する。ここでは開いた状態で固定 */}
-        <Typography size="s">カテゴリ</Typography>
-        <Stack gap="xs">
-          {categories.map((c) => (
-            <Checkbox key={c} isSelected={selected.includes(c)} onChange={() => onToggle(c)}>
-              {c}
-            </Checkbox>
-          ))}
-        </Stack>
+        <Typography size="s">Modrinth</Typography>
       </Stack>
-    </Inset>
+      <Divider />
+      <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
+        <Typography size="xs" color="medium_emphasis" component="h3">
+          フィルタ
+        </Typography>
+        <Button appearance="transparent" size="s" onPress={onClear}>
+          すべてクリア
+        </Button>
+      </Stack>
+      {/* GAP-NEW: Collapse / Accordion が無い。実アプリは「カテゴリ」の右の ∨ で開閉する。ここでは開いた状態で固定 */}
+      <Typography size="s">カテゴリ</Typography>
+      <Stack gap="xs">
+        {categories.map((c) => (
+          <Checkbox key={c} isSelected={selected.includes(c)} onChange={() => onToggle(c)}>
+            {c}
+          </Checkbox>
+        ))}
+      </Stack>
+    </Stack>
   </Paper>
 )
 
 /** ModManager/ModResultItem */
 const ModResultItem = ({ mod }: { mod: SearchResult }) => (
-  <Inset>
+  <>
     <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
       <Stack flexDirection="row" gap="m" alignItems="center">
         <ModIcon />
@@ -665,7 +656,7 @@ const ModResultItem = ({ mod }: { mod: SearchResult }) => (
         {mod.isInstalled ? 'インストール済' : 'インストール'}
       </Button>
     </Stack>
-  </Inset>
+  </>
 )
 
 /**
@@ -871,11 +862,9 @@ const AddMods = ({ initialQuery, onBack }: { initialQuery: string; onBack: () =>
             )}
             <Paper elevation={0} outlined>
               {results.length === 0 ? (
-                <Inset>
-                  <Stack alignItems="center">
-                    <Typography color="medium_emphasis">検索結果がありません</Typography>
-                  </Stack>
-                </Inset>
+                <Stack alignItems="center">
+                  <Typography color="medium_emphasis">検索結果がありません</Typography>
+                </Stack>
               ) : (
                 results.map((mod, i) => (
                   <Stack key={mod.id}>

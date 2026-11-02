@@ -8,6 +8,7 @@ import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } fr
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
+import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
 import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
@@ -17,6 +18,9 @@ import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
+import claudeLogo from './assets/ai-gateway/providers/claude.svg'
+import geminiLogo from './assets/ai-gateway/providers/gemini.svg'
+import openaiLogo from './assets/ai-gateway/providers/openai.svg'
 import { Card, PageHeader } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -190,66 +194,6 @@ const Glyph = ({ name, size = 's' }: { name: IconName; size?: 's' | 'm' | 'l' })
   <Icon name={name} size={size} aria-hidden="true" />
 )
 
-/**
- * GAP-9: Menu が無い。トリガーの直下に Paper を絶対配置で重ね、項目を transparent ボタンで並べている
- * （Backup / FileManager と同じ回避策）。外側のクリックや Esc で閉じない・矢印キーで項目を移れない・
- * role="menu" にならない。実装は shared/ui/Menu の ActionsMenu（react-aria-components の Menu）。
- */
-const menuAnchorStyle = { position: 'relative', display: 'inline-block' } as const // GAP-9
-const menuPanelStyle = {
-  position: 'absolute',
-  top: '100%',
-  right: 0,
-  zIndex: 10,
-  width: 200,
-} as const // GAP-9
-
-type MenuEntry = {
-  label: string
-  icon: IconName
-  danger?: boolean
-}
-
-const ActionsMenu = ({ label, items }: { label: string; items: MenuEntry[] }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  return (
-    <div style={menuAnchorStyle}>
-      <Button
-        appearance="transparent"
-        color="neutral"
-        size="s"
-        iconOnly
-        aria-label={label}
-        aria-expanded={isOpen}
-        onPress={() => setIsOpen(!isOpen)}
-      >
-        <Glyph name="ellipsis_horizontal" />
-      </Button>
-      {isOpen && (
-        <div style={menuPanelStyle}>
-          <Paper elevation={3}>
-            <Stack gap="xxs">
-              {items.map((item) => (
-                <Button
-                  key={item.label}
-                  appearance="transparent"
-                  color={item.danger ? 'negative' : 'neutral'}
-                  size="s"
-                  width="full"
-                  leading={<Glyph name={item.icon} />}
-                  onPress={() => setIsOpen(false)}
-                >
-                  {item.label}
-                </Button>
-              ))}
-            </Stack>
-          </Paper>
-        </div>
-      )}
-    </div>
-  )
-}
-
 // GAP-NEW: InfoTip が無い（shared/ui/InfoTip）。押しても説明の吹き出しは開かない
 const InfoTip = ({ label }: { label: string }) => (
   <Button appearance="transparent" color="neutral" size="s" iconOnly aria-label={label}>
@@ -415,7 +359,7 @@ const BarChart = ({ values }: { values: number[] }) => {
 
 type ListView = 'success' | 'error' | 'empty'
 
-const KeyList = ({ view }: { view: ListView }) => {
+const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey) => void }) => {
   const [query, setQuery] = useState('')
   const [ruleFilter, setRuleFilter] = useState('all')
   const [selected, setSelected] = useState<string[]>([])
@@ -454,7 +398,8 @@ const KeyList = ({ view }: { view: ListView }) => {
               value={query}
               onChange={setQuery}
             />
-            {/* shared/ui/ListFilterMenu の代わり。実装は Menu で、閉じているときは「ルール」と出す（GAP-9） */}
+            {/* shared/ui/ListFilterMenu の代わり。実装は Menu で、閉じているときは「ルール」と出す。
+                選んだ値を残す絞り込みなので、wip-ui では Menu ではなく Select を使う（Menu.md） */}
             <Select
               aria-label="ルール"
               size="s"
@@ -574,18 +519,40 @@ const KeyList = ({ view }: { view: ListView }) => {
                       </Sticker>
                     </Cell>
                     <Cell>
-                      <ActionsMenu
-                        label={`${k.alias} の操作メニュー`}
-                        items={[
-                          { label: '詳細を開く', icon: 'launch' },
-                          k.blocked
-                            ? { label: '有効にする', icon: 'check_on_circle' }
-                            : { label: '無効にする', icon: 'cross_on_circle' },
-                          // GAP-NEW: RenewIcon が無い。arrow_right_left で代用
-                          { label: '再生成する', icon: 'arrow_right_left' },
-                          { label: '削除する', icon: 'garbage_can', danger: true },
-                        ]}
-                      />
+                      <MenuTrigger>
+                        <Button
+                          appearance="transparent"
+                          color="neutral"
+                          size="s"
+                          iconOnly
+                          aria-label={`${k.alias} の操作メニュー`}
+                        >
+                          <Glyph name="ellipsis_vertical" />
+                        </Button>
+                        <Menu placement="bottom end">
+                          <MenuItem leading={<Glyph name="launch" />}>詳細を開く</MenuItem>
+                          {k.blocked ? (
+                            <MenuItem leading={<Glyph name="check_on_circle" />}>
+                              有効にする
+                            </MenuItem>
+                          ) : (
+                            <MenuItem leading={<Glyph name="cross_on_circle" />}>
+                              無効にする
+                            </MenuItem>
+                          )}
+                          {/* GAP-NEW: RenewIcon が無い。arrow_right_left で代用 */}
+                          <MenuItem leading={<Glyph name="arrow_right_left" />}>
+                            再生成する
+                          </MenuItem>
+                          <MenuItem
+                            color="negative"
+                            leading={<Glyph name="garbage_can" />}
+                            onAction={() => onDelete(k)}
+                          >
+                            削除する
+                          </MenuItem>
+                        </Menu>
+                      </MenuTrigger>
                     </Cell>
                   </Row>
                 )
@@ -891,9 +858,18 @@ const LimitSettings = ({ apiKey }: { apiKey: ApiKey }) => {
 /**
  * shared/ui/ModelSelect の代わり。入力欄は読み取り専用の TextField で「n件を選択中」を出し、
  * 選択中のモデルを名前だけの行で下に並べる。
- * GAP-NEW: 押すと開くモデル選択のダイアログ・プロバイダーのロゴ（ProviderIcon）・ドラッグでの並べ替えが無い。
+ * GAP-NEW: 押すと開くモデル選択のダイアログ・ドラッグでの並べ替えが無い。
  * TextField の右に下向きの山形を添えることもできない。
  */
+// shared/ui/ProviderIcon の modelIconKey と同じく、モデル名の系統から提供元のロゴを引く
+const providerLogo = (name: string) => {
+  const head = name.toLowerCase().split(' ')[0]
+  if (head === 'claude') return claudeLogo
+  if (head === 'gemini') return geminiLogo
+  if (head.startsWith('gpt')) return openaiLogo
+  return undefined
+}
+
 const ModelPicker = ({
   label,
   placeholder,
@@ -917,9 +893,13 @@ const ModelPicker = ({
       <Stack gap="xxs">
         {value.map((name) => (
           <Stack key={name} flexDirection="row" alignItems="center" justifyContent="space-between">
-            <Typography size="s" component="span">
-              {name}
-            </Typography>
+            <Stack flexDirection="row" gap="xs" alignItems="center">
+              {/* GAP-NEW: 画像の枠（Image）が無い。実物は object-fit: contain で縮めず収める */}
+              {providerLogo(name) && <img src={providerLogo(name)} alt="" width={18} height={18} />}
+              <Typography size="s" component="span">
+                {name}
+              </Typography>
+            </Stack>
             <Button
               appearance="transparent"
               color="neutral"
@@ -1272,8 +1252,7 @@ const IssueKeyDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
 // ─── 削除の確認（shared/ui/ConfirmDialog。文言は AccountKeys/messages.tsx の delete）───
 
-// GAP-NEW: Dialog に幅の口が無い。ConfirmDialog は中に div を置いて 400px に絞っている
-const confirmWidth = { width: 'min(400px, calc(100vw - 64px))' }
+// GAP-NEW: Dialog に幅の prop が無い（ConfirmDialog は 400px）。inline style を当てない方針のため未対応で、中身の幅で縮む
 
 const ConfirmDeleteDialog = ({
   apiKey,
@@ -1283,22 +1262,20 @@ const ConfirmDeleteDialog = ({
   onClose: () => void
 }) => (
   <Dialog isOpen={apiKey !== null} role="alertdialog" onOpenChange={(open) => !open && onClose()}>
-    <div style={confirmWidth}>
-      <DialogHeader>
-        <DialogTitle>APIキーを削除しますか？</DialogTitle>
-      </DialogHeader>
-      <DialogDescription>
-        <strong>{apiKey?.alias}</strong> を削除します。 この操作は取り消せません。
-      </DialogDescription>
-      <DialogFooter>
-        <Button appearance="transparent" color="neutral" onPress={onClose}>
-          キャンセル
-        </Button>
-        <Button color="negative" onPress={onClose}>
-          このAPIキーを削除する
-        </Button>
-      </DialogFooter>
-    </div>
+    <DialogHeader>
+      <DialogTitle>APIキーを削除しますか？</DialogTitle>
+    </DialogHeader>
+    <DialogDescription>
+      <strong>{apiKey?.alias}</strong> を削除します。 この操作は取り消せません。
+    </DialogDescription>
+    <DialogFooter>
+      <Button appearance="transparent" color="neutral" onPress={onClose}>
+        キャンセル
+      </Button>
+      <Button color="negative" onPress={onClose}>
+        このAPIキーを削除する
+      </Button>
+    </DialogFooter>
   </Dialog>
 )
 
@@ -1326,7 +1303,7 @@ const ApiKeysScreen = ({
   return (
     <AppShell active="apikeys">
       {page === 'list' ? (
-        <KeyList view={view} />
+        <KeyList view={view} onDelete={setConfirm} />
       ) : (
         <KeyShell
           apiKey={openKey}
@@ -1334,13 +1311,31 @@ const ApiKeysScreen = ({
           actions={
             page === 'detail' && (
               // KeyDetail の操作メニューは「無効にする / 有効にする」と「削除する」だけ（再生成は一覧から）
-              <ActionsMenu
-                label="このAPIキーの操作メニュー"
-                items={[
-                  { label: '無効にする', icon: 'cross_on_circle' },
-                  { label: '削除する', icon: 'garbage_can', danger: true },
-                ]}
-              />
+              <MenuTrigger>
+                <Button
+                  appearance="transparent"
+                  color="neutral"
+                  size="s"
+                  iconOnly
+                  aria-label="このAPIキーの操作メニュー"
+                >
+                  <Glyph name="ellipsis_vertical" />
+                </Button>
+                <Menu placement="bottom end">
+                  {openKey.blocked ? (
+                    <MenuItem leading={<Glyph name="check_on_circle" />}>有効にする</MenuItem>
+                  ) : (
+                    <MenuItem leading={<Glyph name="cross_on_circle" />}>無効にする</MenuItem>
+                  )}
+                  <MenuItem
+                    color="negative"
+                    leading={<Glyph name="garbage_can" />}
+                    onAction={() => setConfirm(openKey)}
+                  >
+                    削除する
+                  </MenuItem>
+                </Menu>
+              </MenuTrigger>
             )
           }
         >
@@ -1366,7 +1361,6 @@ const ApiKeysScreen = ({
 /**
  * プロジェクトの APIキー一覧。行を選ぶと「選択した n 件を削除する」が出る。
  * 「利用額」の列は予算のある行だけメーターと周期のチップを持つ。
- * 行の操作メニューは Menu が無いため、Paper を重ねて代用している（GAP-9）。
  *
  * @summary APIキーの一覧
  */

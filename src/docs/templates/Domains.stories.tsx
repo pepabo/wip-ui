@@ -9,6 +9,7 @@ import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
+import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
@@ -18,7 +19,6 @@ import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import type { ReactNode } from 'react'
 import type { StickerColor } from '../../Sticker'
 
 /**
@@ -43,51 +43,10 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// GAP-1: ドメインのカードの行と詳細欄。実物は px-6 py-4。
-const rowStyle = { paddingBlock: 16, paddingInline: 24 }
-// GAP-1: DNS レコードのコピー欄。実物は px-3 py-2 のボタン。
-const fieldStyle = { paddingBlock: 8, paddingInline: 12 }
-// GAP-NEW: TabPanel と本文のあいだに間隔が無く、タブの下線に本文が接する。実物は mb-3（12px）で離している。
-const panelStyle = { paddingTop: 12 }
-
-const Row = ({ children }: { children: ReactNode }) => <div style={rowStyle}>{children}</div>
-
-// GAP-9: Menu / DropdownMenu が無い。実物は KebabMenu（portal + fixed 配置）を手組みしている。
-// ここでは ⋯ を押すと、カードの中にメニュー項目をそのまま差し込む。
-const KebabMenu = ({ label, onDelete }: { label: string; onDelete: () => void }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  return (
-    <Stack gap="xxs" alignItems="flex-end">
-      <Button
-        appearance="transparent"
-        color="neutral"
-        size="s"
-        iconOnly
-        aria-label={label}
-        aria-expanded={isOpen}
-        onPress={() => setIsOpen((v) => !v)}
-      >
-        <Icon name="ellipsis_horizontal" size="s" />
-      </Button>
-      {isOpen && (
-        <Paper elevation={3}>
-          <Button
-            appearance="transparent"
-            color="negative"
-            size="s"
-            width="full"
-            onPress={() => {
-              setIsOpen(false)
-              onDelete()
-            }}
-          >
-            削除
-          </Button>
-        </Paper>
-      )}
-    </Stack>
-  )
-}
+// GAP-1: Paper に padding が無い。ドメインのカードの行と詳細欄（実物は px-6 py-4）、
+//        DNS レコードのコピー欄（実物は px-3 py-2）の余白。inline style を当てない方針のため未対応。
+// GAP-NEW: TabPanel と本文のあいだの間隔（実物は mb-3 = 12px）を付ける prop が無く、
+//          タブの下線に本文が接する。inline style を当てない方針のため未対応。
 
 // ─── データ（実物の DomainView と同じ形。値はダミー） ───
 
@@ -337,42 +296,40 @@ const CopyableField = ({ label, value }: { label: string; value: string }) => {
   const [copied, setCopied] = useState(false)
   return (
     <Paper elevation={0} outlined>
-      <div style={fieldStyle}>
-        <Stack gap="xxs">
-          <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
-            <Typography component="span" size="xs" color="medium_emphasis">
-              {label}
-            </Typography>
-            <Button
-              appearance="transparent"
-              color="neutral"
-              size="s"
-              iconOnly
-              aria-label={`${label}をコピー`}
-              onPress={() => {
-                setCopied(true)
-                setTimeout(() => setCopied(false), 2000)
-              }}
-            >
-              <Icon name="copy" size="s" />
-            </Button>
-          </Stack>
-          {copied ? (
-            <Stack flexDirection="row" gap="xxs" alignItems="center">
-              <Typography component="span" size="s" color="positive">
-                <Icon name="check" size="s" color="currentColor" aria-hidden />
-              </Typography>
-              <Typography component="span" size="s" color="positive">
-                コピーしました
-              </Typography>
-            </Stack>
-          ) : (
-            <Typography component="span" size="s">
-              {value}
-            </Typography>
-          )}
+      <Stack gap="xxs">
+        <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
+          <Typography component="span" size="xs" color="medium_emphasis">
+            {label}
+          </Typography>
+          <Button
+            appearance="transparent"
+            color="neutral"
+            size="s"
+            iconOnly
+            aria-label={`${label}をコピー`}
+            onPress={() => {
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
+            }}
+          >
+            <Icon name="copy" size="s" />
+          </Button>
         </Stack>
-      </div>
+        {copied ? (
+          <Stack flexDirection="row" gap="xxs" alignItems="center">
+            <Typography component="span" size="s" color="positive">
+              <Icon name="check" size="s" color="currentColor" aria-hidden />
+            </Typography>
+            <Typography component="span" size="s" color="positive">
+              コピーしました
+            </Typography>
+          </Stack>
+        ) : (
+          <Typography component="span" size="s">
+            {value}
+          </Typography>
+        )}
+      </Stack>
     </Paper>
   )
 }
@@ -460,59 +417,70 @@ const DomainCard = ({
   const progress = <DomainProgress domain={domain} />
   return (
     <Paper elevation={0} outlined>
-      <Row>
-        <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
-          <Typography component="span" size="s">
-            {domain.hostname}
-          </Typography>
-          <Stack flexDirection="row" gap="xs" alignItems="center">
-            {IN_PROGRESS.includes(domain.status) && <Loader size="s" />}
-            <Sticker color={st.color} size="s">
-              {st.label}
-            </Sticker>
-            {domain.kind === 'custom' && domain.status !== '削除中' && (
-              <KebabMenu label={`${domain.hostname} の操作`} onDelete={onDelete} />
-            )}
-          </Stack>
+      <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
+        <Typography component="span" size="s">
+          {domain.hostname}
+        </Typography>
+        <Stack flexDirection="row" gap="xs" alignItems="center">
+          {IN_PROGRESS.includes(domain.status) && <Loader size="s" />}
+          <Sticker color={st.color} size="s">
+            {st.label}
+          </Sticker>
+          {domain.kind === 'custom' && domain.status !== '削除中' && (
+            <MenuTrigger>
+              <Button
+                appearance="transparent"
+                color="neutral"
+                size="s"
+                iconOnly
+                aria-label={`${domain.hostname} の操作`}
+              >
+                <Icon name="ellipsis_horizontal" size="s" aria-hidden="true" />
+              </Button>
+              <Menu placement="bottom end">
+                <MenuItem color="negative" onAction={onDelete}>
+                  削除
+                </MenuItem>
+              </Menu>
+            </MenuTrigger>
+          )}
         </Stack>
-      </Row>
+      </Stack>
       {hasDetail && (
         <>
           <Divider />
           {/* GAP-NEW: Paper に地色の違う面が無い。実物の詳細欄は bg-neutral-50 */}
-          <Row>
-            <Stack gap="s">
-              {showMethodTabs ? (
-                // 実物は wip-ui の Tabs を使わず role="tablist" の native button で手組みしている
-                // （TabPanel が export されていない・下線色と文字サイズを変えられないため）
-                <Tabs
-                  selectedKey={domain.verificationMethod}
-                  onSelectionChange={(k) => onChangeMethod(k as VerificationMethod)}
-                >
-                  <TabList aria-label="検証方法">
-                    {METHOD_TABS.map((t) => (
-                      <Tab key={t.key} id={t.key}>
-                        <Stack flexDirection="row" gap="xs" alignItems="center">
-                          <span>{t.label}</span>
-                          <Typography component="span" size="xs" color="medium_emphasis">
-                            {t.description}
-                          </Typography>
-                        </Stack>
-                      </Tab>
-                    ))}
-                  </TabList>
-                  {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
+          <Stack gap="s">
+            {showMethodTabs ? (
+              // 実物は wip-ui の Tabs を使わず role="tablist" の native button で手組みしている
+              // （TabPanel が export されていない・下線色と文字サイズを変えられないため）
+              <Tabs
+                selectedKey={domain.verificationMethod}
+                onSelectionChange={(k) => onChangeMethod(k as VerificationMethod)}
+              >
+                <TabList aria-label="検証方法">
                   {METHOD_TABS.map((t) => (
-                    <TabPanel key={t.key} id={t.key}>
-                      <div style={panelStyle}>{progress}</div>
-                    </TabPanel>
+                    <Tab key={t.key} id={t.key}>
+                      <Stack flexDirection="row" gap="xs" alignItems="center">
+                        <span>{t.label}</span>
+                        <Typography component="span" size="xs" color="medium_emphasis">
+                          {t.description}
+                        </Typography>
+                      </Stack>
+                    </Tab>
                   ))}
-                </Tabs>
-              ) : (
-                progress
-              )}
-            </Stack>
-          </Row>
+                </TabList>
+                {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
+                {METHOD_TABS.map((t) => (
+                  <TabPanel key={t.key} id={t.key}>
+                    {progress}
+                  </TabPanel>
+                ))}
+              </Tabs>
+            ) : (
+              progress
+            )}
+          </Stack>
         </>
       )}
     </Paper>
@@ -666,35 +634,29 @@ const DomainsScreen = ({
 
 // 実物の features/Project/index.tsx がプロジェクトを取得している間と、取得に失敗したとき。
 // タブ（ドメイン）より上で止まるので、パンくずも出ない。
-// GAP-1: 実物の読み込み中は py-16、失敗は px-6 py-16 の中央寄せ。
-const noticeStyle = { paddingBlock: 64, paddingInline: 24 }
+// GAP-1: 余白をとる部品が無い。実物の読み込み中は py-16、失敗は px-6 py-16 の中央寄せ。
+//        inline style を当てない方針のため未対応。
 
 const ProjectLoadingAndError = () => (
   <Stack gap="xxl">
     <AppShell active="domains">
-      <div style={noticeStyle}>
-        <Stack alignItems="center">
-          <Loader size="m" message="読み込み中" />
-        </Stack>
-      </div>
+      <Stack alignItems="center">
+        <Loader size="m" message="読み込み中" />
+      </Stack>
     </AppShell>
     <AppShell active="domains">
-      <div style={noticeStyle}>
-        <Stack alignItems="center">
-          <Typography component="div" size="s" color="low_emphasis">
-            プロジェクトの取得に失敗しました。時間をおいて再度お試しください。
-          </Typography>
-        </Stack>
-      </div>
+      <Stack alignItems="center">
+        <Typography component="div" size="s" color="low_emphasis">
+          プロジェクトの取得に失敗しました。時間をおいて再度お試しください。
+        </Typography>
+      </Stack>
     </AppShell>
     <AppShell active="domains">
-      <div style={noticeStyle}>
-        <Stack alignItems="center">
-          <Typography component="div" size="s" color="low_emphasis">
-            プロジェクトが見つかりません。
-          </Typography>
-        </Stack>
-      </div>
+      <Stack alignItems="center">
+        <Typography component="div" size="s" color="low_emphasis">
+          プロジェクトが見つかりません。
+        </Typography>
+      </Stack>
     </AppShell>
   </Stack>
 )

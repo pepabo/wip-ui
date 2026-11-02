@@ -26,7 +26,7 @@ import {
   ServerStatusView,
   server,
 } from './gameServer'
-import { Card, Inset } from './parts'
+import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -904,45 +904,43 @@ const UserTable = ({
   deletable?: boolean
 }) => (
   <Paper elevation={0} outlined>
-    <Inset>
-      <Stack gap="m">
-        <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="xl">
-          <Typography size="s" component="span">
-            追加済ユーザー
-          </Typography>
-          <Typography size="s" color="medium_emphasis" component="span">
-            {users.length}人
-          </Typography>
-        </Stack>
-        <Table aria-label={`${label}の追加済ユーザー`}>
-          <TableHeader>
-            <Column isRowHeader allowsSorting>
-              ユーザー名
-            </Column>
-            {deletable ? <Column aria-label="操作"> </Column> : null}
-          </TableHeader>
-          <TableBody>
-            {users.map((u) => (
-              <Row key={u} id={u}>
-                <Cell>{u}</Cell>
-                {deletable ? (
-                  <Cell>
-                    <Button
-                      appearance="outlined"
-                      color="negative"
-                      size="s"
-                      leading={<Icon name="garbage_can" size="s" />}
-                    >
-                      削除
-                    </Button>
-                  </Cell>
-                ) : null}
-              </Row>
-            ))}
-          </TableBody>
-        </Table>
+    <Stack gap="m">
+      <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="xl">
+        <Typography size="s" component="span">
+          追加済ユーザー
+        </Typography>
+        <Typography size="s" color="medium_emphasis" component="span">
+          {users.length}人
+        </Typography>
       </Stack>
-    </Inset>
+      <Table aria-label={`${label}の追加済ユーザー`}>
+        <TableHeader>
+          <Column isRowHeader allowsSorting>
+            ユーザー名
+          </Column>
+          {deletable ? <Column aria-label="操作"> </Column> : null}
+        </TableHeader>
+        <TableBody>
+          {users.map((u) => (
+            <Row key={u} id={u}>
+              <Cell>{u}</Cell>
+              {deletable ? (
+                <Cell>
+                  <Button
+                    appearance="outlined"
+                    color="negative"
+                    size="s"
+                    leading={<Icon name="garbage_can" size="s" />}
+                  >
+                    削除
+                  </Button>
+                </Cell>
+              ) : null}
+            </Row>
+          ))}
+        </TableBody>
+      </Table>
+    </Stack>
   </Paper>
 )
 
@@ -1276,16 +1274,14 @@ const UserListItem = ({ label, users }: { label: string; users: string[] }) => {
  */
 const SaveBar = ({ onSave, onDiscard }: { onSave: () => void; onDiscard: () => void }) => (
   <Paper elevation={0} square outlined>
-    <Inset>
-      <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s" justifyContent="center">
-        <Button color="interactive" size="l" onPress={onSave}>
-          保存
-        </Button>
-        <Button appearance="outlined" size="l" onPress={onDiscard}>
-          変更を破棄
-        </Button>
-      </Stack>
-    </Inset>
+    <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s" justifyContent="center">
+      <Button color="interactive" size="l" onPress={onSave}>
+        保存
+      </Button>
+      <Button appearance="outlined" size="l" onPress={onDiscard}>
+        変更を破棄
+      </Button>
+    </Stack>
   </Paper>
 )
 

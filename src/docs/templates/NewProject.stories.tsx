@@ -14,6 +14,7 @@ import { Stack } from '../../Stack'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
+import deployNowLogo from './assets/deploy-now/logo.svg'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -49,16 +50,15 @@ const DEPLOY_PROMPT =
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// GAP-1: 一覧の行。実物は px-4 py-3（リポジトリ）と px-3 py-2（ファイル）。
-const repoRowStyle = { paddingBlock: 12, paddingInline: 16 }
-const fileRowStyle = { paddingBlock: 8, paddingInline: 12 }
-// GAP-1: 値とコピーの面・ファイル一覧の面。実物は p-4。
-const boxStyle = { padding: 16 }
-// GAP-1: 実物の CenteredNotice / 読み込み中（px-6 py-16）と、検索 0 件・取得失敗（py-8）。
-const noticeStyle = { paddingBlock: 64, paddingInline: 24 }
-const smallNoticeStyle = { paddingBlock: 32, paddingInline: 24 }
-// GAP-1: ドロップ領域。実物は px-8 py-16。
+// GAP-1: Paper に padding が無い。一覧の行（実物は px-4 py-3 のリポジトリ・px-3 py-2 のファイル）、
+//        値とコピーの面・ファイル一覧の面・インポート元の面（p-4）、CenteredNotice（px-6 py-16）、
+//        検索 0 件（py-8）の余白。inline style を当てない方針のため未対応。
+// GAP-1: 余白をとる部品が無い。読み込み中・取得失敗の案内（実物は px-6 py-16）の余白。
+//        inline style を当てない方針のため未対応。
+// ドロップ領域（DropZone そのものが無い）の余白。実物は px-8 py-16。
 const dropStyle = { paddingBlock: 64, paddingInline: 32 }
+// skill の本文を出すコード表示面（pre 相当の部品そのものが無い）の余白。実物は p-4。
+const codeStyle = { padding: 16 }
 
 // GAP-NEW: 文中のテキストリンクが無い。実物は native a / button + text-sky-700（または #0b3893）。
 // LinkButton の transparent で代えるので、文字の前後に余白が付く。
@@ -69,35 +69,29 @@ const TextLink = ({ children }: { children: ReactNode }) => (
 )
 
 const LoadingBody = ({ message = '読み込み中' }: { message?: string }) => (
-  <div style={noticeStyle}>
-    <Stack alignItems="center">
-      <Loader size="m" message={message} />
-    </Stack>
-  </div>
+  <Stack alignItems="center">
+    <Loader size="m" message={message} />
+  </Stack>
 )
 
 /** 実物の `px-6 py-16 text-center` の 1 行（面を持たない）。 */
 const CenteredMessage = ({ message }: { message: string }) => (
-  <div style={noticeStyle}>
-    <Stack alignItems="center">
-      <Typography component="div" size="s" color="low_emphasis">
-        {message}
-      </Typography>
-    </Stack>
-  </div>
+  <Stack alignItems="center">
+    <Typography component="div" size="s" color="low_emphasis">
+      {message}
+    </Typography>
+  </Stack>
 )
 
 /** 実物の CenteredNotice（Paper outlined + px-6 py-16 + 中央寄せ）。 */
 const CenteredNotice = ({ message, children }: { message: string; children?: ReactNode }) => (
   <Paper elevation={0} outlined>
-    <div style={noticeStyle}>
-      <Stack gap="m" alignItems="center">
-        <Typography component="div" size="s" color="low_emphasis">
-          {message}
-        </Typography>
-        {children}
-      </Stack>
-    </div>
+    <Stack gap="m" alignItems="center">
+      <Typography component="div" size="s" color="low_emphasis">
+        {message}
+      </Typography>
+      {children}
+    </Stack>
   </Paper>
 )
 
@@ -136,24 +130,22 @@ const CopyBox = ({ value }: { value: string }) => {
   return (
     // 実物は border + bg-neutral-50 + shadow-sm。GAP-NEW: Paper に地色の違う面が無い
     <Paper elevation={1} outlined>
-      <div style={boxStyle}>
-        <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
-          <Typography size="s" color="medium_emphasis" component="span">
-            {value}
-          </Typography>
-          <Button
-            appearance="flat"
-            color="neutral"
-            size="s"
-            onPress={() => {
-              setCopied(true)
-              setTimeout(() => setCopied(false), 2000)
-            }}
-          >
-            {copied ? 'コピーしました' : 'コピー'}
-          </Button>
-        </Stack>
-      </div>
+      <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
+        <Typography size="s" color="medium_emphasis" component="span">
+          {value}
+        </Typography>
+        <Button
+          appearance="flat"
+          color="neutral"
+          size="s"
+          onPress={() => {
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+          }}
+        >
+          {copied ? 'コピーしました' : 'コピー'}
+        </Button>
+      </Stack>
     </Paper>
   )
 }
@@ -199,38 +191,34 @@ const SelectedFilesCard = () => (
   // GAP-NEW: Paper に地色の違う面（bg-neutral-50）が無い。実物はファイル一覧を薄い灰色の面に置く
   // GAP-NEW: 高さを決めてスクロールさせる面が無い。実物の一覧は max-h-48 overflow-y-auto
   <Paper elevation={0} outlined>
-    <div style={boxStyle}>
-      <Stack gap="s">
-        <Stack gap="xxs">
-          <Stack flexDirection="row" gap="xs" alignItems="center">
-            <Icon name="folder" />
-            <Typography component="div" size="m" fontWeight="bold">
-              {`${selectedFiles.length} ファイル (250.5 KB)`}
-            </Typography>
-          </Stack>
-          <Typography component="div" size="xxs" color="medium_emphasis">
-            .git / node_modules / .env.local は除外され、送信されません。
+    <Stack gap="s">
+      <Stack gap="xxs">
+        <Stack flexDirection="row" gap="xs" alignItems="center">
+          <Icon name="folder" />
+          <Typography component="div" size="m" fontWeight="bold">
+            {`${selectedFiles.length} ファイル (250.5 KB)`}
           </Typography>
         </Stack>
-        <Paper elevation={0} outlined>
-          {selectedFiles.map((file, i) => (
-            <Stack key={file.path}>
-              {i > 0 && <Divider />}
-              <div style={fileRowStyle}>
-                <Stack flexDirection="row" gap="xs" justifyContent="space-between">
-                  <Typography component="span" size="xs">
-                    {file.path}
-                  </Typography>
-                  <Typography component="span" size="xs" color="medium_emphasis">
-                    {file.size}
-                  </Typography>
-                </Stack>
-              </div>
-            </Stack>
-          ))}
-        </Paper>
+        <Typography component="div" size="xxs" color="medium_emphasis">
+          .git / node_modules / .env.local は除外され、送信されません。
+        </Typography>
       </Stack>
-    </div>
+      <Paper elevation={0} outlined>
+        {selectedFiles.map((file, i) => (
+          <Stack key={file.path}>
+            {i > 0 && <Divider />}
+            <Stack flexDirection="row" gap="xs" justifyContent="space-between">
+              <Typography component="span" size="xs">
+                {file.path}
+              </Typography>
+              <Typography component="span" size="xs" color="medium_emphasis">
+                {file.size}
+              </Typography>
+            </Stack>
+          </Stack>
+        ))}
+      </Paper>
+    </Stack>
   </Paper>
 )
 
@@ -555,37 +543,28 @@ const RepositoryPicker = ({ accountsEmpty = false }: { accountsEmpty?: boolean }
       </Grid>
       {visible.length === 0 ? (
         <Paper elevation={0} outlined>
-          <div style={smallNoticeStyle}>
-            <Stack alignItems="center">
-              <Typography component="div" size="s" color="low_emphasis">
-                {`「${query}」に一致するリポジトリがありません。`}
-              </Typography>
-            </Stack>
-          </div>
+          <Stack alignItems="center">
+            <Typography component="div" size="s" color="low_emphasis">
+              {`「${query}」に一致するリポジトリがありません。`}
+            </Typography>
+          </Stack>
         </Paper>
       ) : (
         <Paper elevation={0} outlined>
           {visible.map((r, i) => (
             <Stack key={r.id}>
               {i > 0 && <Divider />}
-              <div style={repoRowStyle}>
-                <Stack
-                  flexDirection="row"
-                  gap="m"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Stack flexDirection="row" gap="xs" alignItems="center">
-                    <Typography component="span" size="m" fontWeight="bold">
-                      {r.name}
-                    </Typography>
-                    {r.private && <Icon name="lock" size="s" aria-label="非公開リポジトリ" />}
-                  </Stack>
-                  <Button size="s" aria-label={`${r.name} をインポート`}>
-                    インポート
-                  </Button>
+              <Stack flexDirection="row" gap="m" alignItems="center" justifyContent="space-between">
+                <Stack flexDirection="row" gap="xs" alignItems="center">
+                  <Typography component="span" size="m" fontWeight="bold">
+                    {r.name}
+                  </Typography>
+                  {r.private && <Icon name="lock" size="s" aria-label="非公開リポジトリ" />}
                 </Stack>
-              </div>
+                <Button size="s" aria-label={`${r.name} をインポート`}>
+                  インポート
+                </Button>
+              </Stack>
             </Stack>
           ))}
         </Paper>
@@ -645,19 +624,17 @@ const NewProjectSection = ({
       <Stack gap="l">
         {/* GAP-NEW: Paper に地色の違う面（bg-neutral-100・枠なし）が無い。実物はインポート元を灰色の面に置く */}
         <Paper elevation={0} outlined>
-          <div style={boxStyle}>
-            <Stack gap="xxs">
-              <Typography component="div" size="xs" color="medium_emphasis">
-                GitHub からインポート
+          <Stack gap="xxs">
+            <Typography component="div" size="xs" color="medium_emphasis">
+              GitHub からインポート
+            </Typography>
+            <Stack flexDirection="row" gap="xs" alignItems="center">
+              <Icon name="github" size="s" />
+              <Typography component="div" size="m" fontWeight="bold">
+                {repository.fullName}
               </Typography>
-              <Stack flexDirection="row" gap="xs" alignItems="center">
-                <Icon name="github" size="s" />
-                <Typography component="div" size="m" fontWeight="bold">
-                  {repository.fullName}
-                </Typography>
-              </Stack>
             </Stack>
-          </div>
+          </Stack>
         </Paper>
         <Stack gap="l">
           <TextField
@@ -803,12 +780,10 @@ const TrialShell = ({ children }: { children: ReactNode }) => (
   <Stack gap="l">
     <AppBar appearance="white" position="relative">
       <AppBarLeading>
-        <Stack flexDirection="row" gap="s" alignItems="center">
-          <Icon name="pepapon" size="m" />
-          <Typography size="l" fontWeight="bold" component="span">
-            サーバー管理
-          </Typography>
-        </Stack>
+        {/* GAP-NEW: 画像の枠（Image）が無い。実物は h-7 w-auto（md 以上 h-12）に縮めて出す */}
+        <a href="/start">
+          <img src={deployNowLogo} alt="ロリポップ！デプロイナウ" width={390} height={54} />
+        </a>
       </AppBarLeading>
       <AppBarTrailing>
         {/* GAP-NEW: 表示/非表示のレスポンシブ指定が無い。実物は sm 未満で「ドキュメント」「ログイン」を隠す */}
@@ -990,7 +965,7 @@ const CliSkillScreen = () => {
           GAP-NEW: 高さを決めてスクロールさせる面が無い。実物は max-h-[60vh] overflow-auto。
           GAP-NEW: Paper に地色の違う面（bg-neutral-50）が無い */}
       <Paper elevation={0} outlined>
-        <div style={boxStyle}>
+        <div style={codeStyle}>
           <Stack>
             {SKILL_MARKDOWN.split('\n').map((line, i) => (
               <Typography

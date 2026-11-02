@@ -3,11 +3,11 @@ import { Callout } from '../../Callout'
 import { Dialog, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
-import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Stack } from '../../Stack'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
+import paypayLogo from './assets/gamers/paypay.svg'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -67,9 +67,8 @@ const PaymentInfo = ({ loading }: { loading: boolean }) => (
         {loading ? (
           <Pending />
         ) : (
-          // GAP-NEW: PayPay のロゴ（/paypay.svg）が無い
           <Stack flexDirection="row" gap="m" alignItems="center">
-            <Icon name="qr_code" size="l" />
+            <img src={paypayLogo} alt="PayPay" width={48} height={48} />
             <Typography size="s" component="p">
               PayPay
             </Typography>
@@ -143,8 +142,7 @@ const OrderDetail = ({ loading }: { loading: boolean }) => (
   </Card>
 )
 
-// GAP-NEW: Dialog に幅の指定が無い。実物は MUI の fullWidth（600px）。552px は左右の padding を引いた値
-const dialogWidthStyle = { width: 552, maxWidth: '100%' } // GAP-NEW: Dialog に幅が無い
+// GAP-NEW: Dialog に幅の prop（MUI の fullWidth・600px）が無い。inline style を当てない方針のため未対応で、中身の幅で縮む
 
 /**
  * components/InSubmitDialog。閉じられない。「購入する」を押して PayPay へ移るまでと、
@@ -152,19 +150,17 @@ const dialogWidthStyle = { width: 552, maxWidth: '100%' } // GAP-NEW: Dialog に
  */
 const InSubmitDialog = () => (
   <Dialog isOpen isDismissable={false}>
-    <div style={dialogWidthStyle}>
-      <DialogHeader>
-        <DialogTitle>購入</DialogTitle>
-      </DialogHeader>
-      <Stack gap="xl">
-        <Callout color="notice" appearance="outline">
-          アプリを閉じないようにご注意ください
-        </Callout>
-        <Stack alignItems="center">
-          <Loader size="xxl" />
-        </Stack>
+    <DialogHeader>
+      <DialogTitle>購入</DialogTitle>
+    </DialogHeader>
+    <Stack gap="xl">
+      <Callout color="notice" appearance="outline">
+        アプリを閉じないようにご注意ください
+      </Callout>
+      <Stack alignItems="center">
+        <Loader size="xxl" />
       </Stack>
-    </div>
+    </Stack>
   </Dialog>
 )
 

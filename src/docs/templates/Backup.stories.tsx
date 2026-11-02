@@ -6,7 +6,7 @@ import { Callout } from '../../Callout'
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
-import { Paper } from '../../Paper'
+import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Tab, TabList, Tabs } from '../../Tab'
@@ -19,7 +19,6 @@ import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
-import type { IconName } from '../../Icon'
 
 /**
  * ロリポップ！for Gamers（apollo/frontend）のバックアップの再現。
@@ -119,57 +118,6 @@ const palworldBackups: Backup[] = [
 
 // ─── 部品 ───
 
-/**
- * GAP-9: Menu が無い。トリガーの直下に Paper を絶対配置で重ね、項目を transparent ボタンで並べている。
- * 外側のクリックや Esc で閉じない・矢印キーで項目を移れない・role="menu" にならない。
- */
-const menuAnchorStyle = { position: 'relative', display: 'inline-block' } as const // GAP-9
-const menuPanelStyle = {
-  position: 'absolute',
-  top: '100%',
-  right: 0,
-  zIndex: 10,
-  width: 220,
-} as const // GAP-9
-
-type MenuItem = { label: string; icon: IconName }
-
-const PseudoMenu = ({
-  isOpen,
-  onOpenChange,
-  trigger,
-  items,
-}: {
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
-  trigger: (toggle: () => void) => ReactNode
-  items: MenuItem[]
-}) => (
-  <div style={menuAnchorStyle}>
-    {trigger(() => onOpenChange(!isOpen))}
-    {isOpen && (
-      <div style={menuPanelStyle}>
-        <Paper elevation={3}>
-          <Stack gap="xxs">
-            {items.map((item) => (
-              <Button
-                key={item.label}
-                appearance="transparent"
-                size="s"
-                width="full"
-                leading={<Icon name={item.icon} size="s" />}
-                onPress={() => onOpenChange(false)}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </Stack>
-        </Paper>
-      </div>
-    )}
-  </div>
-)
-
 // GAP-18: 進捗バー / メーターが無い。Typography で色を継承させ、currentColor で塗っている。
 // 高さ・角丸・トラックの不透明度はトークンに出典が無い暫定値。90% 以上で赤（実アプリは pink[700]）。
 const meterTrackStyle = { height: 20, borderRadius: 8, opacity: 0.15, background: 'currentColor' } // GAP-18
@@ -227,112 +175,129 @@ const BackupListTable = ({
   backups: Backup[]
   isServerBackup?: boolean
 }) => {
-  const [menu, setMenu] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<Backup | null>(null)
   return (
-    <Table aria-label="バックアップ">
-      <TableHeader>
-        <Column isRowHeader>名前</Column>
-        <Column>サイズ</Column>
-        <Column>作成日時</Column>
-        {isServerBackup ? null : <Column>ゲーム</Column>}
-        <Column aria-label="操作"> </Column>
-      </TableHeader>
-      {/* DataGrid の noRowsLabel と同じく、0 件でも見出しは残す */}
-      <TableBody
-        renderEmptyState={() => (
-          <Typography size="s" color="medium_emphasis">
-            バックアップがありません
-          </Typography>
-        )}
-      >
-        {backups.map((b) => (
-          <Row key={b.id} id={b.id}>
-            <Cell>
-              <Stack flexDirection="row" gap="xs" alignItems="center">
-                {/* GAP-NEW: Icon の color は生の CSS 値しか取らないので Typography で色を継承させている */}
-                <Typography component="span" color="informative">
-                  <Icon name="person" size="m" />
-                </Typography>
-                <Typography component="span" size="s">
-                  {b.name}
-                </Typography>
-                {b.status === 'FAILED' && (
-                  <Sticker color="negative" size="s">
-                    失敗
-                  </Sticker>
-                )}
-              </Stack>
-            </Cell>
-            <Cell>{b.sizeBytes > 0 ? formatBytes(b.sizeBytes) : '-'}</Cell>
-            <Cell>{b.createdAt}</Cell>
-            {isServerBackup ? null : <Cell>{gameName[b.game]}</Cell>}
-            <Cell>
-              {/* BackupListTable/MenuCell。成功は「復元」と ⋮、失敗は × だけ */}
-              {b.status === 'SUCCESS' ? (
+    <>
+      <Table aria-label="バックアップ">
+        <TableHeader>
+          <Column isRowHeader>名前</Column>
+          <Column>サイズ</Column>
+          <Column>作成日時</Column>
+          {isServerBackup ? null : <Column>ゲーム</Column>}
+          <Column aria-label="操作"> </Column>
+        </TableHeader>
+        {/* DataGrid の noRowsLabel と同じく、0 件でも見出しは残す */}
+        <TableBody
+          renderEmptyState={() => (
+            <Typography size="s" color="medium_emphasis">
+              バックアップがありません
+            </Typography>
+          )}
+        >
+          {backups.map((b) => (
+            <Row key={b.id} id={b.id}>
+              <Cell>
                 <Stack flexDirection="row" gap="xs" alignItems="center">
-                  {/* GAP-NEW: Replay（↺）に当たるアイコンが無いので arrow_order で代用 */}
-                  <Button
-                    appearance="outlined"
-                    size="s"
-                    leading={<Icon name="arrow_order" size="s" />}
-                  >
-                    復元
-                  </Button>
-                  <PseudoMenu
-                    isOpen={menu === b.id}
-                    onOpenChange={(open) => setMenu(open ? b.id : null)}
-                    trigger={(toggle) => (
+                  {/* GAP-NEW: Icon の color は生の CSS 値しか取らないので Typography で色を継承させている */}
+                  <Typography component="span" color="informative">
+                    <Icon name="person" size="m" />
+                  </Typography>
+                  <Typography component="span" size="s">
+                    {b.name}
+                  </Typography>
+                  {b.status === 'FAILED' && (
+                    <Sticker color="negative" size="s">
+                      失敗
+                    </Sticker>
+                  )}
+                </Stack>
+              </Cell>
+              <Cell>{b.sizeBytes > 0 ? formatBytes(b.sizeBytes) : '-'}</Cell>
+              <Cell>{b.createdAt}</Cell>
+              {isServerBackup ? null : <Cell>{gameName[b.game]}</Cell>}
+              <Cell>
+                {/* BackupListTable/MenuCell。成功は「復元」と ⋮、失敗は × だけ */}
+                {b.status === 'SUCCESS' ? (
+                  <Stack flexDirection="row" gap="xs" alignItems="center">
+                    {/* GAP-NEW: Replay（↺）に当たるアイコンが無いので arrow_order で代用 */}
+                    <Button
+                      appearance="outlined"
+                      size="s"
+                      leading={<Icon name="arrow_order" size="s" />}
+                    >
+                      復元
+                    </Button>
+                    <MenuTrigger>
                       <Button
                         appearance="transparent"
                         size="s"
                         iconOnly
                         aria-label={`${b.name}の操作`}
-                        aria-expanded={menu === b.id}
-                        onPress={toggle}
                       >
-                        <Icon name="ellipsis_vertical" size="m" />
+                        <Icon name="ellipsis_vertical" size="m" aria-hidden="true" />
                       </Button>
-                    )}
-                    items={[{ label: '削除', icon: 'garbage_can' }]}
-                  />
-                </Stack>
-              ) : (
-                // 失敗したバックアップは確認なしですぐ消える（handleClickDeleteNow）
-                <Button appearance="transparent" size="s" iconOnly aria-label={`${b.name}を削除`}>
-                  <Icon name="cross" size="m" />
-                </Button>
-              )}
-            </Cell>
-          </Row>
-        ))}
-      </TableBody>
-    </Table>
+                      <Menu placement="bottom end">
+                        <MenuItem
+                          color="negative"
+                          leading={<Icon name="garbage_can" size="s" />}
+                          onAction={() => setDeleting(b)}
+                        >
+                          削除
+                        </MenuItem>
+                      </Menu>
+                    </MenuTrigger>
+                  </Stack>
+                ) : (
+                  // 失敗したバックアップは確認なしですぐ消える（handleClickDeleteNow）
+                  <Button appearance="transparent" size="s" iconOnly aria-label={`${b.name}を削除`}>
+                    <Icon name="cross" size="m" />
+                  </Button>
+                )}
+              </Cell>
+            </Row>
+          ))}
+        </TableBody>
+      </Table>
+      {deleting && <DeleteBackupDialog backup={deleting} onClose={() => setDeleting(null)} />}
+    </>
   )
 }
 
 // ─── ダイアログ ───
 // ボタンの見た目は lib/dialog.ts に合わせる。キャンセル = 文字だけ、確定 = 枠線、削除の確定 = 赤の枠線。
 
-// GAP-NEW: Dialog に幅の指定が無く、中身の幅で縮む。実アプリは MUI の fullWidth（最大 600px）。
-// 中身を 1 枚の div で包んで幅を持たせている。552px は 600px から Dialog の左右の padding を引いた値。
-const dialogWidthStyle = { width: 552, maxWidth: '100%' } // GAP-NEW: Dialog に幅が無い
+// GAP-NEW: Dialog に幅の prop（MUI の fullWidth・最大 600px）が無い。inline style を当てない方針のため未対応で、
+// ダイアログは中身の幅で縮む。
 
-const FullWidthDialog = ({
+/** 開いた状態の Dialog。閉じる操作を onClose に渡す */
+const OpenDialog = ({
   children,
   role,
+  onClose,
 }: {
   children: ReactNode
   role?: 'dialog' | 'alertdialog'
+  onClose?: () => void
 }) => (
-  <Dialog isOpen role={role}>
-    <div style={dialogWidthStyle}>{children}</div>
+  <Dialog isOpen role={role} onOpenChange={(open) => !open && onClose?.()}>
+    {children}
   </Dialog>
 )
 
-const DialogActions = ({ confirm, negative = false }: { confirm: string; negative?: boolean }) => (
+const DialogActions = ({
+  confirm,
+  negative = false,
+  onClose,
+}: {
+  confirm: string
+  negative?: boolean
+  onClose?: () => void
+}) => (
   <DialogFooter>
-    <Button appearance="transparent">キャンセル</Button>
-    <Button appearance="outlined" color={negative ? 'negative' : 'neutral'}>
+    <Button appearance="transparent" onPress={onClose}>
+      キャンセル
+    </Button>
+    <Button appearance="outlined" color={negative ? 'negative' : 'neutral'} onPress={onClose}>
       {confirm}
     </Button>
   </DialogFooter>
@@ -352,7 +317,7 @@ const ConfigRow = ({ label, children }: { label: string; children: ReactNode }) 
 
 /** components/CreateBackupDialog（サーバーのバックアップから開いたとき） */
 const CreateBackupDialog = () => (
-  <FullWidthDialog>
+  <OpenDialog>
     <DialogHeader>
       <DialogTitle>バックアップ作成</DialogTitle>
     </DialogHeader>
@@ -366,12 +331,12 @@ const CreateBackupDialog = () => (
       </Callout>
     </Stack>
     <DialogActions confirm="作成" />
-  </FullWidthDialog>
+  </OpenDialog>
 )
 
 /** (server)/backup/_components/RestoreBackupDialog */
 const RestoreBackupDialog = ({ backup }: { backup: Backup }) => (
-  <FullWidthDialog>
+  <OpenDialog>
     <DialogHeader>
       <DialogTitle>「{backup.name}」を復元しますか？</DialogTitle>
     </DialogHeader>
@@ -387,12 +352,12 @@ const RestoreBackupDialog = ({ backup }: { backup: Backup }) => (
       </Callout>
     </Stack>
     <DialogActions confirm="復元" />
-  </FullWidthDialog>
+  </OpenDialog>
 )
 
 /** components/DeleteBackupDialog。注意文は実アプリの文言のまま（「復元したデータは」） */
-const DeleteBackupDialog = ({ backup }: { backup: Backup }) => (
-  <FullWidthDialog role="alertdialog">
+const DeleteBackupDialog = ({ backup, onClose }: { backup: Backup; onClose?: () => void }) => (
+  <OpenDialog role="alertdialog" onClose={onClose}>
     <DialogHeader>
       <DialogTitle>「{backup.name}」を削除しますか？</DialogTitle>
     </DialogHeader>
@@ -405,8 +370,8 @@ const DeleteBackupDialog = ({ backup }: { backup: Backup }) => (
         復元したデータは元に戻せないためご注意ください。
       </Callout>
     </Stack>
-    <DialogActions confirm="削除" negative />
-  </FullWidthDialog>
+    <DialogActions confirm="削除" negative onClose={onClose} />
+  </OpenDialog>
 )
 
 const usageOf = (backups: Backup[]) => backups.reduce((sum, b) => sum + b.sizeBytes, 0)

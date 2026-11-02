@@ -6,18 +6,20 @@ import { Checkbox } from '../../Checkbox'
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
-import { Icon } from '../../Icon'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AuthShell } from './AppShell'
+import createAccountImage from './assets/gamers/create-account.svg'
+import discordLogo from './assets/gamers/external-idp/discord.svg'
+import googleLogo from './assets/gamers/external-idp/google.svg'
+import twitchLogo from './assets/gamers/external-idp/twitch.svg'
 import { CalloutBody } from './gameServer'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
-import type { IconName } from '../../Icon'
 
 /**
  * ログイン前の画面の再現。2 つのアプリの実画面をそのまま写している。
@@ -82,14 +84,13 @@ const PaperTitle = ({ title, lines }: { title: string; lines?: string[] }) => (
 )
 
 /**
- * components/ExternalIdpButtons/model.ts。Google / Discord / Twitch の 3 つ。
- * GAP-5: Google のアイコンが無い。GAP-NEW: Twitch のアイコンも無い。どちらも launch で代用している。
+ * components/ExternalIdpButtons/model.ts。Google / Discord / Twitch の 3 つ。ロゴは実物と同じ public/external-idp/*.svg。
  * parts.tsx の identityProviders（Google / Apple / X / LINE / Discord）は実物と違うので使わない。
  */
-const gamersIdps: { label: string; icon: IconName }[] = [
-  { label: 'Google', icon: 'launch' },
-  { label: 'Discord', icon: 'discord' },
-  { label: 'Twitch', icon: 'launch' },
+const gamersIdps: { label: string; logo: string }[] = [
+  { label: 'Google', logo: googleLogo },
+  { label: 'Discord', logo: discordLogo },
+  { label: 'Twitch', logo: twitchLogo },
 ]
 
 /**
@@ -105,7 +106,8 @@ const ExternalIdpButtons = ({ disabled }: { disabled: boolean }) => (
           size="l"
           isDisabled={disabled}
           aria-label={idp.label}
-          leading={<Icon name={idp.icon} size="s" />}
+          // GAP-NEW: 画像の枠（Image）が無い。実物は object-fit: contain で、無効のときはロゴも薄くする
+          leading={<img src={idp.logo} alt="" width={22} height={22} />}
         >
           {idp.label}
         </Button>
@@ -114,15 +116,14 @@ const ExternalIdpButtons = ({ disabled }: { disabled: boolean }) => (
   </Grid>
 )
 
-const noWrapStyle = { whiteSpace: 'nowrap' } as const // GAP-4
-
 /** MUI の <Divider>または</Divider>。GAP-4: Divider に文字を入れられないので線と文字を並べる */
 const OrDivider = () => (
   <Stack flexDirection="row" gap="s" alignItems="center">
     <Divider flexItem />
     <Typography size="s" component="span">
-      {/* GAP-4: 線に挟まれた文字が縮んで 1 文字ずつ折り返すので、折り返さない指定を足している */}
-      <span style={noWrapStyle}>または</span>
+      {/* GAP-4: Typography に折り返しを止める指定（noWrap）が無い。inline style を当てない方針のため未対応で、
+          線に挟まれた文字が縮んで折り返すことがある */}
+      または
     </Typography>
     <Divider flexItem />
   </Stack>
@@ -165,8 +166,7 @@ const ConsentCheckboxes = ({
   </Stack>
 )
 
-// GAP-NEW: Dialog に幅の指定が無い。Backup と同じく中身を包んで MUI の fullWidth（600px）に寄せている
-const dialogWidthStyle = { width: 552, maxWidth: '100%' } // GAP-NEW: Dialog に幅が無い
+// GAP-NEW: Dialog に幅の prop（MUI の fullWidth・600px）が無い。inline style を当てない方針のため未対応で、中身の幅で縮む
 
 /**
  * login/_components/ExternalSignupModal（パターン B）。外部 IdP で戻ってきたがアカウントが無いときに出る。
@@ -177,38 +177,36 @@ const ExternalSignupModal = () => {
   return (
     // 実物は onClose を渡しておらず、背景のクリックでは閉じない
     <Dialog isOpen isDismissable={false}>
-      <div style={dialogWidthStyle}>
-        <DialogHeader>
-          <DialogTitle>アカウント作成</DialogTitle>
-        </DialogHeader>
-        <Stack gap="m">
-          <AlertBox
-            color="notice"
-            alert={{
-              title: 'ログイン情報が見つかりませんでした',
-              message: '選択されたアカウントでの登録は確認できませんでした',
-            }}
-          />
-          <Typography size="s" component="span">
-            このままアカウントを新規作成しますか？
-          </Typography>
-          <ConsentCheckboxes agreed={agreed} onAgreed={setAgreed} />
-        </Stack>
-        {/* lib/dialog.ts: キャンセル = 文字だけ、確定 = 枠線 */}
-        <DialogFooter>
-          <Button appearance="transparent">閉じる</Button>
-          <Button appearance="outlined" isDisabled={!agreed}>
-            作成
-          </Button>
-        </DialogFooter>
-      </div>
+      <DialogHeader>
+        <DialogTitle>アカウント作成</DialogTitle>
+      </DialogHeader>
+      <Stack gap="m">
+        <AlertBox
+          color="notice"
+          alert={{
+            title: 'ログイン情報が見つかりませんでした',
+            message: '選択されたアカウントでの登録は確認できませんでした',
+          }}
+        />
+        <Typography size="s" component="span">
+          このままアカウントを新規作成しますか？
+        </Typography>
+        <ConsentCheckboxes agreed={agreed} onAgreed={setAgreed} />
+      </Stack>
+      {/* lib/dialog.ts: キャンセル = 文字だけ、確定 = 枠線 */}
+      <DialogFooter>
+        <Button appearance="transparent">閉じる</Button>
+        <Button appearance="outlined" isDisabled={!agreed}>
+          作成
+        </Button>
+      </DialogFooter>
     </Dialog>
   )
 }
 
 /**
  * login/_components/LoginPaper（フィーチャーフラグ gamers_external-idp-login が ON で、外部 IdP が出るとき）。
- * 実物の Paper は余白が px 48 / py 80 と広い。GAP-1 の Card は 24px 固定なので詰まって見える。
+ * 実物の Paper は余白が px 48 / py 80 と広い。GAP-1（Paper に padding が無い）のため内容が面の端に接する。
  */
 const LoginPaper = () => (
   <Card elevation={1}>
@@ -269,7 +267,7 @@ const SignupPaper = () => {
 
 // GAP-NEW: 1 桁ずつの入力欄（OTP / PIN 入力）が無い。TextField を 6 つ並べ、幅を 56px に絞っている。
 // 実物は数字以外を弾く・入力で次の欄へ移る・6 桁の貼り付けで自動送信する、を自前で持っている。
-const digitStyle = { width: 56 } // GAP-NEW: 1 桁の入力欄
+// GAP-NEW: 1 桁ずつの入力欄（OTP）が無い。TextField の幅を inline style で絞らない方針のため、6 つの TextField を並べるだけにしている
 
 /** components/AuthenticationCodeTextField。6 桁が埋まるまで「認証」は押せない */
 const AuthenticationCodeTextField = () => (
@@ -280,7 +278,7 @@ const AuthenticationCodeTextField = () => (
       </Typography>
       <Stack flexDirection="row" gap="xs" justifyContent="center">
         {['1', '2', '3', '4', '5', '6'].map((digit) => (
-          <div key={digit} style={digitStyle}>
+          <div key={digit}>
             <TextField
               aria-label={`認証コード ${digit} 桁目`}
               inputMode="numeric"
@@ -417,7 +415,6 @@ export const GamersSignupAuthcode: Story = {
 /**
  * アカウント作成の完了（(private)/signup/complete）。申し込み画面へ進ませる。
  * 実物は見出しの下に 250px のイラスト（create-account.svg）がある。
- * GAP-NEW: イラストを置く枠（とイラストの素材）が無いので省いている。
  *
  * @summary ゲーマーズのアカウント作成完了
  */
@@ -429,6 +426,10 @@ export const GamersSignupComplete: Story = {
           <Typography size="xl" fontWeight="bold" component="h1">
             アカウント作成完了
           </Typography>
+          <Stack alignItems="center">
+            {/* GAP-NEW: 画像の枠（Image）が無い */}
+            <img src={createAccountImage} alt="アカウント作成完了" width={250} height={250} />
+          </Stack>
           <Stack gap="s" alignItems="center">
             <Typography size="m" fontWeight="bold" component="span">
               アカウント作成が完了しました

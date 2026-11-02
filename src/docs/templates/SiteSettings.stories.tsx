@@ -10,6 +10,7 @@ import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
+import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
 import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
@@ -19,7 +20,7 @@ import { Tab, TabList, Tabs } from '../../Tab'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
-import { Card, Inset } from './parts'
+import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -48,28 +49,21 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// GAP-1: 一覧の行。実物は px-6 py-4（行）と px-6 py-2（列見出し）。
-const rowStyle = { paddingBlock: 16, paddingInline: 24 }
-const headerRowStyle = { paddingBlock: 8, paddingInline: 24 }
-// GAP-1: 設定カードの行。実物は py-3 で左右の余白はカード側が持つ。
-const settingRowStyle = { paddingBlock: 12 }
-// GAP-1: 空の案内と読み込み中。実物は px-6 py-16 / py-16。
-const noticeStyle = { paddingBlock: 64, paddingInline: 24 }
-// GAP-NEW: TabPanel と本文のあいだに間隔が無く、タブの下線に本文が接する。実物は Stack gap="m"（16px）で離している。
-const panelStyle = { paddingTop: 16 }
-
-const Row = ({ children }: { children: ReactNode }) => <div style={rowStyle}>{children}</div>
+// GAP-1: Paper に padding が無い。一覧の行（実物は px-6 py-4）・列見出し（px-6 py-2）・
+//        設定カードの行（py-3）・リポジトリ選択の面の余白。inline style を当てない方針のため未対応。
+// GAP-1: 余白をとる部品が無い。空の案内と読み込み中（実物は px-6 py-16 / py-16）の余白。
+//        inline style を当てない方針のため未対応。
+// GAP-NEW: TabPanel と本文のあいだの間隔（実物は 16px）を付ける prop が無く、
+//          タブの下線に本文が接する。inline style を当てない方針のため未対応。
 
 // GAP-NEW: Button の isPending に見た目が無い（押せなくなるだけ）。実物の wip-ui も同じなので、
 // 処理中が分かるよう leading に Loader を入れている。
 
 /** 実物の各セクションの読み込み中（flex justify-center py-16 + Loader）。 */
 const SectionLoading = () => (
-  <div style={noticeStyle}>
-    <Stack alignItems="center">
-      <Loader size="m" message="読み込み中" />
-    </Stack>
-  </div>
+  <Stack alignItems="center">
+    <Loader size="m" message="読み込み中" />
+  </Stack>
 )
 
 // GAP-NEW: 文中のテキストリンクが無い。実物は native a + text-[#0b3893]。
@@ -90,50 +84,6 @@ const ExternalLink = ({ children }: { children: ReactNode }) => (
 
 // GAP-NEW: TextField のエラー文言スロットが react-aria のネイティブ検証前提で、
 // 送信時の独自検証の文言を出せない。実物と同じく Typography で下に置いている。
-
-// GAP-9: Menu / DropdownMenu が無い。実物は KebabMenu（portal + fixed 配置）を手組みしている。
-// ここでは ⋯ を押すと、行の中にメニュー項目をそのまま差し込む。
-type MenuAction = { label: string; destructive?: boolean; onSelect: () => void }
-
-const KebabMenu = ({ label, actions }: { label: string; actions: MenuAction[] }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  return (
-    <Stack gap="xxs" alignItems="flex-end">
-      <Button
-        appearance="transparent"
-        color="neutral"
-        size="s"
-        iconOnly
-        aria-label={label}
-        aria-expanded={isOpen}
-        onPress={() => setIsOpen((v) => !v)}
-      >
-        <Icon name="ellipsis_horizontal" size="s" />
-      </Button>
-      {isOpen && (
-        <Paper elevation={3}>
-          <Stack gap="xxs">
-            {actions.map((action) => (
-              <Button
-                key={action.label}
-                appearance="transparent"
-                color={action.destructive ? 'negative' : 'neutral'}
-                size="s"
-                width="full"
-                onPress={() => {
-                  setIsOpen(false)
-                  action.onSelect()
-                }}
-              >
-                {action.label}
-              </Button>
-            ))}
-          </Stack>
-        </Paper>
-      )}
-    </Stack>
-  )
-}
 
 /** 実物の「⚠️ ○○ を削除しますか？」型の確認ダイアログ（w-[360px]）。 */
 const ConfirmDialog = ({
@@ -472,7 +422,7 @@ const GitCard = ({
           )}
         </Stack>
         {connection ? (
-          <Stack>
+          <Stack gap="s">
             {(
               [
                 [
@@ -540,13 +490,11 @@ const GitCard = ({
                 ],
               ] as const
             ).map(([label, value, action], i) => (
-              <Stack key={label}>
+              <Stack key={label} gap="s">
                 {i > 0 && <Divider />}
-                <div style={settingRowStyle}>
-                  <SettingRow label={label} action={action}>
-                    {value}
-                  </SettingRow>
-                </div>
+                <SettingRow label={label} action={action}>
+                  {value}
+                </SettingRow>
               </Stack>
             ))}
           </Stack>
@@ -619,39 +567,35 @@ const ConnectionAddDialog = ({
             </Grid>
             <Paper elevation={0} outlined>
               {matched.length === 0 ? (
-                <Inset>
-                  <Stack alignItems="center">
-                    <Typography component="div" size="s" color="low_emphasis">
-                      {`「${query}」に一致するリポジトリがありません。`}
-                    </Typography>
-                  </Stack>
-                </Inset>
+                <Stack alignItems="center">
+                  <Typography component="div" size="s" color="low_emphasis">
+                    {`「${query}」に一致するリポジトリがありません。`}
+                  </Typography>
+                </Stack>
               ) : (
                 matched.map((r, i) => (
                   <Stack key={r.id}>
                     {i > 0 && <Divider />}
-                    <Row>
-                      <Stack
-                        flexDirection="row"
-                        gap="m"
-                        alignItems="center"
-                        justifyContent="space-between"
-                      >
-                        <Stack flexDirection="row" gap="xs" alignItems="center">
-                          <Typography component="span" size="m" fontWeight="bold">
-                            {r.name}
-                          </Typography>
-                          {r.private && <Icon name="lock" size="s" aria-label="非公開リポジトリ" />}
-                        </Stack>
-                        <Button
-                          size="s"
-                          aria-label={`${r.name} を選択`}
-                          onPress={() => setSelected(`example-inc/${r.name}`)}
-                        >
-                          選択
-                        </Button>
+                    <Stack
+                      flexDirection="row"
+                      gap="m"
+                      alignItems="center"
+                      justifyContent="space-between"
+                    >
+                      <Stack flexDirection="row" gap="xs" alignItems="center">
+                        <Typography component="span" size="m" fontWeight="bold">
+                          {r.name}
+                        </Typography>
+                        {r.private && <Icon name="lock" size="s" aria-label="非公開リポジトリ" />}
                       </Stack>
-                    </Row>
+                      <Button
+                        size="s"
+                        aria-label={`${r.name} を選択`}
+                        onPress={() => setSelected(`example-inc/${r.name}`)}
+                      >
+                        選択
+                      </Button>
+                    </Stack>
                   </Stack>
                 ))
               )}
@@ -661,14 +605,12 @@ const ConnectionAddDialog = ({
           <>
             {/* GAP-NEW: Paper に地色の違う面（bg-neutral-100）が無い */}
             <Paper elevation={0} outlined>
-              <Inset>
-                <Stack flexDirection="row" gap="xs" alignItems="center">
-                  <Icon name="github" size="s" />
-                  <Typography component="div" size="m" fontWeight="bold">
-                    {selected}
-                  </Typography>
-                </Stack>
-              </Inset>
+              <Stack flexDirection="row" gap="xs" alignItems="center">
+                <Icon name="github" size="s" />
+                <Typography component="div" size="m" fontWeight="bold">
+                  {selected}
+                </Typography>
+              </Stack>
             </Paper>
             <TextField
               label="デプロイするブランチ"
@@ -1070,16 +1012,14 @@ const EnvValueCell = ({ env }: { env: EnvVar }) => {
 }
 
 const EmptyState = ({ title, description }: { title: string; description: string }) => (
-  <div style={noticeStyle}>
-    <Stack gap="xxs" alignItems="center">
-      <Typography component="div" size="m" fontWeight="bold">
-        {title}
-      </Typography>
-      <Typography component="div" size="s" color="medium_emphasis">
-        {description}
-      </Typography>
-    </Stack>
-  </div>
+  <Stack gap="xxs" alignItems="center">
+    <Typography component="div" size="m" fontWeight="bold">
+      {title}
+    </Typography>
+    <Typography component="div" size="s" color="medium_emphasis">
+      {description}
+    </Typography>
+  </Stack>
 )
 
 const EnvVarList = ({
@@ -1108,44 +1048,52 @@ const EnvVarList = ({
       )
     ) : (
       <>
-        <div style={headerRowStyle}>
-          <Grid spacing="s">
-            <GridItem size={{ xxs: 10, m: 4 }}>
-              <Typography component="span" size="xs" color="medium_emphasis">
-                キー
-              </Typography>
-            </GridItem>
-            <GridItem size={{ xxs: 12, m: 7 }}>
-              <Typography component="span" size="xs" color="medium_emphasis">
-                値
-              </Typography>
-            </GridItem>
-          </Grid>
-        </div>
+        <Grid spacing="s">
+          <GridItem size={{ xxs: 10, m: 4 }}>
+            <Typography component="span" size="xs" color="medium_emphasis">
+              キー
+            </Typography>
+          </GridItem>
+          <GridItem size={{ xxs: 12, m: 7 }}>
+            <Typography component="span" size="xs" color="medium_emphasis">
+              値
+            </Typography>
+          </GridItem>
+        </Grid>
         {vars.map((env) => (
           <Stack key={env.id}>
             <Divider />
-            <Row>
-              <Grid spacing="s" alignContent="center">
-                <GridItem size={{ xxs: 10, m: 4 }}>
-                  <Typography component="span" size="s">
-                    {env.key}
-                  </Typography>
-                </GridItem>
-                <GridItem size={{ xxs: 12, m: 7 }}>
-                  <EnvValueCell env={env} />
-                </GridItem>
-                <GridItem size={{ xxs: 2, m: 1 }}>
-                  <KebabMenu
-                    label={`${env.key} の操作`}
-                    actions={[
-                      { label: '編集', onSelect: () => onEdit(env) },
-                      { label: '削除', destructive: true, onSelect: () => onDelete(env) },
-                    ]}
-                  />
-                </GridItem>
-              </Grid>
-            </Row>
+            <Grid spacing="s" alignContent="center">
+              <GridItem size={{ xxs: 10, m: 4 }}>
+                <Typography component="span" size="s">
+                  {env.key}
+                </Typography>
+              </GridItem>
+              <GridItem size={{ xxs: 12, m: 7 }}>
+                <EnvValueCell env={env} />
+              </GridItem>
+              <GridItem size={{ xxs: 2, m: 1 }}>
+                <Stack alignItems="flex-end">
+                  <MenuTrigger>
+                    <Button
+                      appearance="transparent"
+                      color="neutral"
+                      size="s"
+                      iconOnly
+                      aria-label={`${env.key} の操作`}
+                    >
+                      <Icon name="ellipsis_horizontal" size="s" aria-hidden="true" />
+                    </Button>
+                    <Menu placement="bottom end">
+                      <MenuItem onAction={() => onEdit(env)}>編集</MenuItem>
+                      <MenuItem color="negative" onAction={() => onDelete(env)}>
+                        削除
+                      </MenuItem>
+                    </Menu>
+                  </MenuTrigger>
+                </Stack>
+              </GridItem>
+            </Grid>
           </Stack>
         ))}
       </>
@@ -1357,62 +1305,60 @@ const EnvVarsScreen = ({
           {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
           {(['production', 'preview'] as const).map((t) => (
             <TabPanel key={t} id={t}>
-              <div style={panelStyle}>
-                <Stack gap="m">
-                  <Stack alignItems="flex-end">
-                    <Button
-                      appearance="flat"
-                      color="neutral"
-                      size="s"
-                      onPress={() => setDialog({ kind: 'form', editing: null })}
-                    >
-                      + 環境変数を追加
-                    </Button>
-                  </Stack>
-                  {!hasAiGatewayKey && (
-                    <Callout
-                      color="neutral"
-                      appearance="flat"
-                      action={
-                        <LinkButton
-                          href="https://lolipop.jp/ai/gateway/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          appearance="outlined"
-                          size="s"
-                          trailing={<Icon name="launch" size="s" />}
-                        >
-                          APIキーを発行
-                        </LinkButton>
-                      }
-                    >
-                      <Stack gap="xxs">
-                        <Typography component="div" size="s" fontWeight="bold">
-                          アプリにAIを組み込むには
-                        </Typography>
-                        <Typography component="div" size="xs" color="medium_emphasis">
-                          ロリポップ！AIゲートウェイは、Claude・GPT・Gemini
-                          などのAIモデルをひとつのAPIキーで呼び出せるサービスです。
-                        </Typography>
-                        {/* GAP-20: 実物はキー名を font-mono の code チップで出している */}
-                        <Typography component="div" size="xs" color="medium_emphasis">
-                          発行したキーを{' '}
-                          <Typography component="span" size="xs" fontWeight="bold">
-                            {AI_GATEWAY_ENV_KEY}
-                          </Typography>{' '}
-                          として追加すると、アプリから使えます。
-                        </Typography>
-                      </Stack>
-                    </Callout>
-                  )}
-                  <EnvVarList
-                    vars={vars.filter((e) => e.target === t)}
-                    target={t}
-                    onEdit={(env) => setDialog({ kind: 'form', editing: env })}
-                    onDelete={(env) => setDialog({ kind: 'delete', env })}
-                  />
+              <Stack gap="m">
+                <Stack alignItems="flex-end">
+                  <Button
+                    appearance="flat"
+                    color="neutral"
+                    size="s"
+                    onPress={() => setDialog({ kind: 'form', editing: null })}
+                  >
+                    + 環境変数を追加
+                  </Button>
                 </Stack>
-              </div>
+                {!hasAiGatewayKey && (
+                  <Callout
+                    color="neutral"
+                    appearance="flat"
+                    action={
+                      <LinkButton
+                        href="https://lolipop.jp/ai/gateway/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        appearance="outlined"
+                        size="s"
+                        trailing={<Icon name="launch" size="s" />}
+                      >
+                        APIキーを発行
+                      </LinkButton>
+                    }
+                  >
+                    <Stack gap="xxs">
+                      <Typography component="div" size="s" fontWeight="bold">
+                        アプリにAIを組み込むには
+                      </Typography>
+                      <Typography component="div" size="xs" color="medium_emphasis">
+                        ロリポップ！AIゲートウェイは、Claude・GPT・Gemini
+                        などのAIモデルをひとつのAPIキーで呼び出せるサービスです。
+                      </Typography>
+                      {/* GAP-20: 実物はキー名を font-mono の code チップで出している */}
+                      <Typography component="div" size="xs" color="medium_emphasis">
+                        発行したキーを{' '}
+                        <Typography component="span" size="xs" fontWeight="bold">
+                          {AI_GATEWAY_ENV_KEY}
+                        </Typography>{' '}
+                        として追加すると、アプリから使えます。
+                      </Typography>
+                    </Stack>
+                  </Callout>
+                )}
+                <EnvVarList
+                  vars={vars.filter((e) => e.target === t)}
+                  target={t}
+                  onEdit={(env) => setDialog({ kind: 'form', editing: env })}
+                  onDelete={(env) => setDialog({ kind: 'delete', env })}
+                />
+              </Stack>
             </TabPanel>
           ))}
         </Tabs>

@@ -1,10 +1,22 @@
 import { Button } from '../../Button'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
-import { Select, SelectItem } from '../../Select'
+import { Menu, MenuDivider, MenuItem, MenuTrigger } from '../../Menu'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Typography } from '../../Typography'
+import sevenDaysImage from './assets/gamers/game/7days-to-die.webp'
+import arkImage from './assets/gamers/game/ark_image.webp'
+import corekeeperImage from './assets/gamers/game/corekeeper.webp'
+import enshroudedImage from './assets/gamers/game/enshrouded.webp'
+import fivemImage from './assets/gamers/game/fivem.webp'
+import minecraftBeImage from './assets/gamers/game/minecraft_be_image.webp'
+import minecraftJeImage from './assets/gamers/game/minecraft_je_image.webp'
+import palworldImage from './assets/gamers/game/palworld_image.webp'
+import projectzomboidImage from './assets/gamers/game/projectzomboid.webp'
+import satisfactoryImage from './assets/gamers/game/satisfactory.webp'
+import terrariaImage from './assets/gamers/game/terraria.webp'
+import valheimImage from './assets/gamers/game/valheim.webp'
 
 import type { ReactNode } from 'react'
 import type { IconName } from '../../Icon'
@@ -61,6 +73,22 @@ export const server = {
   mod: 'mohist',
   version: '1.20.1',
 } as const
+
+/** ゲームのキービジュアル（services/Game.ts の findGameImg）。キーは GameDisplayNames の表示名 */
+export const gameImages: Record<string, string> = {
+  'Minecraft (Java版)': minecraftJeImage,
+  'Minecraft (統合版)': minecraftBeImage,
+  パルワールド: palworldImage,
+  '7 Days to Die': sevenDaysImage,
+  'ARK: Survival Evolved': arkImage,
+  Satisfactory: satisfactoryImage,
+  'FiveM(GTA V)': fivemImage,
+  Terraria: terrariaImage,
+  'Core Keeper': corekeeperImage,
+  Valheim: valheimImage,
+  'Project Zomboid': projectzomboidImage,
+  Enshrouded: enshroudedImage,
+}
 
 // ─── 表示の部品 ───
 
@@ -233,22 +261,24 @@ const serverList = [
  * servers/[id]/_components/ServerListMenu。サーバー名＋UnfoldMore のボタンで Menu を開き、
  * 契約中のサーバー・区切り線・「ホーム」を並べる。実アプリは AppBar の左端にある。
  * AppShell の AppBar は編集できないので、ヘッダーの上に置いている（共通化の候補: AppShell に AppBar 左端の差し込み口）。
- * GAP-9: Menu が無いので Select で代用。区切り線は入れられない。
  * 同じ AppBar の VESPY（AI アシスタント）とサイドバーのオンボーディングバナーは告知・広告の性格が強いので省いた
  */
 const ServerListMenu = () => (
-  <Select aria-label="サーバーを切り替える" size="s" defaultSelectedKey={server.id}>
-    {[
-      ...serverList.map((s) => (
-        <SelectItem key={s.id} id={s.id}>
+  <MenuTrigger>
+    {/* GAP-NEW: UnfoldMore（上下の山）に当たるアイコンが無いので chevron_down で代用 */}
+    <Button appearance="outlined" size="s" trailing={<Icon name="chevron_down" size="s" />}>
+      {server.name}
+    </Button>
+    <Menu>
+      {serverList.map((s) => (
+        <MenuItem key={s.id} id={s.id}>
           {s.name}
-        </SelectItem>
-      )),
-      <SelectItem key="home" id="home">
-        ホーム
-      </SelectItem>,
-    ]}
-  </Select>
+        </MenuItem>
+      ))}
+      <MenuDivider />
+      <MenuItem id="home">ホーム</MenuItem>
+    </Menu>
+  </MenuTrigger>
 )
 
 /** サイドナビの現在地。表示には使わない（実アプリにパンくずや現在タブ名の表示は無い） */

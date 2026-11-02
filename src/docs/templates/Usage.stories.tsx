@@ -11,7 +11,10 @@ import { Stack } from '../../Stack'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
-import { Card, Inset, PageHeader } from './parts'
+import claudeLogo from './assets/ai-gateway/providers/claude.svg'
+import geminiLogo from './assets/ai-gateway/providers/gemini.svg'
+import openaiLogo from './assets/ai-gateway/providers/openai.svg'
+import { Card, PageHeader } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -192,7 +195,8 @@ const scale = (share: number, extra: Partial<Totals> = {}): Totals => ({
   ...extra,
 })
 
-type Entry = { key: string; label: string; totals: Totals }
+/** logo はモデル別の内訳で名前の前に出す提供元のロゴ（ProviderIcon） */
+type Entry = { key: string; label: string; totals: Totals; logo?: string }
 
 /** usageDashboard の accountScopeLabel。プロジェクトに属さない利用で、行を押しても移らない */
 const ACCOUNT_SCOPE = 'アカウント直下'
@@ -214,11 +218,16 @@ const projectEntries: Entry[] = [
 ]
 
 const modelEntries: Entry[] = [
-  { key: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6', totals: scale(0.45) },
-  { key: 'gpt-5.6', label: 'GPT-5.6', totals: scale(0.25) },
-  { key: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', totals: scale(0.15, { image: 318 }) },
-  { key: 'claude-haiku-4-5', label: 'Claude Haiku 4.5', totals: scale(0.1) },
-  { key: 'gpt-5.6-mini', label: 'GPT-5.6 mini', totals: scale(0.05) },
+  { key: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6', totals: scale(0.45), logo: claudeLogo },
+  { key: 'gpt-5.6', label: 'GPT-5.6', totals: scale(0.25), logo: openaiLogo },
+  {
+    key: 'gemini-2.5-pro',
+    label: 'Gemini 2.5 Pro',
+    totals: scale(0.15, { image: 318 }),
+    logo: geminiLogo,
+  },
+  { key: 'claude-haiku-4-5', label: 'Claude Haiku 4.5', totals: scale(0.1), logo: claudeLogo },
+  { key: 'gpt-5.6-mini', label: 'GPT-5.6 mini', totals: scale(0.05), logo: openaiLogo },
 ]
 
 /** プロジェクトの APIキー別内訳。名前の無いキーは「キー未特定」、一覧に無いキーは「削除されたキー」で、どちらも押せない */
@@ -347,10 +356,14 @@ const UsageChart = ({ series, entries }: { series: Series; entries: Entry[] }) =
             <Stack gap="xxs">
               {top.map((e) => (
                 <Stack key={e.key} flexDirection="row" justifyContent="space-between" gap="s">
-                  {/* GAP-NEW: モデルの提供元アイコン（ProviderIcon）と説明の InfoTip が無い */}
-                  <Typography size="xs" component="span">
-                    {e.label}
-                  </Typography>
+                  {/* GAP-NEW: 説明の InfoTip が無い */}
+                  <Stack flexDirection="row" gap="xs" alignItems="center">
+                    {/* GAP-NEW: 画像の枠（Image）が無い。実物は object-fit: contain で縮めず収める */}
+                    {e.logo && <img src={e.logo} alt="" width={16} height={16} />}
+                    <Typography size="xs" component="span">
+                      {e.label}
+                    </Typography>
+                  </Stack>
                   <Typography size="xs" fontWeight="bold" component="span">
                     {series.format(series.valueOf(e.totals))}
                   </Typography>
@@ -583,11 +596,9 @@ const ProjectBreakdownSection = ({
           {/* GAP-NEW: EmptyState（DataTableEmpty）が無い */}
           <TableBody
             renderEmptyState={() => (
-              <Inset>
-                <Typography size="s" fontWeight="bold" component="h3">
-                  この期間の使用状況はありません
-                </Typography>
-              </Inset>
+              <Typography size="s" fontWeight="bold" component="h3">
+                この期間の使用状況はありません
+              </Typography>
             )}
           >
             {shown.map((e) => (
@@ -638,18 +649,16 @@ const ProjectBreakdownSection = ({
         </Table>
         {/* DataTable の footer */}
         {(hidden > 0 || expanded) && (
-          <Inset>
-            <Stack alignItems="center">
-              <Button
-                appearance="transparent"
-                color="neutral"
-                size="s"
-                onPress={() => setExpanded(!expanded)}
-              >
-                {expanded ? `上位${SHOWN_PROJECTS}件だけ表示する` : `残り${hidden}件を表示する`}
-              </Button>
-            </Stack>
-          </Inset>
+          <Stack alignItems="center">
+            <Button
+              appearance="transparent"
+              color="neutral"
+              size="s"
+              onPress={() => setExpanded(!expanded)}
+            >
+              {expanded ? `上位${SHOWN_PROJECTS}件だけ表示する` : `残り${hidden}件を表示する`}
+            </Button>
+          </Stack>
         )}
       </TableFrame>
     </Stack>
