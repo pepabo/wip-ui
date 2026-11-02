@@ -12,20 +12,9 @@ wip-ui のカラーシステムは [inhouse のカラートークン](https://de
 
 色名とレベル（明度段階）の組み合わせで定義される直接的な色値です。
 
-<Table aria-label="プリミティブカラー一覧">
-  <TableHeader>
-    <Column id="name" isRowHeader>色名</Column>
-    <Column id="range">レベル範囲</Column>
-  </TableHeader>
-  <TableBody>
-    <Row><Cell>Black / White</Cell><Cell>1000</Cell></Row>
-    <Row><Cell>Gray</Cell><Cell>50〜900</Cell></Row>
-    <Row><Cell>Blue</Cell><Cell>50〜900</Cell></Row>
-    <Row><Cell>Green</Cell><Cell>50〜900</Cell></Row>
-    <Row><Cell>Red</Cell><Cell>50〜900</Cell></Row>
-    <Row><Cell>Yellow</Cell><Cell>50〜900</Cell></Row>
-  </TableBody>
-</Table>
+色の系統はフレーバーによって違います（例：lolipop と nachiguro には Brown がある）。下の表は、ツールバーで選んでいるフレーバーの系統です。
+
+<Canvas of={ColorStories.Primitives} sourceState="none" />
 
 レベルの数値が大きいほど暗くなります。コンポーネント実装では直接使用せず、セマンティックカラーを使用してください。
 
