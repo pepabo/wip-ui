@@ -79,6 +79,7 @@ import { Button, Menu, MenuItem, MenuTrigger } from 'wip-ui'
 - [should] 開くボタンは、wip-ui の Button を MenuTrigger の最初の子に置く。押したときの開閉は、MenuTrigger が自動で行う
 - [should] 項目を選んだときの処理は、MenuItem の onAction か、Menu の onAction（項目の id を受け取る）に書く
 - [should] ページ遷移する項目は、MenuItem に href を指定する
+- [should] Next.js などのルーターでページを移動する場合は、react-aria-components の RouterProvider でアプリを囲む。囲まない場合は、ページ全体が読み込み直される
 - [should] 表示する位置は placement で指定する。右側にある開くボタンは "bottom end"、下に開くとほかの内容を隠す場合は "top start" / "top end" にする
 
 ```tsx
