@@ -12,12 +12,6 @@ export interface LoaderProps extends HTMLAttributes<HTMLDivElement> {
   message?: string
 }
 
-/**
- * データ読み込み中の待機状態を示すローダーコンポーネント。
- * メッセージ付きで処理内容を伝えることも可能。
- *
- * @summary 読み込み中の待機インジケーター
- */
 export const Loader = ({ size = 'm', message, className, ...props }: LoaderProps) => {
   return (
     <div className={clsx('wip-loader', `-size-${size}`, className)} {...props}>

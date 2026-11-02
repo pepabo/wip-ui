@@ -41,11 +41,6 @@ const useTabState = () => {
   return { state, setElement }
 }
 
-/**
- * タブの個別項目。TabList内に配置し、対応するTabPanelと連動する。
- *
- * @summary タブの個別項目
- */
 export const Tab = ({ children, ref, ...props }: Props) => {
   const { state, setElement } = useTabState()
   const { isActivated } = state

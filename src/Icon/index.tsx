@@ -120,12 +120,6 @@ export interface IconProps extends HTMLAttributes<HTMLSpanElement> {
   color?: string
 }
 
-/**
- * Inhouse Iconsフォントを使用したアイコンコンポーネント。
- * ボタンやナビゲーションなどの装飾に使用。
- *
- * @summary Inhouse Iconsによるアイコン表示
- */
 export const Icon = ({ name, className, size, color, ...props }: IconProps) => {
   const fontSize = size ? iconSizeMap[size] : undefined
 

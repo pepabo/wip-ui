@@ -15,26 +15,14 @@ interface Props extends AriaLinkProps {
   size?: ButtonSize
   /** ボタンの幅 */
   width?: ButtonWidth
-  /**
-   * アイコンのみ表示する際はtrueを指定し、適切なaria-labelなどを付与してください
-   */
+  /** アイコンのみで表示する */
   iconOnly?: boolean
-  /**
-   * ボタンの先頭のアイコンを表示する要素
-   */
+  /** ボタンの先頭に表示するアイコン */
   leading?: ReactNode
-  /**
-   * ボタンの末尾のアイコンを表示する要素
-   */
+  /** ボタンの末尾に表示するアイコン */
   trailing?: ReactNode
 }
 
-/**
- * ページ遷移を伴うボタン風のリンクコンポーネント。
- * アクションの実行にはButtonを使用してください。
- *
- * @summary ページ遷移を伴うボタン風リンク
- */
 export const LinkButton: FC<Props> = ({
   children,
   appearance = 'flat',

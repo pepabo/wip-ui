@@ -17,12 +17,6 @@ export interface Props {
   className?: string
 }
 
-/**
- * コンテンツの最大幅を制限し、中央に配置するレイアウトコンポーネント。
- * ページ全体やセクションのラッパーとして使用。
- *
- * @summary コンテンツの幅制限と中央配置
- */
 export const Container: FC<Props> = ({
   children,
   isGapless = false,

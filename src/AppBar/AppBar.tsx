@@ -9,12 +9,6 @@ interface Props extends HTMLAttributes<HTMLElement> {
   position?: 'fixed' | 'relative'
 }
 
-/**
- * ページ上部に配置するナビゲーションバー。
- * タイトルやアクションボタンを左右に配置できる。
- *
- * @summary ページ上部のナビゲーションバー
- */
 const AppBar = ({
   appearance = 'white',
   position = 'relative',

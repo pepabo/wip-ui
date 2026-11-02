@@ -1,110 +1,87 @@
+import { Button } from '../Button'
 import { Icon } from '../Icon'
-import { Typography } from '../Typography'
+import { Stack } from '../Stack'
 import { AppBar, AppBarLeading, AppBarTrailing } from './index'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 const meta = {
-  title: 'Components/Surfaces/AppBar',
+  title: 'Components/Navigation/AppBar',
   component: AppBar,
   parameters: {
     layout: 'fullscreen',
   },
   tags: ['autodocs'],
-  argTypes: {},
+  argTypes: {
+    appearance: {
+      control: 'select',
+      options: ['filled', 'white', 'transparent'],
+    },
+    position: {
+      control: 'select',
+      options: ['relative', 'fixed'],
+    },
+    children: {
+      control: false,
+    },
+  },
 } satisfies Meta<typeof AppBar>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-const defaultChildren = (
+const logoSrc = `data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="32"><rect width="120" height="32" rx="4" fill="#888"/></svg>'
+)}`
+
+const children = (
   <>
     <AppBarLeading>
-      <Typography size="m" fontWeight="bold">
-        Title
-      </Typography>
+      <a href="/">
+        <img src={logoSrc} alt="サービス名" />
+      </a>
     </AppBarLeading>
     <AppBarTrailing>
-      <Icon name="menu" size="m" />
+      <Button iconOnly appearance="transparent" aria-label="メニュー">
+        <Icon name="menu" aria-hidden="true" />
+      </Button>
     </AppBarTrailing>
   </>
 )
 
-/**
- * タイトルとアクションを両端に配置するページ上部のナビゲーションバー。
- *
- * @summary タイトルとアクションを配置するページ上部のバー
- */
-export const Default: Story = {
-  args: {
-    children: defaultChildren,
-  },
-}
-
-/**
- * アクションが不要でタイトルのみを表示したい場合に使用。
- *
- * @summary タイトルのみ表示したい場合
- */
-export const LeadingOnly: Story = {
-  args: {
-    children: (
-      <AppBarLeading>
-        <Typography size="m" fontWeight="bold">
-          Title
-        </Typography>
-      </AppBarLeading>
-    ),
-  },
-}
-
-/**
- * タイトル不要でアクションボタンのみを配置したい場合に使用。
- *
- * @summary アクションボタンのみ配置したい場合
- */
-export const TrailingOnly: Story = {
-  args: {
-    children: (
-      <AppBarTrailing>
-        <Icon name="menu" size="m" />
-      </AppBarTrailing>
-    ),
-  },
-}
-
-/**
- * ブランドカラーを前面に出してページの印象を強調したい場合に使用。
- *
- * @summary ブランドカラーを強調したい場合
- */
-export const Filled: Story = {
-  args: {
-    appearance: 'filled',
-    children: defaultChildren,
-  },
-}
-
-/**
- * コンテンツと明確に区切りつつ、控えめな印象にしたい場合に使用。
- *
- * @summary 控えめな印象で区切りたい場合
- */
-export const White: Story = {
+export const Playground: Story = {
   args: {
     appearance: 'white',
-    children: defaultChildren,
+    position: 'relative',
+    children,
   },
 }
 
-/**
- * ヒーロー画像やグラデーション背景の上に重ねたい場合に使用。
- *
- * @summary 背景コンテンツの上に重ねたい場合
- */
-export const Transparent: Story = {
-  args: {
-    appearance: 'transparent',
-    children: defaultChildren,
-  },
+export const Appearance: Story = {
+  name: 'appearance',
+  render: () => (
+    <Stack gap="s">
+      <AppBar appearance="filled">{children}</AppBar>
+      <AppBar appearance="white">{children}</AppBar>
+      <div style={{ background: '#333' }}>
+        <AppBar appearance="transparent">{children}</AppBar>
+      </div>
+    </Stack>
+  ),
+}
+
+export const Position: Story = {
+  name: 'position',
+  render: () => (
+    <Stack gap="s">
+      <div style={{ transform: 'translateZ(0)', height: '160px', overflow: 'auto' }}>
+        <AppBar position="relative">{children}</AppBar>
+        <div style={{ height: '400px', padding: '16px' }}>relative</div>
+      </div>
+      <div style={{ transform: 'translateZ(0)', height: '160px', overflow: 'auto' }}>
+        <AppBar position="fixed">{children}</AppBar>
+        <div style={{ height: '400px', padding: '16px', paddingTop: '80px' }}>fixed</div>
+      </div>
+    </Stack>
+  ),
 }

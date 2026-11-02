@@ -61,12 +61,6 @@ const getIcon = (state: SnackBarState = 'positive') => {
   }
 }
 
-/**
- * 一時的な通知メッセージを表示するスナックバーコンポーネント。
- * SnackBarQueueと組み合わせて使用し、自動的に消えるフィードバックを提供。
- *
- * @summary 一時的な通知メッセージ
- */
 export const SnackBar = ({ queue, ...props }: Props) => {
   return (
     <AriaToastRegion queue={queue} {...props} className="wip-snackbar-region">

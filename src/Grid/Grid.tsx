@@ -40,12 +40,6 @@ export interface GridProps extends ComponentPropsWithoutRef<'div'> {
   columns?: number
 }
 
-/**
- * 12カラムグリッドベースのレイアウトコンポーネント。
- * GridItemと組み合わせてレスポンシブなカラムレイアウトを構築する。
- *
- * @summary 12カラムグリッドレイアウト
- */
 export const Grid = ({
   children,
   spacing,

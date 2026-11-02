@@ -1,0 +1,37 @@
+// wip-ui に置き換え先が1対1で決まっている素の HTML 要素を検出する Biome プラグイン
+// メッセージには、使うコンポーネントと、その md（wip-ui パッケージ内のパス）を書く
+or {
+  or { `<button $attrs>$children</button>`, `<button $attrs />` } as $el where {
+    register_diagnostic(span=$el, message="素の <button> ではなく wip-ui の Button を使ってください。ページ遷移なら LinkButton です。使い方: wip-ui/dist/js/Button/Button.md")
+  },
+  or { `<select $attrs>$children</select>`, `<select $attrs />` } as $el where {
+    register_diagnostic(span=$el, message="素の <select> ではなく wip-ui の Select を使ってください。使い方: wip-ui/dist/js/Select/Select.md")
+  },
+  or { `<textarea $attrs>$children</textarea>`, `<textarea $attrs />` } as $el where {
+    register_diagnostic(span=$el, message="素の <textarea> ではなく wip-ui の TextField（component=textarea）を使ってください。使い方: wip-ui/dist/js/TextField/TextField.md")
+  },
+  `<input $attrs />` as $el where {
+    $attrs <: contains `type="checkbox"`,
+    register_diagnostic(span=$el, message="素の <input type=checkbox> ではなく wip-ui の Checkbox を使ってください。即時に反映する設定なら Switch です。使い方: wip-ui/dist/js/Checkbox/Checkbox.md")
+  },
+  `<input $attrs />` as $el where {
+    $attrs <: contains `type="radio"`,
+    register_diagnostic(span=$el, message="素の <input type=radio> ではなく wip-ui の RadioGroup と Radio を使ってください。使い方: wip-ui/dist/js/Radio/Radio.md")
+  },
+  `<input $attrs />` as $el where {
+    or {
+      $attrs <: not contains or { `type="$_"`, `type={$_}` },
+      $attrs <: contains or { `type="text"`, `type="email"`, `type="password"`, `type="search"`, `type="tel"`, `type="url"`, `type="number"` }
+    },
+    register_diagnostic(span=$el, message="素のテキスト入力の <input> ではなく wip-ui の TextField を使ってください。使い方: wip-ui/dist/js/TextField/TextField.md")
+  },
+  or { `<table $attrs>$children</table>`, `<table $attrs />` } as $el where {
+    register_diagnostic(span=$el, message="素の <table> ではなく wip-ui の Table を使ってください。使い方: wip-ui/dist/js/Table/Table.md")
+  },
+  or { `<hr $attrs>$children</hr>`, `<hr $attrs />` } as $el where {
+    register_diagnostic(span=$el, message="素の <hr> ではなく wip-ui の Divider を使ってください。使い方: wip-ui/dist/js/Divider/Divider.md")
+  },
+  or { `<dialog $attrs>$children</dialog>`, `<dialog $attrs />` } as $el where {
+    register_diagnostic(span=$el, message="素の <dialog> ではなく wip-ui の Dialog を使ってください。使い方: wip-ui/dist/js/Dialog/Dialog.md")
+  }
+}

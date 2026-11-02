@@ -1,3 +1,4 @@
+import { Stack } from '../Stack'
 import { TextField } from './index'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -32,147 +33,124 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/**
- * ユーザーにテキストを自由入力させる場合の基本形。定義済みの選択肢から選ばせる場合は Select を使用する。
- *
- * @summary テキストを自由入力させる場合の基本形
- */
-export const Default: Story = {
+export const Playground: Story = {
   args: {
-    label: 'Label',
-    placeholder: 'Enter text...',
-  },
-}
-
-/**
- * 入力形式の例や文字数制限など、入力ルールをユーザーに伝えたい場合に使用。
- *
- * @summary 入力ルールをユーザーに伝えたい場合
- */
-export const WithCaption: Story = {
-  args: {
-    label: 'Email',
-    caption: 'Please enter your email address',
+    label: 'メールアドレス',
+    caption: '例：email@example.com',
     placeholder: 'email@example.com',
+    size: 'm',
+    width: 'auto',
+    color: 'neutral',
+    component: 'input',
+    isRequired: false,
+    isDisabled: false,
+    isReadOnly: false,
   },
 }
 
-/**
- * テーブル内やフィルターなど、スペースが限られる場面で使用。
- *
- * @summary スペースが限られる場面向け
- */
-export const Small: Story = {
-  args: {
-    label: 'Small TextField',
-    size: 's',
-    placeholder: 'Enter text...',
-  },
+export const Label: Story = {
+  name: 'label',
+  render: () => <TextField label="氏名" placeholder="山田 太郎" />,
 }
 
-/**
- * 検索フォームやランディングページなど、入力欄を目立たせたい場面で使用。
- *
- * @summary 入力欄を目立たせたい場面向け
- */
-export const Large: Story = {
-  args: {
-    label: 'Large TextField',
-    size: 'l',
-    placeholder: 'Enter text...',
-  },
+export const Caption: Story = {
+  name: 'caption',
+  render: () => (
+    <TextField
+      label="ユーザー名"
+      caption="半角英数字 20 文字以内で入力してください"
+      placeholder="pepabo"
+    />
+  ),
 }
 
-/**
- * フォームレイアウトで他の要素と幅を揃えたい場合に使用。
- *
- * @summary フォーム内で幅を揃えたい場合
- */
-export const FullWidth: Story = {
-  args: {
-    label: 'Full Width',
-    width: 'full',
-    placeholder: 'Enter text...',
-  },
+export const Placeholder: Story = {
+  name: 'placeholder',
+  render: () => <TextField label="メールアドレス" placeholder="email@example.com" />,
+}
+
+export const Size: Story = {
+  name: 'size',
+  render: () => (
+    <Stack gap="s">
+      <TextField label="s" size="s" placeholder="入力してください" />
+      <TextField label="m" size="m" placeholder="入力してください" />
+      <TextField label="l" size="l" placeholder="入力してください" />
+    </Stack>
+  ),
+}
+
+export const Width: Story = {
+  name: 'width',
   parameters: {
     layout: 'padded',
   },
+  render: () => (
+    <Stack gap="s">
+      <TextField label="auto" width="auto" placeholder="入力してください" />
+      <TextField label="third" width="third" placeholder="入力してください" />
+      <TextField label="half" width="half" placeholder="入力してください" />
+      <TextField label="full" width="full" placeholder="入力してください" />
+    </Stack>
+  ),
 }
 
-/**
- * バリデーションエラーが発生した際に、入力に問題があることをユーザーに伝える場合に使用。
- *
- * @summary バリデーションエラーをユーザーに伝える場合
- */
-export const Negative: Story = {
-  args: {
-    label: 'Error Field',
-    color: 'negative',
-    placeholder: 'Enter text...',
-  },
+export const Color: Story = {
+  name: 'color',
+  render: () => (
+    <Stack gap="s">
+      <TextField label="neutral" color="neutral" placeholder="入力してください" />
+      <TextField label="negative" color="negative" placeholder="入力してください" />
+    </Stack>
+  ),
 }
 
-/**
- * 権限不足や条件未達により編集できない状態を示す。
- *
- * @summary 編集できない状態を示す場合
- */
-export const Disabled: Story = {
-  args: {
-    label: 'Disabled Field',
-    isDisabled: true,
-    placeholder: 'Cannot edit...',
-  },
+export const Component: Story = {
+  name: 'component',
+  render: () => (
+    <Stack gap="s">
+      <TextField label="input" component="input" placeholder="1 行のテキスト" />
+      <TextField label="textarea" component="textarea" placeholder="複数行のテキスト" />
+    </Stack>
+  ),
 }
 
-/**
- * フォーム送信に必須の項目であることをユーザーに明示する場合に使用。
- *
- * @summary 必須項目であることを明示する場合
- */
-export const Required: Story = {
-  args: {
-    label: 'Required Field',
-    isRequired: true,
-    placeholder: 'Enter text...',
-  },
+export const IsRequired: Story = {
+  name: 'isRequired',
+  render: () => <TextField label="氏名" placeholder="山田 太郎" isRequired />,
 }
 
-/**
- * 編集フォームで既存データを表示する場合や、デフォルト値を設定する場合に使用。
- *
- * @summary 既存データやデフォルト値を表示する場合
- */
-export const WithValue: Story = {
-  args: {
-    label: 'Field with value',
-    defaultValue: 'Pre-filled value',
-  },
+export const IsDisabled: Story = {
+  name: 'isDisabled',
+  render: () => <TextField label="氏名" defaultValue="山田 太郎" isDisabled />,
 }
 
-/**
- * 説明文、コメント、問い合わせ内容など、複数行の長文入力が必要な場合に使用。
- *
- * @summary 複数行の長文入力が必要な場合
- */
-export const Textarea: Story = {
-  args: {
-    label: 'Textarea',
-    component: 'textarea',
-    placeholder: 'Enter multiple lines...',
-  },
+export const IsReadOnly: Story = {
+  name: 'isReadOnly',
+  render: () => (
+    <TextField
+      label="会員番号"
+      caption="この項目は変更できません"
+      defaultValue="123456"
+      isReadOnly
+    />
+  ),
 }
 
-/**
- * 長文入力欄に入力ルールや文字数制限を補足したい場合に使用。
- *
- * @summary 長文入力欄に入力ルールを補足する場合
- */
-export const TextareaWithCaption: Story = {
-  args: {
-    label: 'Description',
-    caption: 'Please provide a detailed description',
-    component: 'textarea',
-    placeholder: 'Enter description...',
-  },
+export const DefaultValue: Story = {
+  name: 'defaultValue',
+  render: () => <TextField label="氏名" defaultValue="山田 太郎" />,
+}
+
+export const Validate: Story = {
+  name: 'validate',
+  render: () => (
+    <TextField
+      label="ユーザー名"
+      caption="半角英数字 20 文字以内で入力してください"
+      defaultValue="ぺぱぼ"
+      validate={(value) => (/^[a-zA-Z0-9]*$/.test(value) ? null : '半角英数字で入力してください')}
+      validationBehavior="aria"
+    />
+  ),
 }

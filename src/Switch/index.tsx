@@ -20,12 +20,6 @@ interface SwitchProps extends AriaSwitchProps {
   color?: SwitchColor
 }
 
-/**
- * ON/OFFの切り替えに使用するスイッチコンポーネント。
- * 設定の有効/無効など即時反映される操作に使用。
- *
- * @summary ON/OFF切り替えスイッチ
- */
 export const Switch = ({
   label,
   size = 'm',

@@ -1,8 +1,22 @@
 import { Container } from '../Container/'
 import { Paper } from '../Paper/'
+import { Stack } from '../Stack'
 import { Grid, GridItem } from './'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { ReactNode } from 'react'
+
+const spacings = ['xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl'] as const
+const contentAlignments = [
+  'start',
+  'end',
+  'center',
+  'stretch',
+  'space-around',
+  'space-between',
+] as const
+const directions = ['row', 'row-reverse', 'column', 'column-reverse'] as const
+const wraps = ['wrap', 'nowrap', 'wrap-reverse'] as const
 
 const meta = {
   title: 'Components/Layout/Grid',
@@ -14,26 +28,26 @@ const meta = {
   argTypes: {
     spacing: {
       control: 'select',
-      options: ['xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl'],
+      options: spacings,
     },
     gapless: {
       control: 'boolean',
     },
     alignContent: {
       control: 'select',
-      options: ['start', 'end', 'center', 'stretch', 'space-around', 'space-between'],
+      options: contentAlignments,
     },
     justifyContent: {
       control: 'select',
-      options: ['start', 'end', 'center', 'stretch', 'space-around', 'space-between'],
+      options: contentAlignments,
     },
     direction: {
       control: 'select',
-      options: ['row', 'row-reverse', 'column', 'column-reverse'],
+      options: directions,
     },
     wrap: {
       control: 'select',
-      options: ['wrap', 'nowrap', 'wrap-reverse'],
+      options: wraps,
     },
   },
 } satisfies Meta<typeof Grid>
@@ -41,335 +55,241 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-const Wrapper = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ padding: '40px' }}>{children}</div>
+const Wrapper = ({ children }: { children: ReactNode }) => (
+  <div style={{ padding: '40px' }}>
+    <Container size="xl">{children}</Container>
+  </div>
 )
 
-/**
- * 12 カラムグリッドで自由な幅配分のレイアウトを組む基本形。
- *
- * @summary 自由な幅配分でレイアウトを組む基本形
- */
-export const Default: Story = {
+const Item = ({ children }: { children: ReactNode }) => (
+  <Paper style={{ padding: '16px' }}>{children}</Paper>
+)
+
+const threeItems = [1, 2, 3].map((n) => (
+  <GridItem key={n} size={4}>
+    <Item>{n}</Item>
+  </GridItem>
+))
+
+export const Playground: Story = {
   args: {
     spacing: 'm',
+    gapless: false,
+    direction: 'row',
+    wrap: 'wrap',
   },
   render: (args) => (
     <Wrapper>
-      <Container size="xl">
-        <Grid {...args}>
-          <GridItem size={4}>
-            <Paper>size=4</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>size=4</Paper>
-          </GridItem>
-          <GridItem size={2}>
-            <Paper>size=4</Paper>
-          </GridItem>
-        </Grid>
-      </Container>
+      <Grid {...args}>{threeItems}</Grid>
     </Wrapper>
   ),
 }
 
-/**
- * 比較表や左右対称のコンテンツなど、均等に2分割したい場合に使用。
- *
- * @summary コンテンツを均等に2分割したい場合
- */
-export const EqualColumns: Story = {
-  args: {
-    spacing: 'm',
-  },
-  render: (args) => (
-    <Wrapper>
-      <Container size="xl">
-        <Grid {...args}>
-          <GridItem size={6}>
-            <Paper>size=6</Paper>
-          </GridItem>
-          <GridItem size={6}>
-            <Paper>size=6</Paper>
-          </GridItem>
-        </Grid>
-      </Container>
-    </Wrapper>
-  ),
-}
-
-/**
- * メインコンテンツ + サイドバーなど、異なる幅を持つカラムを組み合わせる場合に使用。
- *
- * @summary 異なる幅のカラムを組み合わせる場合
- */
-export const UnequalColumns: Story = {
-  args: {
-    spacing: 'xxl',
-  },
-  render: (args) => (
-    <Wrapper>
-      <Container size="xl">
-        <Grid {...args}>
-          <GridItem size={8}>
-            <Paper>size=8</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>size=4</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>size=4</Paper>
-          </GridItem>
-          <GridItem size={8}>
-            <Paper>size=8</Paper>
-          </GridItem>
-        </Grid>
-      </Container>
-    </Wrapper>
-  ),
-}
-
-/**
- * カード一覧やタイル表示など、アイテム間の余白を調整したい場合の指定方法。
- *
- * @summary アイテム間の余白を調整したい場合
- */
-export const WithSpacing: Story = {
-  args: {
-    spacing: 'l',
-  },
-  render: (args) => (
-    <Wrapper>
-      <Container size="xl">
-        <Grid {...args}>
-          <GridItem size={4}>
-            <Paper>size=4</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>size=4</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>size=4</Paper>
-          </GridItem>
-          <GridItem size={6}>
-            <Paper>size=6</Paper>
-          </GridItem>
-          <GridItem size={6}>
-            <Paper>size=6</Paper>
-          </GridItem>
-        </Grid>
-      </Container>
-    </Wrapper>
-  ),
-}
-
-/**
- * 画像ギャラリーやタイルなど、要素を隙間なく敷き詰めたい場合に使用。
- *
- * @summary 要素を隙間なく敷き詰めたい場合
- */
-export const Gapless: Story = {
-  args: {
-    gapless: true,
-  },
-  render: (args) => (
-    <Wrapper>
-      <Container size="xl">
-        <Grid {...args}>
-          <GridItem size={4}>
-            <Paper>size=4</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>size=4</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>size=4</Paper>
-          </GridItem>
-        </Grid>
-      </Container>
-    </Wrapper>
-  ),
-}
-
-/**
- * コンテンツを中央寄せしたり、左側に余白を設けたい場合に使用。
- *
- * @summary 中央寄せや左側余白を設けたい場合
- */
-export const WithOffset: Story = {
-  args: {
-    spacing: 'm',
-  },
-  render: (args) => (
-    <Wrapper>
-      <Container size="xl">
-        <Grid {...args}>
-          <GridItem size={4} offset={2}>
-            <Paper>size=4, offset=2</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>size=4</Paper>
-          </GridItem>
-          <GridItem size={6} offset={3}>
-            <Paper>size=6, offset=3</Paper>
-          </GridItem>
-        </Grid>
-      </Container>
-    </Wrapper>
-  ),
-}
-
-/**
- * ブレークポイントごとにカラム数を変更するレスポンシブレイアウト。
- * モバイルでは1列、タブレットで2列、デスクトップで4列に変化。
- *
- * @summary レスポンシブなカラム変更
- */
-export const ResponsiveColumns: Story = {
-  args: {
-    spacing: 'm',
-  },
-  render: (args) => (
-    <Wrapper>
-      <Container size="xl">
-        <Grid {...args}>
-          <GridItem size={{ xxs: 12, s: 6, m: 4, l: 3 }}>
-            <Paper>Responsive</Paper>
-          </GridItem>
-          <GridItem size={{ xxs: 12, s: 6, m: 4, l: 3 }}>
-            <Paper>Responsive</Paper>
-          </GridItem>
-          <GridItem size={{ xxs: 12, s: 6, m: 4, l: 3 }}>
-            <Paper>Responsive</Paper>
-          </GridItem>
-          <GridItem size={{ xxs: 12, s: 6, m: 4, l: 3 }}>
-            <Paper>Responsive</Paper>
-          </GridItem>
-        </Grid>
-      </Container>
-    </Wrapper>
-  ),
-}
-
-/**
- * ブレークポイントごとにスペースを変更するレスポンシブレイアウト。
- *
- * @summary レスポンシブなスペース変更
- */
-export const ResponsiveSpacing: Story = {
+export const Spacing: Story = {
+  name: 'spacing',
   render: () => (
     <Wrapper>
-      <Container size="xl">
-        <Grid spacing={{ xxs: 's', m: 'l', xl: 'xxl' }}>
-          <GridItem size={{ xxs: 12, s: 6, m: 4 }}>
-            <Paper>Item 1</Paper>
-          </GridItem>
-          <GridItem size={{ xxs: 12, s: 6, m: 4 }}>
-            <Paper>Item 2</Paper>
-          </GridItem>
-          <GridItem size={{ xxs: 12, s: 6, m: 4 }}>
-            <Paper>Item 3</Paper>
-          </GridItem>
-        </Grid>
-      </Container>
+      <Stack gap="xl">
+        {spacings.map((spacing) => (
+          <Grid key={spacing} spacing={spacing}>
+            <GridItem size={4}>
+              <Item>{spacing}</Item>
+            </GridItem>
+            <GridItem size={4}>
+              <Item>{spacing}</Item>
+            </GridItem>
+            <GridItem size={4}>
+              <Item>{spacing}</Item>
+            </GridItem>
+          </Grid>
+        ))}
+      </Stack>
     </Wrapper>
   ),
 }
 
-/**
- * ヘッダー、メインコンテンツ、サイドバー、フッターを組み合わせた実践的なレイアウト例。
- *
- * @summary 実践的なページレイアウト
- */
-export const ComplexLayout: Story = {
-  args: {
-    spacing: 'm',
-  },
-  render: (args) => (
+export const SpacingResponsive: Story = {
+  name: 'spacing (responsive)',
+  render: () => (
     <Wrapper>
-      <Container size="xl">
-        <Grid {...args}>
-          <GridItem size={12}>
-            <Paper>Full width header (size=12)</Paper>
-          </GridItem>
-          <GridItem size={8}>
-            <Paper>Main content (size=8)</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>Sidebar (size=4)</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>Footer column 1</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>Footer column 2</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper>Footer column 3</Paper>
-          </GridItem>
-        </Grid>
-      </Container>
+      <Grid spacing={{ xxs: 's', m: 'l', xl: 'xxl' }}>{threeItems}</Grid>
     </Wrapper>
   ),
 }
 
-/**
- * ヘッダー・メイン・フッターのような縦方向の積み重ねレイアウトに使用。
- *
- * @summary 縦方向の積み重ねレイアウト向け
- */
-export const WithDirection: Story = {
-  args: {
-    spacing: 'm',
-    direction: 'column',
-  },
-  render: (args) => (
+export const Gapless: Story = {
+  name: 'gapless',
+  render: () => (
     <Wrapper>
-      <Container size="xl">
-        <Grid {...args}>
-          <GridItem size={12}>
-            <Paper style={{ minHeight: '60px' }}>Header</Paper>
-          </GridItem>
-          <GridItem size={12}>
-            <Paper style={{ minHeight: '200px' }}>Main content</Paper>
-          </GridItem>
-          <GridItem size={12}>
-            <Paper style={{ minHeight: '60px' }}>Footer</Paper>
-          </GridItem>
-        </Grid>
-      </Container>
+      <Grid spacing="m" gapless>
+        {threeItems}
+      </Grid>
     </Wrapper>
   ),
 }
 
-/**
- * 水平スクロールやカルーセルなど、アイテムを折り返さずに1行で並べたい場合に使用。
- *
- * @summary アイテムを折り返さず1行で並べたい場合
- */
-export const WithWrapNowrap: Story = {
-  args: {
-    spacing: 'm',
-    wrap: 'nowrap',
-  },
-  render: (args) => (
+export const JustifyContent: Story = {
+  name: 'justifyContent',
+  render: () => (
     <Wrapper>
-      <Container size="xl">
-        <Grid {...args}>
-          <GridItem size={4}>
-            <Paper style={{ height: '100%' }}>Item 1</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper style={{ height: '100%' }}>Item 2</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper style={{ height: '100%' }}>Item 3</Paper>
-          </GridItem>
-          <GridItem size={4}>
-            <Paper style={{ height: '100%' }}>Item 4 (overflows)</Paper>
-          </GridItem>
-        </Grid>
-      </Container>
+      <Stack gap="xl">
+        {contentAlignments.map((justifyContent) => (
+          <Grid key={justifyContent} spacing="m" justifyContent={justifyContent}>
+            <GridItem size={3}>
+              <Item>{justifyContent}</Item>
+            </GridItem>
+            <GridItem size={3}>
+              <Item>{justifyContent}</Item>
+            </GridItem>
+          </Grid>
+        ))}
+      </Stack>
+    </Wrapper>
+  ),
+}
+
+export const AlignContent: Story = {
+  name: 'alignContent',
+  render: () => (
+    <Wrapper>
+      <Stack flexDirection="row" gap="s">
+        {contentAlignments.map((alignContent) => (
+          <Grid
+            key={alignContent}
+            spacing="xs"
+            alignContent={alignContent}
+            style={{ height: '240px', flex: 1, background: '#f5f5f5' }}
+          >
+            <GridItem size={12}>
+              <Item>{alignContent}</Item>
+            </GridItem>
+            <GridItem size={12}>
+              <Item>{alignContent}</Item>
+            </GridItem>
+          </Grid>
+        ))}
+      </Stack>
+    </Wrapper>
+  ),
+}
+
+export const Direction: Story = {
+  name: 'direction',
+  render: () => (
+    <Wrapper>
+      <Stack gap="xl">
+        {directions.map((direction) => (
+          <Grid key={direction} spacing="m" direction={direction}>
+            <GridItem size={4}>
+              <Item>{direction} 1</Item>
+            </GridItem>
+            <GridItem size={4}>
+              <Item>{direction} 2</Item>
+            </GridItem>
+            <GridItem size={4}>
+              <Item>{direction} 3</Item>
+            </GridItem>
+          </Grid>
+        ))}
+      </Stack>
+    </Wrapper>
+  ),
+}
+
+export const Wrap: Story = {
+  name: 'wrap',
+  render: () => (
+    <Wrapper>
+      <Stack gap="xl">
+        {wraps.map((wrap) => (
+          <Grid key={wrap} spacing="m" wrap={wrap}>
+            <GridItem size={6}>
+              <Item>{wrap} 1</Item>
+            </GridItem>
+            <GridItem size={6}>
+              <Item>{wrap} 2</Item>
+            </GridItem>
+            <GridItem size={6}>
+              <Item>{wrap} 3</Item>
+            </GridItem>
+          </Grid>
+        ))}
+      </Stack>
+    </Wrapper>
+  ),
+}
+
+export const GridItemSize: Story = {
+  name: 'GridItem size',
+  render: () => (
+    <Wrapper>
+      <Grid spacing="m">
+        <GridItem size={12}>
+          <Item>12</Item>
+        </GridItem>
+        <GridItem size={8}>
+          <Item>8</Item>
+        </GridItem>
+        <GridItem size={4}>
+          <Item>4</Item>
+        </GridItem>
+        <GridItem size={6}>
+          <Item>6</Item>
+        </GridItem>
+        <GridItem size={6}>
+          <Item>6</Item>
+        </GridItem>
+        <GridItem size={3}>
+          <Item>3</Item>
+        </GridItem>
+        <GridItem size={3}>
+          <Item>3</Item>
+        </GridItem>
+        <GridItem size={3}>
+          <Item>3</Item>
+        </GridItem>
+        <GridItem size={3}>
+          <Item>3</Item>
+        </GridItem>
+      </Grid>
+    </Wrapper>
+  ),
+}
+
+export const GridItemSizeResponsive: Story = {
+  name: 'GridItem size (responsive)',
+  render: () => (
+    <Wrapper>
+      <Grid spacing="m">
+        <GridItem size={{ xxs: 12, s: 6, m: 4 }}>
+          <Item>1</Item>
+        </GridItem>
+        <GridItem size={{ xxs: 12, s: 6, m: 4 }}>
+          <Item>2</Item>
+        </GridItem>
+        <GridItem size={{ xxs: 12, s: 6, m: 4 }}>
+          <Item>3</Item>
+        </GridItem>
+      </Grid>
+    </Wrapper>
+  ),
+}
+
+export const GridItemOffset: Story = {
+  name: 'GridItem offset',
+  render: () => (
+    <Wrapper>
+      <Grid spacing="m">
+        <GridItem size={6} offset={3}>
+          <Item>size=6 offset=3</Item>
+        </GridItem>
+        <GridItem size={4} offset={2}>
+          <Item>size=4 offset=2</Item>
+        </GridItem>
+        <GridItem size={4}>
+          <Item>size=4</Item>
+        </GridItem>
+      </Grid>
     </Wrapper>
   ),
 }

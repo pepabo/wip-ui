@@ -14,29 +14,30 @@ const ColorStrip = ({ name, colorObj }: { name: string; colorObj: Record<string,
       <Typography size="m" fontWeight="bold">
         {name}
       </Typography>
-      <div style={{ display: 'flex', borderRadius: '12px', overflow: 'hidden' }}>
+      <div
+        style={{
+          display: 'flex',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          border: '1px solid rgba(0, 0, 0, 0.12)',
+        }}
+      >
         {levels.map((level) => (
-          <div key={level} style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                height: '64px',
-                backgroundColor: colorObj[level],
-              }}
-            />
-            <div
-              style={{
-                padding: '8px 4px',
-                textAlign: 'center',
-                backgroundColor: 'var(--sb-docs-bg, #fff)',
-              }}
-            >
-              <Typography size="xxs" fontWeight="bold">
-                {level}
-              </Typography>
-              <Typography size="xxs" color="medium_emphasis">
-                {colorObj[level]}
-              </Typography>
-            </div>
+          <div
+            key={level}
+            style={{ flex: 1, minWidth: 0, height: '64px', backgroundColor: colorObj[level] }}
+          />
+        ))}
+      </div>
+      <div style={{ display: 'flex' }}>
+        {levels.map((level) => (
+          <div key={level} style={{ flex: 1, minWidth: 0, padding: '0 4px', textAlign: 'center' }}>
+            <Typography size="xxs" fontWeight="bold">
+              {level}
+            </Typography>
+            <Typography size="xxs" color="medium_emphasis">
+              {colorObj[level]}
+            </Typography>
           </div>
         ))}
       </div>
@@ -92,7 +93,8 @@ const AllColorSwatches = ({ flavor }: { flavor: FlavorName }) => {
 
 const meta: Meta = {
   title: 'Foundations/Colors/Swatches',
-  tags: ['!manifest'],
+  // Colors の Docs ページ（Color.mdx）に埋め込むためのもの。サイドバーには単独のページとして出さない
+  tags: ['!manifest', '!dev'],
 }
 
 export default meta

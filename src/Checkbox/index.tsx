@@ -54,12 +54,6 @@ const useCheckboxState = (ref: React.RefObject<HTMLLabelElement | null>) => {
   return state
 }
 
-/**
- * フォームでの複数選択に使用するチェックボックスコンポーネント。
- * 単一選択にはRadioを使用してください。
- *
- * @summary 複数選択用のチェックボックス
- */
 const Checkbox = ({ children, className, ...props }: CheckboxProps) => {
   const ariaRef = useRef<HTMLLabelElement>(null)
   const { isSelected, isIndeterminate, isDisabled, isHovered, isFocused } =

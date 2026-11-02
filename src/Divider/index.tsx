@@ -12,28 +12,28 @@ export type OverridableStringUnion<T, U extends Record<PropertyKey, unknown>> = 
 
 interface DividerProps extends React.HTMLAttributes<HTMLHRElement> {
   /**
-   * Absolutely position the element.
+   * 要素を絶対配置にする
    * @default false
    */
   absolute?: boolean
   /**
-   * Additional CSS classes that can be applied to the component.
+   * コンポーネントに追加する CSS クラス
    */
   classes?: Partial<{
     root: string
   }>
   /**
-   * If true, the divider will align itself as a flex item.
+   * Flexbox の子要素として、親の高さに合わせて伸ばす
    * @default false
    */
   flexItem?: boolean
   /**
-   * The component orientation.
+   * 区切り線の向き
    * @default 'horizontal'
    */
   orientation?: DividerOrientation
   /**
-   * The variant to use.
+   * 区切り線の表示範囲
    * @default 'fullWidth'
    */
   variant?: DividerVariant
