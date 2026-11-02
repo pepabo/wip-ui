@@ -5,10 +5,9 @@
   display: flex;
   align-items: flex-start;
   padding: adapter.get-spacing-size(s);
-  border-radius: adapter.get-radius-size(l) * 1.5; // 0.75rem。Paper の面とそろえる
+  border-radius: adapter.get-radius-size(m);
   gap: adapter.get-gap-size(s);
-  // 浮いている要素ではないので影を付けない。背景色だけで面を作る
-  box-shadow: none;
+  box-shadow: adapter.get-elevation-box-shadow(1);
 
   &.-appearance-outline {
     box-shadow: none;

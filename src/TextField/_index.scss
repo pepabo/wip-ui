@@ -5,10 +5,6 @@
 .wip-textfield {
   @include textfield.style();
 
-  & ._input {
-    border-radius: adapter.get-radius-size(l); // 0.5rem。ボタン・セレクトとそろえる
-  }
-
   &[data-disabled] {
     & ._label-container {
       opacity: 0.38;

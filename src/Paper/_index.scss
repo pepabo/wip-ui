@@ -1,21 +1,19 @@
 @use '@pepabo-inhouse/adapter' as adapter;
 
 .wip-paper {
-  border-radius: adapter.get-radius-size(l) * 1.5; // 0.75rem。面はボタンや入力欄より一段やわらかくする
+  border-radius: adapter.get-radius-size(l);
   background: adapter.get-surface-color(light, primary);
 
   &--elevation-0 {
     box-shadow: none;
   }
 
-  // TODO(フレーバー対応): ページの地との明るさの差で区切るため、低い elevation は影を付けない。
-  // 影は 3 以上（ダイアログやメニューのように浮いているもの）だけに残す
   &--elevation-1 {
-    box-shadow: none;
+    box-shadow: adapter.get-elevation-box-shadow(1);
   }
 
   &--elevation-2 {
-    box-shadow: none;
+    box-shadow: adapter.get-elevation-box-shadow(2);
   }
 
   &--elevation-3 {
@@ -35,8 +33,7 @@
   }
 
   &--outlined {
-    // TODO(フレーバー対応): 値をベタ書きしている。濃い線だと面が重く見えるため、弱い線にする
-    border: adapter.get-border-size(m) solid #dddfea;
+    border: adapter.get-border-size(m) solid adapter.get-border-color(light, high_emphasis);
   }
 
   &--square {

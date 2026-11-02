@@ -1,14 +1,5 @@
 @use "@pepabo-inhouse/button" as button;
-@use '@pepabo-inhouse/adapter' as adapter;
 
 .wip-button {
   @include button.style;
-  border-radius: adapter.get-radius-size(l); // 0.5rem。入力欄・セレクトとそろえる
-
-  // inhouse は状態ごとに立体的な影（上下のハイライト）を付けるため、平らにする。
-  // 影は状態 × appearance × color の細かいセレクタで指定されていて詳細度で負けるので、
-  // :not(#\9) で ID 1 つ分の詳細度を足して上書きする（どの要素にも当たる :not）
-  &:not(#\9) {
-    box-shadow: none;
-  }
 }

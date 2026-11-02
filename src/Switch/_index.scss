@@ -50,8 +50,7 @@ $switch-border-size: adapter.get-border-size($level: l); // 0.125rem
   @if $color == 'neutral' {
     @return adapter.get-semantic-color(neutral, 800);
   } @else if $color == 'interactive' {
-    // TODO(フレーバー対応): informative の水色になっていたため、Button の interactive（濃紺）にそろえてベタ書きしている
-    @return #0b3893;
+    @return adapter.get-semantic-color(informative, 600);
   } @else if $color == 'negative' {
     @return adapter.get-semantic-color(negative, 600);
   }
