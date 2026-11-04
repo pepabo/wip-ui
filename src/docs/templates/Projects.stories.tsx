@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 
 import { Button, LinkButton } from '../../Button'
 import { Divider } from '../../Divider'
@@ -172,6 +172,12 @@ const StatusDot = ({ color, label }: { color: StickerColor; label: string }) => 
 const floatingStyle = { position: 'fixed', right: 24, bottom: 24, width: 240, zIndex: 20 } as const
 const closeButtonStyle = { position: 'absolute', left: 8, top: 8 } as const
 
+// GAP-NEW: 行全体をリンクにする一覧（stretched link）が無い。実物と同じく、行を relative にし、
+// 行全体を覆う a（absolute inset-0、aria-label「{name} の詳細」）を敷き、ドメインのリンクだけ前面（z-10）に出す
+const rowStyle = { position: 'relative' } as const
+const stretchedLinkStyle = { position: 'absolute', inset: 0 } as const
+const frontStyle = { position: 'relative', zIndex: 10, alignSelf: 'flex-start' } as const
+
 /** features/Projects/features/ContestNotice。応募締切（2026-12-08 23:59 JST）までで、閉じると出なくなる */
 const ContestNotice = () => {
   const [dismissed, setDismissed] = useState(false)
@@ -292,88 +298,95 @@ const ProjectRow = ({ project }: { project: Project }) => {
   const visibleTags = project.tags.slice(0, MAX_VISIBLE_TAGS)
   const hiddenTagCount = project.tags.length - visibleTags.length
   return (
-    // GAP-NEW: 行全体をリンクにする一覧（stretched link）が無い。実物は行全体を覆う
-    // <Link aria-label="{name} の詳細" className="absolute inset-0"> を敷き、ドメインだけ前面に出している。
-    // ここでは行の面は押せず、プロジェクト名をボタンにしている。
-    // GAP-NEW: Grid に alignItems が無く、右 2 列を名前ブロックの縦中央にそろえられない
-    // 実物は grid-cols-[1fr_auto_auto]（右 2 列は w-24）で、gap-y-2、md 以上は gap-x-8 gap-y-0
-    <Grid spacing={{ xxs: 'xs', m: 'xl' }}>
-      <GridItem size={{ xxs: 12, m: 8 }}>
-        {/* 実物は名前・ドメインの間に余白が無く、リポジトリは mt-0.5、タグは mt-1。
+    // GAP-NEW: 実物は行に hover:bg-neutral-50 を付ける。行の面の hover が無い
+    <div style={rowStyle}>
+      {/* 実物の px-6 py-3.5。GAP-NEW: Paper の padding は 4 辺同じ値なので m（16px） */}
+      <Paper padding="m" elevation={0}>
+        {/* GAP-NEW: Grid に alignItems が無く、右 2 列を名前ブロックの縦中央にそろえられない
+        実物は grid-cols-[1fr_auto_auto]（右 2 列は w-24）で、gap-y-2、md 以上は gap-x-8 gap-y-0 */}
+        <Grid spacing={{ xxs: 'xs', m: 'xl' }}>
+          <GridItem size={{ xxs: 12, m: 8 }}>
+            {/* 実物は名前・ドメインの間に余白が無く、リポジトリは mt-0.5、タグは mt-1。
             GAP-NEW: 子ごとの余白が無いので一律 xxs（4px）にしている */}
-        <Stack gap="xxs">
-          <Stack flexDirection="row" gap="xs" alignItems="center">
-            {/* 実物の名前は Typography m bold で、押すのは行全体を覆う stretched link。ここは名前を Button で包む */}
-            <Button
-              appearance="transparent"
-              size="s"
-              aria-label={`${project.name} の詳細`}
-              onPress={() => navigate('project-deploys')}
-            >
-              <Typography size="m" fontWeight="bold" component="span">
-                {project.name}
-              </Typography>
-            </Button>
-            {/* サイトが今見えているか。右の「デプロイ状態」とは別の軸 */}
-            <StatusDot
-              color={SERVING_STATUS_COLOR[project.servingStatus]}
-              label={project.servingStatus}
-            />
-          </Stack>
-          {project.domain ? (
-            // 実物は native a + text-sm text-[#0b3893] + launch（s）で公開サイトを別タブで開く。
-            // 文中リンクの GAP は parts.tsx の TextLink に書いている
-            <TextLink href={`https://${project.domain}`} external>
-              {project.domain}
-            </TextLink>
-          ) : (
-            <Typography component="div" size="s" color="low_emphasis">
-              ドメイン未発行
-            </Typography>
-          )}
-          {project.githubRepositoryFullName && (
-            // 接続リポジトリはリンクにしない（前面で押せるものをドメインだけにする）。
-            // 実物は 1 つの Typography xs medium_emphasis（span）の中にアイコンと文字を gap-1.5（6px）で並べる。
-            // GAP-NEW: Typography に flex の並びが無いので Stack で並べ、gap は xxs（4px）にしている
-            <Stack flexDirection="row" gap="xxs" alignItems="center">
-              <Typography component="span" size="xs" color="medium_emphasis">
-                <Icon name="github" size="s" color="currentColor" aria-hidden />
-              </Typography>
-              <Typography component="span" size="xs" color="medium_emphasis">
-                {project.githubRepositoryFullName}
-              </Typography>
-            </Stack>
-          )}
-          {visibleTags.length > 0 && (
-            <Stack flexDirection="row" gap="xs" alignItems="center">
-              {visibleTags.map((tag) => (
-                <Sticker key={tag} color="neutral" size="s">
-                  {tag}
-                </Sticker>
-              ))}
-              {hiddenTagCount > 0 && (
-                <Sticker color="neutral" size="s">
-                  {`+${hiddenTagCount}`}
-                </Sticker>
+            <Stack gap="xxs">
+              <Stack flexDirection="row" gap="xs" alignItems="center">
+                <Typography size="m" fontWeight="bold" component="div">
+                  {project.name}
+                </Typography>
+                {/* サイトが今見えているか。右の「デプロイ状態」とは別の軸 */}
+                <StatusDot
+                  color={SERVING_STATUS_COLOR[project.servingStatus]}
+                  label={project.servingStatus}
+                />
+              </Stack>
+              {project.domain ? (
+                // 実物は native a + text-sm text-[#0b3893] + launch（s）で公開サイトを別タブで開く。
+                // 文中リンクの GAP は parts.tsx の TextLink に書いている
+                <div style={frontStyle}>
+                  <TextLink href={`https://${project.domain}`} external>
+                    {project.domain}
+                  </TextLink>
+                </div>
+              ) : (
+                <Typography component="div" size="s" color="low_emphasis">
+                  ドメイン未発行
+                </Typography>
+              )}
+              {project.githubRepositoryFullName && (
+                // 接続リポジトリはリンクにしない（前面で押せるものをドメインだけにする）。
+                // 実物は 1 つの Typography xs medium_emphasis（span）の中にアイコンと文字を gap-1.5（6px）で並べる。
+                // GAP-NEW: Typography に flex の並びが無いので Stack で並べ、gap は xxs（4px）にしている
+                <Stack flexDirection="row" gap="xxs" alignItems="center">
+                  <Typography component="span" size="xs" color="medium_emphasis">
+                    <Icon name="github" size="s" color="currentColor" aria-hidden />
+                  </Typography>
+                  <Typography component="span" size="xs" color="medium_emphasis">
+                    {project.githubRepositoryFullName}
+                  </Typography>
+                </Stack>
+              )}
+              {visibleTags.length > 0 && (
+                <Stack flexDirection="row" gap="xs" alignItems="center">
+                  {visibleTags.map((tag) => (
+                    <Sticker key={tag} color="neutral" size="s">
+                      {tag}
+                    </Sticker>
+                  ))}
+                  {hiddenTagCount > 0 && (
+                    <Sticker color="neutral" size="s">
+                      {`+${hiddenTagCount}`}
+                    </Sticker>
+                  )}
+                </Stack>
               )}
             </Stack>
-          )}
-        </Stack>
-      </GridItem>
-      <GridItem size={{ xxs: 6, m: 2 }}>
-        <StatusIndicator color={PROJECT_STATUS_COLOR[project.status]}>
-          {project.status}
-        </StatusIndicator>
-      </GridItem>
-      <GridItem size={{ xxs: 6, m: 2 }}>
-        {/* GAP-17: 実物は md 以上だけ右寄せ（md:text-right）。md 未満は行の右端に置く（justify-between）ので結果は同じ */}
-        <Stack alignItems="flex-end">
-          <Typography component="div" size="s" color="medium_emphasis">
-            {project.lastDeployedAt}
-          </Typography>
-        </Stack>
-      </GridItem>
-    </Grid>
+          </GridItem>
+          <GridItem size={{ xxs: 6, m: 2 }}>
+            <StatusIndicator color={PROJECT_STATUS_COLOR[project.status]}>
+              {project.status}
+            </StatusIndicator>
+          </GridItem>
+          <GridItem size={{ xxs: 6, m: 2 }}>
+            {/* GAP-17: 実物は md 以上だけ右寄せ（md:text-right）。md 未満は行の右端に置く（justify-between）ので結果は同じ */}
+            <Stack alignItems="flex-end">
+              <Typography component="div" size="s" color="medium_emphasis">
+                {project.lastDeployedAt}
+              </Typography>
+            </Stack>
+          </GridItem>
+        </Grid>
+      </Paper>
+      {/* biome-ignore lint/a11y/useAnchorContent lint/a11y/useValidAnchor: 実物の stretched link（Next の Link）と同じく、遷移は onClick で行い、名前は aria-label で付け、面は行全体を覆うだけにする */}
+      <a
+        href="#"
+        aria-label={`${project.name} の詳細`}
+        style={stretchedLinkStyle}
+        onClick={(e) => {
+          e.preventDefault()
+          navigate('project-deploys')
+        }}
+      />
+    </div>
   )
 }
 
@@ -425,8 +438,9 @@ const ProjectsBody = ({ status, items }: { status: Status; items: Project[] }) =
       </Stack>
     )
   }
+  // 列見出し・区切り線・行は Stack に入れず、外側の Paper の中に直接積む（Stack の gap の初期値 m で区切り線の上下が空くため）
   return (
-    <Stack>
+    <>
       {/* GAP-NEW: 表示/非表示のレスポンシブ指定が無い。実物は md 未満で列見出しを隠す */}
       <Paper padding="m" elevation={0}>
         <Grid spacing={{ xxs: 'xs', m: 'xl' }}>
@@ -450,14 +464,12 @@ const ProjectsBody = ({ status, items }: { status: Status; items: Project[] }) =
         </Grid>
       </Paper>
       {items.map((p) => (
-        <Stack key={p.id}>
+        <Fragment key={p.id}>
           <Divider />
-          <Paper padding="m" elevation={0}>
-            <ProjectRow project={p} />
-          </Paper>
-        </Stack>
+          <ProjectRow project={p} />
+        </Fragment>
       ))}
-    </Stack>
+    </>
   )
 }
 

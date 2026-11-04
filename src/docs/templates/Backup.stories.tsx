@@ -182,7 +182,7 @@ const BackupListTable = ({
         {/* DataGrid の noRowsLabel と同じく、0 件でも見出しは残す */}
         <TableBody
           renderEmptyState={() => (
-            <Typography size="s" color="medium_emphasis">
+            <Typography size="s" color="medium_emphasis" component="div">
               バックアップがありません
             </Typography>
           )}
@@ -210,13 +210,28 @@ const BackupListTable = ({
                   )}
                 </Stack>
               </Cell>
-              <Cell>{b.sizeBytes > 0 ? formatBytes(b.sizeBytes) : '-'}</Cell>
-              <Cell>{b.createdAt}</Cell>
-              {isServerBackup ? null : <Cell>{gameName[b.game]}</Cell>}
+              {/* DataGrid のセルの文字は body2（14px） */}
+              <Cell>
+                <Typography size="s" component="span">
+                  {b.sizeBytes > 0 ? formatBytes(b.sizeBytes) : '-'}
+                </Typography>
+              </Cell>
+              <Cell>
+                <Typography size="s" component="span">
+                  {b.createdAt}
+                </Typography>
+              </Cell>
+              {isServerBackup ? null : (
+                <Cell>
+                  <Typography size="s" component="span">
+                    {gameName[b.game]}
+                  </Typography>
+                </Cell>
+              )}
               <Cell>
                 {/* BackupListTable/MenuCell。成功は「復元」と ⋮、失敗は × だけ、作成中はスピナー */}
                 {b.status === 'PENDING' ? (
-                  <Loader size="m" />
+                  <Loader size="l" />
                 ) : b.status === 'SUCCESS' ? (
                   <Stack flexDirection="row" gap="xs" alignItems="center">
                     {/* GAP-NEW: Replay（↺）に当たるアイコンが無いので arrow_order で代用 */}
@@ -229,12 +244,7 @@ const BackupListTable = ({
                       復元
                     </Button>
                     <MenuTrigger>
-                      <Button
-                        appearance="transparent"
-                        size="s"
-                        iconOnly
-                        aria-label={`${b.name}の操作`}
-                      >
+                      <Button appearance="transparent" iconOnly aria-label={`${b.name}の操作`}>
                         <Icon name="ellipsis_vertical" size="m" aria-hidden="true" />
                       </Button>
                       {/* 実物の項目は「削除」1 つだけ（ダウンロードはコメントアウトされている）。色は付いていない */}
@@ -251,7 +261,7 @@ const BackupListTable = ({
                   </Stack>
                 ) : (
                   // 失敗したバックアップは確認なしですぐ消える（handleClickDeleteNow）
-                  <Button appearance="transparent" size="s" iconOnly aria-label={`${b.name}を削除`}>
+                  <Button appearance="transparent" iconOnly aria-label={`${b.name}を削除`}>
                     <Icon name="cross" size="m" />
                   </Button>
                 )}
@@ -346,7 +356,7 @@ const RestoreBackupDialog = ({ backup, onClose }: { backup: Backup; onClose?: ()
       <DialogTitle>「{backup.name}」を復元しますか？</DialogTitle>
     </DialogHeader>
     <Stack gap="l">
-      <Typography size="s">
+      <Typography size="s" component="div">
         「{backup.name}」作成日時：{backup.createdAtLocale} サイズ：
         {formatBytes(backup.sizeBytes)} を復元します。
       </Typography>
@@ -367,7 +377,7 @@ const DeleteBackupDialog = ({ backup, onClose }: { backup: Backup; onClose?: () 
       <DialogTitle>「{backup.name}」を削除しますか？</DialogTitle>
     </DialogHeader>
     <Stack gap="l">
-      <Typography size="s">
+      <Typography size="s" component="div">
         「{backup.name}」作成日時：{backup.createdAtLocale} サイズ：
         {formatBytes(backup.sizeBytes)} を完全に削除します。
       </Typography>

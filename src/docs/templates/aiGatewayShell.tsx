@@ -75,6 +75,7 @@ import type { StoryRoute } from './storyLink'
  * - GAP: 実物の別タブの矢印は hover したときだけ出る。ここでは常に出している
  * - GAP: 切り替えメニューの「組織を作成する」「プロジェクトを作成する」は実物では accent（強調色）の項目。MenuItem に色の口が無い
  * - GAP: ユーザーメニューの「お知らせを受け取る」は実物では右にスイッチの絵を出す。ここではオンのとき check を出す
+ * - GAP: 実物は「お知らせを受け取る」を切り替えてもメニューを閉じない（shouldCloseOnSelect={false}）。wip-ui の MenuItem・MenuSection はこの prop を受けない
  * - GAP: ユーザーメニューのアバターは実物では丸い地の上の人のアイコン。Icon だけを置いている
  * - GAP: 本文の面の表示時のフェードイン（content-fade-in 300ms）は無い
  * - GAP: Sidebar の下のユーザーメニューのボタンは、実物は幅いっぱいで中身が左寄せ。Button width="full" は中身が中央に寄る

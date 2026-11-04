@@ -190,12 +190,13 @@ const Aux = ({ children }: { children: ReactNode }) => (
 /**
  * sections.tsx の PrepaidBalanceSection（styles.wallet）と LowBalanceNotificationCard（styles.sideCard）。
  * どちらも padding 24px・中の gap 16px の枠線の面で、900px 以上で 2 列に等分する（styles.walletGrid、gap 16px）。
+ * 900px は段階に無く、近い l（1024px）から 2 列にする。ボタンの行（actionRow）は 600px 未満で縦に積み、幅いっぱいに伸ばす
  * 面の中の文字は p（.sections p で margin 0）なので、UA の margin が残らない div にしている
  */
 const WalletCards = ({ loading = false, onOpen }: { loading?: boolean; onOpen?: OpenDialog }) => (
   <section aria-label="クレジット残高">
     <Grid spacing="m">
-      <GridItem size={{ xxs: 12, m: 6 }}>
+      <GridItem size={{ xxs: 12, l: 6 }}>
         <Paper outlined>
           <Stack gap="m">
             {/* walletHead（gap 4px）: 見出しの行（gap 8px）と残高 */}
@@ -223,7 +224,7 @@ const WalletCards = ({ loading = false, onOpen }: { loading?: boolean; onOpen?: 
               <LoadingBlock />
             ) : (
               // actionRow（gap 8px）。自動チャージはカードがあるときだけ
-              <Stack flexDirection="row" gap="xs">
+              <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="xs">
                 {/* カードがあれば ManualChargeDialog、無ければ CardRegistrationDialog */}
                 <Button
                   size="s"
@@ -246,7 +247,7 @@ const WalletCards = ({ loading = false, onOpen }: { loading?: boolean; onOpen?: 
           </Stack>
         </Paper>
       </GridItem>
-      <GridItem size={{ xxs: 12, m: 6 }}>
+      <GridItem size={{ xxs: 12, l: 6 }}>
         <section aria-label="通知">
           <Paper outlined>
             <Stack gap="m">
@@ -261,7 +262,7 @@ const WalletCards = ({ loading = false, onOpen }: { loading?: boolean; onOpen?: 
               {loading ? (
                 <LoadingBlock />
               ) : (
-                <Stack flexDirection="row" gap="xs">
+                <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="xs">
                   <Button
                     appearance="outlined"
                     color="neutral"
@@ -674,11 +675,12 @@ const CardRegistrationDialog = ({ onClose, onNavigate }: DialogProps) => (
       {/* CardTokenFields（dialogFields、gap 16px） */}
       <Stack gap="m">
         <TextField label="カード番号" placeholder="1234 5678 9012 3456" width="full" />
+        {/* fieldRow は 600px 未満で縦に積む */}
         <Grid spacing="m">
-          <GridItem size={6}>
+          <GridItem size={{ xxs: 12, s: 6 }}>
             <TextField label="有効期限" placeholder="MM / YY" width="full" />
           </GridItem>
-          <GridItem size={6}>
+          <GridItem size={{ xxs: 12, s: 6 }}>
             <TextField label="セキュリティコード" placeholder="123" width="full" />
           </GridItem>
         </Grid>
@@ -751,7 +753,8 @@ const WelcomeCreditGrantedDialog = ({ onClose, onNavigate }: DialogProps) => (
       </Stack>
       <img src={welcomeCreditIllustration} alt="" width={512} height={168} />
       <DialogTitle>会員登録ありがとうございます！</DialogTitle>
-      <Paper outlined padding="m">
+      {/* welcomeCreditPanel は枠線の無い面（padding 16px） */}
+      <Paper elevation={0} padding="m">
         <Stack gap="xxs" alignItems="center">
           <Typography size="s" fontWeight="bold" color="negative" component="p">
             感謝の気持ちを込めて
@@ -760,11 +763,13 @@ const WelcomeCreditGrantedDialog = ({ onClose, onNavigate }: DialogProps) => (
             <Typography size="xxxl" fontWeight="bold" component="span">
               1,000
             </Typography>
-            <Typography size="xl" fontWeight="bold" component="span">
+            {/* 実物は 29px。段階の xxl（26px） */}
+            <Typography size="xxl" fontWeight="bold" component="span">
               円分
             </Typography>
           </Stack>
-          <Typography size="xl" fontWeight="bold" component="p">
+          {/* 実物は 24px。段階の xxl（26px） */}
+          <Typography size="xxl" fontWeight="bold" component="p">
             クレジットを付与しました！
           </Typography>
         </Stack>

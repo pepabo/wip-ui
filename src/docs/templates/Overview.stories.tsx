@@ -615,7 +615,7 @@ const ContractPaper = ({
             <Divider />
             {changeStatus === 'lower' && (
               <Stack alignItems="center">
-                <Typography size="s" color="negative">
+                <Typography size="s" color="negative" component="div">
                   下位プランへの変更は現在対応していません
                 </Typography>
               </Stack>
@@ -773,7 +773,11 @@ const ServerSchedulePaper = ({
             <Column aria-label="操作"> </Column>
           </TableHeader>
           <TableBody
-            renderEmptyState={() => <Typography size="s">定期スケジュールがありません</Typography>}
+            renderEmptyState={() => (
+              <Typography size="s" component="div">
+                定期スケジュールがありません
+              </Typography>
+            )}
           >
             {schedules.map((s) => (
               <Row key={s.id} id={s.id}>
@@ -1011,7 +1015,9 @@ const ActionPaper = ({
         <Typography size="xxl" fontWeight="bold" component="h2">
           {title}
         </Typography>
-        <Typography size="s">{children}</Typography>
+        <Typography size="s" component="div">
+          {children}
+        </Typography>
       </Stack>
       {action}
     </Stack>
@@ -1158,7 +1164,9 @@ const OverviewScreen = ({
               ・秘密鍵を公開しないようにご注意ください
             </CalloutBody>
           </Callout>
-          <Typography size="s">問題なければ「作成」を押してください</Typography>
+          <Typography size="s" component="div">
+            問題なければ「作成」を押してください
+          </Typography>
         </Stack>
         <DialogFooter>
           <Button appearance="transparent" onPress={close}>

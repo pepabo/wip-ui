@@ -441,25 +441,39 @@ const UploadResourceDialog = () => (
     </DialogHeader>
     {/* GAP-NEW: ドロップゾーン（DropZone / FileTrigger）が無い。実物と同じ elevation 0 の Paper で面だけ作っている。
         実物は高さ 360px で中央寄せ、アイコンは 64px */}
-    <Paper elevation={0}>
+    <Paper padding="xs" elevation={0}>
+      {/* アイコンの下は mt 2（16px）、ボタンの下は mb 4（32px） */}
       <Stack gap="m" alignItems="center">
         <Typography component="span" color="medium_emphasis">
           <Icon name="upload" size="l" />
         </Typography>
-        <Stack gap="xs" alignItems="center">
-          <Typography size="s">アップロードするファイルかフォルダをドラッグ＆ドロップ</Typography>
-          <Typography size="s">または</Typography>
+        <Stack gap="xl" alignItems="center">
+          {/* 文言 2 行とボタンの行は Grid gap 1（8px） */}
+          <Stack gap="xs" alignItems="center">
+            <Typography size="s" component="div">
+              アップロードするファイルかフォルダをドラッグ＆ドロップ
+            </Typography>
+            <Typography size="s" component="div">
+              または
+            </Typography>
+            <Stack
+              flexDirection={{ xxs: 'column', m: 'row' }}
+              gap={{ xxs: 'xs', m: 'xl' }}
+              justifyContent="center"
+            >
+              {/* GAP-NEW: UploadFile / DriveFolderUpload に当たるアイコンが無い */}
+              <Button appearance="outlined" leading={<Icon name="note" size="s" />}>
+                ファイルを選択
+              </Button>
+              <Button appearance="outlined" leading={<Icon name="folder" size="s" />}>
+                フォルダを選択
+              </Button>
+            </Stack>
+          </Stack>
+          <Typography size="xs" component="div">
+            名前が同じ場合は上書きされます。
+          </Typography>
         </Stack>
-        <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap={{ xxs: 'xs', m: 'l' }}>
-          {/* GAP-NEW: UploadFile / DriveFolderUpload に当たるアイコンが無い */}
-          <Button appearance="outlined" leading={<Icon name="note" size="s" />}>
-            ファイルを選択
-          </Button>
-          <Button appearance="outlined" leading={<Icon name="folder" size="s" />}>
-            フォルダを選択
-          </Button>
-        </Stack>
-        <Typography size="xs">名前が同じ場合は上書きされます。</Typography>
       </Stack>
     </Paper>
     <DialogFooter>
@@ -478,14 +492,17 @@ const MoveResourceDialog = ({ targets }: { targets: string[] }) => {
         <DialogTitle>{targetText(targets)}を移動</DialogTitle>
       </DialogHeader>
       <Stack gap="l">
-        <Stack flexDirection="row" gap="xxs" alignItems="center">
+        {/* フォルダのアイコンは左に 8px、右に 4px あける */}
+        <Stack flexDirection="row" gap="xs" alignItems="center">
           <Typography component="span" size="s">
             現在の場所：
           </Typography>
-          <Icon name="folder" size="s" />
-          <Typography component="span" size="s">
-            {from}
-          </Typography>
+          <Stack flexDirection="row" gap="xxs" alignItems="center">
+            <Icon name="folder" size="s" />
+            <Typography component="span" size="s">
+              {from}
+            </Typography>
+          </Stack>
         </Stack>
         <Stack gap="xs">
           <Typography component="span" size="s" fontWeight="bold">
@@ -509,7 +526,9 @@ const DeleteResourceDialog = ({ targets }: { targets: string[] }) => (
       <DialogTitle>{targetText(targets)}を削除しますか？</DialogTitle>
     </DialogHeader>
     <Stack gap="l">
-      <Typography size="s">サーバーから{targetText(targets)}を完全に削除します。</Typography>
+      <Typography size="s" component="div">
+        サーバーから{targetText(targets)}を完全に削除します。
+      </Typography>
       <Callout color="notice" appearance="outline">
         削除されたデータは元に戻せないためご注意ください。
       </Callout>
@@ -617,9 +636,10 @@ const FileManager = ({
               <Stack>
                 {/* FileBrowser/Header */}
                 <Paper padding="m" elevation={0}>
+                  {/* 実物は Grid gap 1（8px） */}
                   <Stack
                     flexDirection="row"
-                    gap="s"
+                    gap="xs"
                     alignItems="center"
                     justifyContent="space-between"
                   >
@@ -659,9 +679,10 @@ const FileManager = ({
                 <Divider />
                 {/* FileBrowser/MultiActionSection */}
                 <Paper padding="m" elevation={0}>
+                  {/* 狭い幅では「未選択」の下に mb 1（8px） */}
                   <Stack
                     flexDirection={{ xxs: 'column', m: 'row' }}
-                    gap="s"
+                    gap="xs"
                     justifyContent="space-between"
                   >
                     <Typography size="s" component="span">
@@ -718,7 +739,7 @@ const FileManager = ({
                   </TableHeader>
                   <TableBody
                     renderEmptyState={() => (
-                      <Typography size="s" color="medium_emphasis">
+                      <Typography size="s" color="medium_emphasis" component="div">
                         このフォルダにはファイルがありません
                       </Typography>
                     )}
@@ -744,8 +765,17 @@ const FileManager = ({
                             </Typography>
                           </Stack>
                         </Cell>
-                        <Cell>{r.size}</Cell>
-                        <Cell>{r.updatedAt}</Cell>
+                        {/* DataGrid のセルの文字は body2（14px） */}
+                        <Cell>
+                          <Typography size="s" component="span">
+                            {r.size}
+                          </Typography>
+                        </Cell>
+                        <Cell>
+                          <Typography size="s" component="span">
+                            {r.updatedAt}
+                          </Typography>
+                        </Cell>
                         <Cell>
                           {/* FileBrowser/ResourcesTable/MenuCell。⋮ を押した行だけを選び直してメニューを開く */}
                           <MenuTrigger
@@ -755,9 +785,9 @@ const FileManager = ({
                               }
                             }}
                           >
+                            {/* 実物は IconButton medium（40px） */}
                             <Button
                               appearance="transparent"
-                              size="s"
                               iconOnly
                               aria-label={`${r.name}の操作`}
                             >

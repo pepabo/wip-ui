@@ -54,7 +54,7 @@ const ErrorPage = () => {
             <Typography size="xl" fontWeight="bold" component="h1">
               問題が発生しました
             </Typography>
-            <Typography size="m" component="p">
+            <Typography size="m" component="div">
               一時的にアクセスできない状態です <br />{' '}
               お困りの場合はエラートラッキングコードを添えてお問い合せください
             </Typography>

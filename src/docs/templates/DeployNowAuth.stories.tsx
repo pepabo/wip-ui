@@ -1,9 +1,7 @@
 import { LinkButton } from '../../Button'
 import { Callout } from '../../Callout'
-import { Stack } from '../../Stack'
 import { Typography } from '../../Typography'
 import { DeployNowBareShell, DeployNowCard, useDeployNowNavigate } from './deployNowShell'
-import { TextLink } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
@@ -58,6 +56,9 @@ const LoginScreen = () => {
   )
 }
 
+// 実物の素の a は Tailwind の preflight で、色を親から継ぎ、下線が無い
+const inheritLinkStyle = { color: 'inherit', textDecoration: 'none' } as const
+
 const SignupScreen = () => {
   const navigate = useDeployNowNavigate()
   return (
@@ -79,15 +80,20 @@ const SignupScreen = () => {
         ロリポップ！ID で新規登録
       </LinkButton>
       {/* 実物は 1 つの Typography s low_emphasis の段落の中に、クラスの無い素の a を置く（色は段落から継ぎ、下線は無い）。
-          GAP: 文中のリンクが無いので、文と TextLink を並べる。リンクの色は informative で実物と違う */}
-      <Stack flexDirection="row" gap="xxs" alignItems="center">
-        <Typography size="s" color="low_emphasis" component="span">
-          すでにアカウントをお持ちの方は
-        </Typography>
-        <TextLink href="/login" onPress={() => navigate('login')}>
+          GAP-NEW: 文中のリンクが無いので、同じく素の a で、色を継いで下線を消す */}
+      <Typography size="s" color="low_emphasis">
+        すでにアカウントをお持ちの方は{' '}
+        <a
+          href="/login"
+          style={inheritLinkStyle}
+          onClick={(event) => {
+            event.preventDefault()
+            navigate('login')
+          }}
+        >
           ログイン
-        </TextLink>
-      </Stack>
+        </a>
+      </Typography>
     </DeployNowCard>
   )
 }

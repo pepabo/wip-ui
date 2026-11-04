@@ -206,9 +206,8 @@ const Glyph = ({ name, size = 's' }: { name: IconName; size?: 's' | 'm' | 'l' })
   <Icon name={name} size={size} aria-hidden="true" />
 )
 
-/** 予算の消費の色。実物は 80% 以上で注意、95% 以上で危険の色にする */
-const budgetColor = (ratio: number) =>
-  ratio >= 0.95 ? 'negative' : ratio >= 0.8 ? 'notice' : 'neutral'
+/** DataTableMeter の色。実物は上限に達した（100% 以上）ときだけ赤（red[500]）、それ以外は青（blue[500]） */
+const budgetColor = (ratio: number) => (ratio >= 1 ? 'negative' : 'neutral')
 
 // GAP-NEW: Table のセルに 2 段目の補足（DataTableText tone="secondary"。14px・行の高さ 20px・gray[700]）を置く型が無い。
 // 色は Typography の medium_emphasis で写している
@@ -417,7 +416,8 @@ const KeyList = ({
           GAP: 検索欄（ListSearch）の虫眼鏡と、600px 以上での幅 280px */}
         {loaded && (
           <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s" justifyContent="space-between">
-            <Stack flexDirection="row" gap="s" alignItems="center">
+            {/* 600px 未満は検索・絞り込み・操作が縦に 1 列ずつ並ぶ */}
+            <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s">
               {/* GAP-NEW: TextField に虫眼鏡のアイコンを差せない（ListSearch は CSS で重ねている） */}
               <TextField
                 aria-label="APIキーを名前で検索する"
@@ -458,7 +458,8 @@ const KeyList = ({
                 </Menu>
               </MenuTrigger>
             </Stack>
-            <Stack flexDirection="row" gap="s" alignItems="center">
+            {/* .actions は右寄せ（justify-content: flex-end） */}
+            <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="flex-end">
               {selectedKeys.length > 0 ? (
                 <Button
                   color="negative"
@@ -561,11 +562,11 @@ const KeyList = ({
                           </Stack>
                           {k.budget !== null ? (
                             <Meter
-                              aria-label={`${k.alias} の予算の消費`}
+                              aria-label={`${k.alias} の予算の使用状況`}
                               size="s"
                               value={k.usage}
                               maxValue={k.budget}
-                              valueLabel={`${yen(k.usage)} / ${yen(k.budget)}`}
+                              valueLabel={`使用 ${yen(k.usage)} / ${yen(k.budget)}`}
                               color={budgetColor(k.usage / k.budget)}
                             />
                           ) : null}
@@ -838,10 +839,10 @@ const KeyDetail = ({
           </Typography>
           <UsagePeriodFilter />
         </Stack>
-        {/* chartGrid：600px 未満は 1 列、600px 以上は 2 列、900px 以上は 3 列。間 16px */}
+        {/* chartGrid：600px 未満は 1 列、600px 以上は 2 列、900px 以上は 3 列。間 16px。900px は段階に無く、近い l（1024px）から 3 列 */}
         <Grid spacing="m">
           {keyUsageSeries.map((series) => (
-            <GridItem key={series.key} size={{ xxs: 12, s: 6, m: 4 }}>
+            <GridItem key={series.key} size={{ xxs: 12, s: 6, l: 4 }}>
               <KeyUsageChart series={series} />
             </GridItem>
           ))}
@@ -887,7 +888,7 @@ const LimitSettings = ({ apiKey }: { apiKey: ApiKey }) => {
   const fromRule = apiKey.ruleId === 'default'
   return (
     <Grid spacing="m">
-      <GridItem size={{ xxs: 12, m: 6 }}>
+      <GridItem size={{ xxs: 12, l: 6 }}>
         <SettingGroup label="予算">
           <SettingRow
             label={<FieldLabel label="予算上限（円）" action={fromRule && <RuleMark />} />}
@@ -905,7 +906,7 @@ const LimitSettings = ({ apiKey }: { apiKey: ApiKey }) => {
           </SettingRow>
         </SettingGroup>
       </GridItem>
-      <GridItem size={{ xxs: 12, m: 6 }}>
+      <GridItem size={{ xxs: 12, l: 6 }}>
         <SettingGroup label="レート制限">
           <Stack gap="m">
             <SettingRow
@@ -1026,7 +1027,7 @@ const ModelSettings = ({ apiKey }: { apiKey: ApiKey }) => {
         />
       </SettingGroup>
       <Grid spacing="m">
-        <GridItem size={{ xxs: 12, m: 6 }}>
+        <GridItem size={{ xxs: 12, l: 6 }}>
           <SettingGroup label="auto が指定されたとき">
             <Stack gap="m">
               <Stack gap="xs">
@@ -1072,7 +1073,7 @@ const ModelSettings = ({ apiKey }: { apiKey: ApiKey }) => {
             </Stack>
           </SettingGroup>
         </GridItem>
-        <GridItem size={{ xxs: 12, m: 6 }}>
+        <GridItem size={{ xxs: 12, l: 6 }}>
           <SettingGroup label="モデルが直接指定されたとき">
             <Stack gap="m">
               {/* AutoOnlySwitch（.optOut：間 8px）。shared/ui/LabeledSwitch は項目名（14px・行の高さ 24px）を左、
@@ -1316,44 +1317,51 @@ const PatternChoices = ({
     <SettingGroup label={title} description={description} action={action}>
       {/* GAP-NEW: Stack に role / aria-label を渡せず、実装の role="group"（「…対象」）の名前を付けられない。
           実物は行ごとに上へ gray[100] の罫線を引き、面の端まで伸ばす（高さ 56px 以上）。
-          GAP: 実物はチェックボックスを行の右端に置き、InfoTip は名前のすぐ右に入る */}
+          GAP: 実物はチェックボックスを行の右端に置く（row-reverse）。Checkbox は左に箱を置く */}
       <Stack gap="xs">
         {groups.map((group) => (
           <Stack key={group.id} gap="xs">
             <Divider />
-            <Stack flexDirection="row" gap="xxs" alignItems="flex-start">
-              <Checkbox
-                isSelected={selected.includes(group.id)}
-                onChange={(checked) =>
-                  setSelected((prev) =>
-                    checked ? [...prev, group.id] : prev.filter((id) => id !== group.id)
-                  )
-                }
-              >
-                <Stack gap="xxs">
+            <Checkbox
+              isSelected={selected.includes(group.id)}
+              onChange={(checked) =>
+                setSelected((prev) =>
+                  checked ? [...prev, group.id] : prev.filter((id) => id !== group.id)
+                )
+              }
+            >
+              {/* choiceLabel（間 2px）。choiceTitle は名前のすぐ右に InfoTip（間 4px） */}
+              <Stack gap="xxs">
+                <Stack flexDirection="row" gap="xxs" alignItems="center">
                   <Typography size="s" component="span">
                     {group.name}
                   </Typography>
-                  {/* GAP-20: 例（実装は code）を等幅で出せない */}
-                  <Typography size="xs" color="medium_emphasis" component="span">
-                    {group.description}。例: {group.example}
-                  </Typography>
+                  {/* 実物と同じく、InfoTip を押してもチェックが切り替わらないよう、クリックを止める */}
+                  {/* biome-ignore lint/a11y/useKeyWithClickEvents: キー操作は中の Button が受ける */}
+                  {/* biome-ignore lint/a11y/noStaticElementInteractions: クリックを止めるだけ */}
+                  <span onClick={(event) => event.stopPropagation()}>
+                    {/* GAP-20: 実物は正規表現を code（等幅）で出す */}
+                    <InfoTip label={`${group.name}の正規表現を表示`}>
+                      {/* patterns（間 8px） */}
+                      <Stack gap="xs">
+                        <Typography size="xs" fontWeight="bold" component="span">
+                          正規表現
+                        </Typography>
+                        {group.patterns.map((pattern) => (
+                          <Typography key={pattern} size="xs" component="span">
+                            {pattern}
+                          </Typography>
+                        ))}
+                      </Stack>
+                    </InfoTip>
+                  </span>
                 </Stack>
-              </Checkbox>
-              {/* GAP-20: 実物は正規表現を code（等幅）で出す */}
-              <InfoTip label={`${group.name}の正規表現を表示`}>
-                <Stack gap="xxs">
-                  <Typography size="xs" fontWeight="bold" component="span">
-                    正規表現
-                  </Typography>
-                  {group.patterns.map((pattern) => (
-                    <Typography key={pattern} size="xs" component="span">
-                      {pattern}
-                    </Typography>
-                  ))}
-                </Stack>
-              </InfoTip>
-            </Stack>
+                {/* GAP-20: 例（実装は code）を等幅で出せない */}
+                <Typography size="xs" color="medium_emphasis" component="span">
+                  {group.description}。例: {group.example}
+                </Typography>
+              </Stack>
+            </Checkbox>
           </Stack>
         ))}
       </Stack>
@@ -1420,8 +1428,8 @@ const IssueKeyDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             </SelectItem>
           ))}
         </Select>
-        {/* 実装は「カスタム」を選ぶと右に日付の欄が並ぶ（styles.fieldRow） */}
-        <Stack flexDirection="row" gap="s">
+        {/* 実装は「カスタム」を選ぶと右に日付の欄が並ぶ（styles.fieldRow、間 12px）。640px 以下は縦に積む（近い段階の s） */}
+        <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s">
           <Select
             label="有効期限"
             width="full"

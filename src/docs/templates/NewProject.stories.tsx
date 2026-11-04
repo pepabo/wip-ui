@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../Accordion'
 import { Button, LinkButton } from '../../Button'
@@ -53,15 +53,22 @@ const DEPLOY_PROMPT =
 // 面の余白は Paper の padding で付ける（GAP-1 は解消）。カードは既定の l、CenteredNotice（実物は px-6 py-16）は xxl、
 // 面の中に置く値とコピーの面・ファイル一覧の面・インポート元の面（実物は p-4）とコード表示面は m、
 // ドロップ領域（実物は px-8 py-16）は xxl。
-// GAP-NEW: 行ごとに余白をとる部品が無い。一覧の行（実物は px-4 py-3 のリポジトリ・px-3 py-2 のファイル）は
-//          面の余白の内側に並ぶので、区切り線が面の端まで届かない。
+// 一覧の行（実物は px-4 py-3 のリポジトリ・px-3 py-2 のファイル）は、面の padding を none にして、行ごとに Paper の
+// padding を付ける。区切り線は面の端まで届く。padding は上下左右同じ値なので、上下か左右のどちらかが実物とずれる。
 // GAP-NEW: 余白をとる部品が無い。面を持たない読み込み中・取得失敗の案内（実物は px-6 py-16）の広い上下の余白。
 //          Stack の gap は要素の間にしか付かず、Paper は白い面になるので付けられない。
 
 // GAP-NEW: 実物の Typography は既定の p（と明示の p）だが、Tailwind の preflight で margin が 0 になっている。
 // wip-ui は p・h1 の既定の margin を消さないので、p の代わりに div で描いている（h1 は見出しのため残し、上下に margin が付く）。
 // GAP-NEW: 文中のテキストリンク（ボタン）が無い。実物は native button + text-sm text-[#0b3893]、hover で下線。
-// Button の transparent で代えるので、文字の前後に余白が付き、文字色は interactive になる。
+// 素の button の見た目を消し、中に Typography s informative を置く。hover の下線は無い
+const textButtonStyle = {
+  padding: 0,
+  border: 0,
+  background: 'none',
+  font: 'inherit',
+  cursor: 'pointer',
+} as const
 const TextLink = ({
   children,
   onPress,
@@ -71,15 +78,11 @@ const TextLink = ({
   onPress?: () => void
   'aria-label'?: string
 }) => (
-  <Button
-    appearance="transparent"
-    color="interactive"
-    size="s"
-    aria-label={ariaLabel}
-    onPress={onPress}
-  >
-    {children}
-  </Button>
+  <button type="button" aria-label={ariaLabel} onClick={onPress} style={textButtonStyle}>
+    <Typography component="span" size="s" color="informative">
+      {children}
+    </Typography>
+  </button>
 )
 
 const LoadingBody = ({ message = '読み込み中' }: { message?: string }) => (
@@ -127,16 +130,16 @@ const PageTitle = ({ title, description }: { title: string; description?: string
 // 送信時の検査には使えない。実物も role="alert" の中に Typography xs negative を置いている。
 
 // GAP-NEW: 箇条書き（ul / li）の部品が無い。実物は ul.list-disc.pl-5 の中に Typography component="li"。
-// Typography で ul / li を描くと、ブラウザの既定の margin と padding（上下 16px・左 40px）が残るので、
-// 行頭の点を文字で書いた div を並べている。実物の li の間は 0 だが、Stack の gap の最小の xxs（4px）
+// 素の ul の既定の margin を消し、左の余白を実物の pl-5（20px）にする
+const bulletListStyle = { margin: 0, paddingLeft: 20 } as const
 const Bullets = ({ items }: { items: string[] }) => (
-  <Stack gap="xxs">
+  <ul style={bulletListStyle}>
     {items.map((item) => (
-      <Typography component="div" key={item} size="s" color="medium_emphasis">
-        ・{item}
+      <Typography component="li" key={item} size="s" color="medium_emphasis">
+        {item}
       </Typography>
     ))}
-  </Stack>
+  </ul>
 )
 
 // GAP-NEW: 値とコピー完了フィードバック（「コピーしました」を 2 秒）をまとめた部品が無い。
@@ -179,25 +182,18 @@ const DropArea = ({ onSelect }: { onSelect?: () => void }) => (
       <Typography component="div" size="m">
         アプリのフォルダやファイルをここにドロップ
       </Typography>
-      {/* 実物は 1 つの Typography（p）の中に文と native button を並べている。Button を文中に置くと
-          縦の位置が文字とずれるので、Stack の row で並べている（間に gap xxs が付く） */}
-      <Stack flexDirection="row" gap="xxs" alignItems="center">
-        <Typography component="span" size="s" color="medium_emphasis">
-          または
-        </Typography>
+      {/* 実物は 1 つの Typography（p）の中に文と native button を並べている */}
+      <Typography component="div" size="s" color="medium_emphasis">
+        または
         <TextLink aria-label="ファイルを選択" onPress={onSelect}>
           ファイル
         </TextLink>
-        <Typography component="span" size="s" color="medium_emphasis">
-          か
-        </Typography>
+        か
         <TextLink aria-label="フォルダを選択" onPress={onSelect}>
           フォルダ
         </TextLink>
-        <Typography component="span" size="s" color="medium_emphasis">
-          を選択
-        </Typography>
-      </Stack>
+        を選択
+      </Typography>
     </Stack>
   </Paper>
 )
@@ -230,13 +226,14 @@ const SelectedFilesCard = () => (
           .git / node_modules / .env.local は除外され、送信されません。
         </Typography>
       </Stack>
-      {/* 実物は ul + rounded border + bg-white、行は li の px-3 py-2。
-          padding は上下左右同じ値しか取れないので左右に合わせて s（12px）、行の上下は gap xs（8px） */}
-      <Paper padding="s" outlined>
-        <Stack gap="xs">
-          {selectedFiles.map((file, i) => (
-            <Stack key={file.path} gap="xs">
-              {i > 0 && <Divider />}
+      {/* 実物は ul + rounded border + bg-white、行は li の px-3 py-2 で、行の間の罫線は面の端まで届く。
+          面の padding を none にし、行ごとに padding="xs" の Paper を置く（左右は実物より 4px 狭い）。
+          GAP-NEW: 実物の行の罫線は border-[#f0f0f0] で、Divider より薄い */}
+      <Paper padding="none" outlined>
+        {selectedFiles.map((file, i) => (
+          <Fragment key={file.path}>
+            {i > 0 && <Divider />}
+            <Paper padding="xs" elevation={0}>
               <Stack
                 flexDirection="row"
                 gap="xs"
@@ -250,9 +247,9 @@ const SelectedFilesCard = () => (
                   {file.size}
                 </Typography>
               </Stack>
-            </Stack>
-          ))}
-        </Stack>
+            </Paper>
+          </Fragment>
+        ))}
       </Paper>
     </Stack>
   </Paper>
@@ -497,33 +494,71 @@ const UploadProjectContent = ({ initialSelection }: { initialSelection: boolean 
 
 const ProjectDeploymentScreen = () => (
   <DeployNowShell>
+    <ProjectDeploymentContent />
+  </DeployNowShell>
+)
+
+const ProjectDeploymentContent = () => {
+  const navigate = useDeployNowNavigate()
+  // ファイルかフォルダを選ぶとフォームに切り替わり、キャンセルで方法の選択に戻る（URL は変わらない）
+  const [hasSelection, setHasSelection] = useState(false)
+  return (
     <Stack gap="l">
       <PageTitle
         title="新しいバージョンをデプロイ"
         description="CLI、またはフォルダのアップロードで「portfolio」の新しいバージョンをデプロイできます。"
       />
-      <Paper outlined>
-        <Stack gap="m">
-          <Typography component="div" size="m" fontWeight="bold">
-            CLI でデプロイ
-          </Typography>
-          <Typography component="div" size="s" color="medium_emphasis">
-            アプリのフォルダで次のコマンドを実行すると、このプロジェクトにデプロイされます。
-          </Typography>
-          <CopyBox value="lolipop deploy --project 01JQ8Z5M3K7XW2N4V6B9C0D1EF" />
-        </Stack>
-      </Paper>
-      <Paper outlined>
-        <Stack gap="m">
-          <Typography component="div" size="m" fontWeight="bold">
-            フォルダやファイルをアップロードしてデプロイ
-          </Typography>
-          <DropArea />
-        </Stack>
-      </Paper>
+      {hasSelection ? (
+        <Paper outlined>
+          <Stack gap="l">
+            <SelectedFilesCard />
+            <Stack flexDirection="row" gap="xs" justifyContent="flex-end">
+              <Button
+                appearance="outlined"
+                color="neutral"
+                size="s"
+                onPress={() => setHasSelection(false)}
+              >
+                キャンセル
+              </Button>
+              {/* 実物はアップロードが済むと、そのデプロイの詳細へ移る */}
+              <Button
+                appearance="flat"
+                color="neutral"
+                size="s"
+                onPress={() => navigate('deploy-detail')}
+              >
+                デプロイ
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      ) : (
+        <>
+          <Paper outlined>
+            <Stack gap="m">
+              <Typography component="div" size="m" fontWeight="bold">
+                CLI でデプロイ
+              </Typography>
+              <Typography component="div" size="s" color="medium_emphasis">
+                アプリのフォルダで次のコマンドを実行すると、このプロジェクトにデプロイされます。
+              </Typography>
+              <CopyBox value="lolipop deploy --project 01JQ8Z5M3K7XW2N4V6B9C0D1EF" />
+            </Stack>
+          </Paper>
+          <Paper outlined>
+            <Stack gap="m">
+              <Typography component="div" size="m" fontWeight="bold">
+                フォルダやファイルをアップロードしてデプロイ
+              </Typography>
+              <DropArea onSelect={() => setHasSelection(true)} />
+            </Stack>
+          </Paper>
+        </>
+      )}
     </Stack>
-  </DeployNowShell>
-)
+  )
+}
 
 // ─── GitHub リポジトリをインポート（features/GitHubRepositoryPicker） ───
 
@@ -649,13 +684,13 @@ const RepositoryPicker = ({
           </Stack>
         </Paper>
       ) : (
-        // 実物は Paper outlined の中の ul.divide-y で、行は li の px-4 py-3。
-        // padding は上下左右同じ値しか取れないので左右に合わせて m（16px）、行の上下は gap s（12px）
-        <Paper outlined padding="m">
-          <Stack gap="s">
-            {visible.map((r, i) => (
-              <Stack key={r.id} gap="s">
-                {i > 0 && <Divider />}
+        // 実物は Paper outlined（余白なし）の中の ul.divide-y で、行は li の px-4 py-3。罫線は面の端まで届く。
+        // 面の padding を none にし、行ごとに padding="m" の Paper を置く（上下は実物より 4px 広い）
+        <Paper outlined padding="none">
+          {visible.map((r, i) => (
+            <Fragment key={r.id}>
+              {i > 0 && <Divider />}
+              <Paper padding="m" elevation={0}>
                 <Stack
                   flexDirection="row"
                   gap="m"
@@ -676,9 +711,9 @@ const RepositoryPicker = ({
                     インポート
                   </Button>
                 </Stack>
-              </Stack>
-            ))}
-          </Stack>
+              </Paper>
+            </Fragment>
+          ))}
         </Paper>
       )}
       {/* GAP-NEW: Stack に折り返し（flex-wrap）の指定が無い */}
@@ -1097,20 +1132,19 @@ const CliSkillScreen = () => {
         {/* GAP-20: 等幅フォントが無い。実物は pre + font-mono + whitespace-pre-wrap。
           GAP-NEW: 高さを決めてスクロールさせる面が無い。実物は max-h-[60vh] overflow-auto。
           GAP-NEW: Paper に地色の違う面（bg-neutral-50）が無い。実物は rounded-md border p-4 text-sm の pre */}
+        {/* 行は Stack に入れず Paper の中に直接積む（Stack の gap の初期値 m で行の間が空くため） */}
         <Paper padding="m" outlined>
-          <Stack>
-            {SKILL_MARKDOWN.split('\n').map((line, i) => (
-              <Typography
-                component="div"
-                // biome-ignore lint/suspicious/noArrayIndexKey: 同じ行（空行や ```）が繰り返し出るため行番号を key にする
-                key={i}
-                size="s"
-                density="dense"
-              >
-                {line || ' '}
-              </Typography>
-            ))}
-          </Stack>
+          {SKILL_MARKDOWN.split('\n').map((line, i) => (
+            <Typography
+              component="div"
+              // biome-ignore lint/suspicious/noArrayIndexKey: 同じ行（空行や ```）が繰り返し出るため行番号を key にする
+              key={i}
+              size="s"
+              density="dense"
+            >
+              {line || ' '}
+            </Typography>
+          ))}
         </Paper>
       </Stack>
     </DeployNowShell>

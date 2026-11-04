@@ -778,7 +778,8 @@ const CopyRow = ({
   display: ReactNode
   copy?: string
 }) => (
-  <Stack flexDirection="row" gap="s" justifyContent="space-between" alignItems="center">
+  // GameSettingsView は Stack spacing 1（8px）
+  <Stack flexDirection="row" gap="xs" justifyContent="space-between" alignItems="center">
     <ConfigRow label={label} description={description}>
       {display}
     </ConfigRow>
@@ -786,26 +787,37 @@ const CopyRow = ({
   </Stack>
 )
 
+/**
+ * ゲーム設定の各 Paper。実物は elevation 0 で、余白は px: { xs: 4, md: 6 }・py: 4（32px / 48px・32px）。
+ * GAP: Paper の padding は 4 辺同じ値なので xl（32px）にしている。md 以上の左右は実物より 16px 狭い
+ */
+const gamePaperProps = { elevation: 0, padding: 'xl' } as const
+
 /** VersionUp / RecreateWorld などの 1 行の Paper。見出しは variant='l' */
 const ActionPaper = ({
   title,
+  titleSize = 'l',
+  gap = 'm',
   children,
   action,
 }: {
   title: string
+  /** Factorio の「ワールドの初期化」だけ見出しが h6（20px） */
+  titleSize?: 'l' | 'xl'
+  /** 見出しの下。説明の mt 2（16px）が多く、見出しに mb 3 があるものは 24px */
+  gap?: 'm' | 'l'
   children: ReactNode
   action: ReactNode
 }) => (
-  <Card>
+  <Card {...gamePaperProps}>
     <Stack
       flexDirection={{ xxs: 'column', s: 'row' }}
       gap="m"
       justifyContent="space-between"
       alignItems="flex-start"
     >
-      {/* 説明は見出しの下 mt 2 */}
-      <Stack gap="m">
-        <Typography size="l" fontWeight="bold" component="h2">
+      <Stack gap={gap}>
+        <Typography size={titleSize} fontWeight="bold" component="h2">
           {title}
         </Typography>
         {children}
@@ -815,11 +827,20 @@ const ActionPaper = ({
   </Card>
 )
 
-/** 項目を縦に並べるだけの Paper（接続情報・招待コード・txAdmin・MySQL） */
-const InfoPaper = ({ title, children }: { title: string; children: ReactNode }) => (
-  <Card>
-    <Stack gap="l">
-      <Typography size="l" fontWeight="bold" component="h2">
+/** 項目を縦に並べるだけの Paper（接続情報・txAdmin・MySQL）。見出しと項目の間は Stack spacing 5（40px） */
+const InfoPaper = ({
+  title,
+  large = false,
+  children,
+}: {
+  title: string
+  /** Astroneer の接続情報は見出しが h5（24px）で、上下の余白が py 6（48px） */
+  large?: boolean
+  children: ReactNode
+}) => (
+  <Card elevation={0} padding={large ? { xxs: 'xl', m: 'xxl' } : 'xl'}>
+    <Stack gap="xl">
+      <Typography size={large ? 'xxl' : 'l'} fontWeight="bold" component="h2">
         {title}
       </Typography>
       {children}
@@ -830,11 +851,12 @@ const InfoPaper = ({ title, children }: { title: string; children: ReactNode }) 
 /** 「設定」の Paper の見出し（変更 / リセット） */
 const SettingTitle = ({ onEdit, onReset }: { onEdit?: () => void; onReset: () => void }) => (
   // 実アプリは画面幅によらず見出しとボタンを横に並べる（PaperTitle は xxs で縦積みになるので使わない）
-  <Stack flexDirection="row" gap="s" alignItems="flex-start" justifyContent="space-between">
+  // 見出しとボタンの間、ボタンどうしの間は 16px
+  <Stack flexDirection="row" gap="m" alignItems="flex-start" justifyContent="space-between">
     <Typography size="xxl" fontWeight="bold" component="h2">
       設定
     </Typography>
-    <Stack flexDirection="row" gap="s">
+    <Stack flexDirection="row" gap="m">
       <Button appearance="outlined" leading={<Icon name="pencil" size="s" />} onPress={onEdit}>
         変更
       </Button>
@@ -889,7 +911,8 @@ const UserTable = ({
   users: string[]
   deletable?: boolean
 }) => (
-  <Paper padding="none" elevation={0} outlined>
+  // 実物の Accordion は elevation 0 で、地に白の 5% を重ねた面（枠線なし）
+  <Paper padding="none" elevation={0}>
     <Accordion>
       <AccordionItem>
         <AccordionTrigger headingLevel="none">
@@ -907,7 +930,12 @@ const UserTable = ({
             <TableBody>
               {users.map((u) => (
                 <Row key={u} id={u}>
-                  <Cell>{u}</Cell>
+                  {/* MUI の TableCell は body2（14px） */}
+                  <Cell>
+                    <Typography size="s" component="span">
+                      {u}
+                    </Typography>
+                  </Cell>
                   {deletable ? (
                     <Cell>
                       <Button
@@ -938,7 +966,7 @@ const MinecraftJavaSettingPaper = ({
   onEdit: () => void
   onReset: () => void
 }) => (
-  <Card>
+  <Card {...gamePaperProps}>
     <Stack gap="xl">
       <SettingTitle onEdit={onEdit} onReset={onReset} />
       <Divider />
@@ -947,7 +975,9 @@ const MinecraftJavaSettingPaper = ({
         <Typography size="l" fontWeight="bold" component="h3">
           ホワイトリスト
         </Typography>
-        <Typography size="s">{whiteList.enabled ? '有効' : '無効'}</Typography>
+        <Typography size="s" component="div">
+          {whiteList.enabled ? '有効' : '無効'}
+        </Typography>
         <ConfigRow label="サーバーにホワイトリストを適用">
           {whiteList.enforce ? '有効' : '無効'}
         </ConfigRow>
@@ -977,21 +1007,28 @@ const MinecraftJavaSettingPaper = ({
 
 /** GameSettings/fields/FieldLabel */
 const FieldLabel = ({ label, description }: { label: string; description?: string }) => (
+  // ラベルは m_comfort、説明は s_comfort
   <Stack gap="xs">
-    <Typography size="m" fontWeight="bold" component="span">
+    <Typography size="m" density="comfort" fontWeight="bold" component="span">
       {label}
     </Typography>
     {description && (
-      <Typography size="s" color="medium_emphasis" component="span">
+      <Typography size="s" density="comfort" color="medium_emphasis" component="span">
         {description}
       </Typography>
     )}
   </Stack>
 )
 
-const Hint = ({ children }: { children?: string }) =>
+const Hint = ({ children, comfort = false }: { children?: string; comfort?: boolean }) =>
   children ? (
-    <Typography size="xs" color="medium_emphasis">
+    // 条件付き入力の説明だけ xs_comfort
+    <Typography
+      size="xs"
+      density={comfort ? 'comfort' : 'normal'}
+      color="medium_emphasis"
+      component="div"
+    >
       {children}
     </Typography>
   ) : null
@@ -1082,7 +1119,7 @@ const DynamicField = ({ field: f, onChange }: { field: Field; onChange: () => vo
   switch (f.kind) {
     case 'text': {
       return (
-        <Stack gap="s">
+        <Stack gap="m">
           <FieldLabel label={f.label} description={f.description} />
           <TextInput
             label={f.label}
@@ -1101,7 +1138,7 @@ const DynamicField = ({ field: f, onChange }: { field: Field; onChange: () => vo
     }
     case 'slider':
       return (
-        <Stack gap="s">
+        <Stack gap="m">
           <FieldLabel label={f.label} description={f.description} />
           <SliderInput
             label={f.label}
@@ -1116,7 +1153,7 @@ const DynamicField = ({ field: f, onChange }: { field: Field; onChange: () => vo
       )
     case 'select':
       return (
-        <Stack gap="s">
+        <Stack gap="m">
           <FieldLabel label={f.label} description={f.description} />
           <Select
             aria-label={f.label}
@@ -1135,7 +1172,7 @@ const DynamicField = ({ field: f, onChange }: { field: Field; onChange: () => vo
       )
     case 'radio':
       return (
-        <Stack gap="s">
+        <Stack gap="m">
           <FieldLabel label={f.label} description={f.description} />
           <RadioGroup aria-label={f.label} defaultValue={f.value} onChange={changed}>
             {f.options.map((o) => (
@@ -1171,7 +1208,7 @@ const DynamicField = ({ field: f, onChange }: { field: Field; onChange: () => vo
     case 'conditional':
     case 'conditionalSlider':
       return (
-        <Stack gap="s">
+        <Stack gap="m">
           <Stack gap="xs">
             <FieldLabel label={f.label} description={f.description} />
             <Checkbox
@@ -1208,7 +1245,7 @@ const DynamicField = ({ field: f, onChange }: { field: Field; onChange: () => vo
               />
             ))}
           {/* 条件付き入力の config.description は、入力欄を出しているときだけその下に出る */}
-          {enabled && <Hint>{f.hint}</Hint>}
+          {enabled && <Hint comfort>{f.hint}</Hint>}
         </Stack>
       )
   }
@@ -1216,9 +1253,10 @@ const DynamicField = ({ field: f, onChange }: { field: Field; onChange: () => vo
 
 /** 編集画面の Paper（variant='l' の見出しの下に Divider） */
 const GroupPaper = ({ title, children }: { title: string; children: ReactNode }) => (
-  <Card>
-    <Stack gap="l">
-      <Stack gap="s">
+  // GameSettingsGroup。Stack spacing 4（32px）、見出しの下 pb 2（16px）に Divider
+  <Card {...gamePaperProps}>
+    <Stack gap="xl">
+      <Stack gap="m">
         <Typography size="l" fontWeight="bold" component="h2">
           {title}
         </Typography>
@@ -1234,11 +1272,12 @@ const UserListItem = ({ label, users }: { label: string; users: string[] }) => {
   const [input, setInput] = useState('')
   return (
     <>
-      <Stack gap="s">
+      {/* 見出しの py 1 と入力欄の mt 1 で 16px。入力欄とボタンの間は 16px */}
+      <Stack gap="m">
         <Typography size="m" fontWeight="bold" component="span">
           ユーザー追加
         </Typography>
-        <Stack flexDirection="row" gap="s" alignItems="flex-start">
+        <Stack flexDirection="row" gap="m" alignItems="flex-start">
           <TextField
             aria-label={`${label}に追加するユーザー名`}
             size="s"
@@ -1261,7 +1300,8 @@ const UserListItem = ({ label, users }: { label: string; users: string[] }) => {
  */
 const SaveBar = ({ onSave, onDiscard }: { onSave: () => void; onDiscard: () => void }) => (
   <Paper elevation={0} square outlined>
-    <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s" justifyContent="center">
+    {/* 実物はどの幅でも横並びで、間は 16px。ボタンの幅は 386px */}
+    <Stack flexDirection="row" gap="m" justifyContent="center">
       <Button color="interactive" size="l" onPress={onSave}>
         保存
       </Button>
@@ -1361,8 +1401,8 @@ const MinecraftJavaSettingEditor = ({ onBack }: EditorProps) => {
             有効
           </Checkbox>
         </Stack>
-        {/* components/SelectItem */}
-        <Stack gap="s">
+        {/* components/SelectItem（見出しの py 1 と mt 1 で 16px） */}
+        <Stack gap="m">
           <Typography size="m" fontWeight="bold" component="span">
             管理者の権限レベル
           </Typography>
@@ -1437,8 +1477,9 @@ const ConfirmDialog = ({
 
 /** 確認の本文（1 行の説明 ＋ outlined の warning） */
 const ConfirmBody = ({ text, warning }: { text: string; warning: string }) => (
-  <Stack gap="m">
-    <Typography>{text}</Typography>
+  // 本文の下は mb 3（24px）
+  <Stack gap="l">
+    <Typography component="div">{text}</Typography>
     <Callout color="notice" appearance="outline">
       {warning}
     </Callout>
@@ -1449,9 +1490,10 @@ const ConfirmBody = ({ text, warning }: { text: string; warning: string }) => (
 const MinecraftJavaVersionBody = () => {
   const [mod, setMod] = useState<string>(server.mod)
   return (
-    <Stack gap="m">
-      <Typography>指定したバージョンに変更できます</Typography>
-      <Grid spacing="m">
+    // 本文・2 つの Select・注意の間は mb 3（24px）、Select の間は spacing 4（32px）
+    <Stack gap="l">
+      <Typography component="div">指定したバージョンに変更できます</Typography>
+      <Grid spacing="xl">
         <GridItem size={6}>
           <Select
             label="サーバーの種類"
@@ -1484,7 +1526,7 @@ const MinecraftJavaVersionBody = () => {
         <>
           <Divider />
           {/* 実物は閉じた状態で始まり、矢印は文字の左に付く。
-              GAP: 実物の「高度な設定」は 14px・medium_emphasis で太字でない。AccordionTrigger の見た目のまま */}
+              GAP: 実物の「高度な設定」は s_comfort（14px）で太字でない。AccordionTrigger の見た目のまま */}
           <Accordion>
             <AccordionItem>
               <AccordionTrigger headingLevel="none" indicator="start">
@@ -1540,8 +1582,10 @@ const dialogs: Record<
     title: 'バージョン変更',
     confirmLabel: '変更',
     body: (
-      <Stack gap="m">
-        <Typography>最新の推奨バージョンもしくは最新バージョンに変更できます</Typography>
+      <Stack gap="l">
+        <Typography component="div">
+          最新の推奨バージョンもしくは最新バージョンに変更できます
+        </Typography>
         <Select label="バージョン" size="s" width="full" defaultSelectedKey="recommended">
           {fivemVersionOptions.map((o) => (
             <SelectItem key={o.value} id={o.value}>
@@ -1613,7 +1657,9 @@ const VersionUpPaper = ({ onOpen }: { onOpen: () => void }) => (
       </Button>
     }
   >
-    <Typography size="s">最新のバージョンにアップデートすることができます</Typography>
+    <Typography size="s" component="div">
+      最新のバージョンにアップデートすることができます
+    </Typography>
   </ActionPaper>
 )
 
@@ -1621,34 +1667,42 @@ const VersionUpPaper = ({ onOpen }: { onOpen: () => void }) => (
 const VersionPaper = ({
   version,
   label,
+  gap = 'l',
   onOpen,
 }: {
   version: string
   label: string
+  /** Factorio・FiveM は見出しの mb 3（24px）、Bedrock は値の pt 2（16px） */
+  gap?: 'm' | 'l'
   onOpen: () => void
 }) => (
   <ActionPaper
     title="バージョン"
+    gap={gap}
     action={
       <Button appearance="outlined" onPress={onOpen}>
         {label}
       </Button>
     }
   >
-    <Typography size="s">{version}</Typography>
+    <Typography size="s" component="div">
+      {version}
+    </Typography>
   </ActionPaper>
 )
 
-const RecreateWorldPaper = ({ onOpen }: { onOpen: () => void }) => (
+const RecreateWorldPaper = ({ onOpen, gap = 'l' }: { onOpen: () => void; gap?: 'm' | 'l' }) => (
+  // Bedrock・GameSettings/RegenerateGameWorldView は見出しに mb 3（24px）、Minecraft (Java版) は説明の mt 2（16px）だけ
   <ActionPaper
     title="ワールドの再生成"
+    gap={gap}
     action={
       <Button appearance="outlined" onPress={onOpen}>
         再生成
       </Button>
     }
   >
-    <Typography size="s">
+    <Typography size="s" component="div">
       現在の設定でワールドを再生成することができます。再生成すると現在のワールドのデータが変更されます。
     </Typography>
   </ActionPaper>
@@ -1656,20 +1710,23 @@ const RecreateWorldPaper = ({ onOpen }: { onOpen: () => void }) => (
 
 /** MinecraftBedrockManager/ui/settings（各グループは手書きで、Server-Driven UI ではない） */
 const BedrockSettingPaper = ({ onReset }: { onReset: () => void }) => (
-  <Card>
+  <Card {...gamePaperProps}>
     <Stack gap="xl">
       {/* 「変更」は ui/setting-modal（全画面の編集）を開く。ここでは編集画面を作っていない */}
       <SettingTitle onReset={onReset} />
       <Divider />
-      <Stack gap="l">
+      {/* ui/settings の各グループは Stack spacing 4（32px） */}
+      <Stack gap="xl">
         <Typography size="l" fontWeight="bold" component="h3">
           ホワイトリスト
         </Typography>
-        <Typography size="s">{bedrock.allowList ? '有効' : '無効'}</Typography>
+        <Typography size="s" component="div">
+          {bedrock.allowList ? '有効' : '無効'}
+        </Typography>
         <UserTable label="ホワイトリスト" users={bedrock.users} />
       </Stack>
       <Divider />
-      <Stack gap="l">
+      <Stack gap="xl">
         <Typography size="l" fontWeight="bold" component="h3">
           管理者リスト
         </Typography>
@@ -1679,7 +1736,7 @@ const BedrockSettingPaper = ({ onReset }: { onReset: () => void }) => (
         <UserTable label="管理者リスト" users={bedrock.ops} />
       </Stack>
       <Divider />
-      <Stack gap="l">
+      <Stack gap="xl">
         <Typography size="l" fontWeight="bold" component="h3">
           サーバー基本情報
         </Typography>
@@ -1687,7 +1744,7 @@ const BedrockSettingPaper = ({ onReset }: { onReset: () => void }) => (
         <ConfigRow label="サーバーに参加できる最大人数">{bedrock.maxPlayers}</ConfigRow>
       </Stack>
       <Divider />
-      <Stack gap="l">
+      <Stack gap="xl">
         <Typography size="l" fontWeight="bold" component="h3">
           ゲームプレイ
         </Typography>
@@ -1708,14 +1765,14 @@ const BedrockSettingPaper = ({ onReset }: { onReset: () => void }) => (
         </ConfigRow>
       </Stack>
       <Divider />
-      <Stack gap="l">
+      <Stack gap="xl">
         <Typography size="l" fontWeight="bold" component="h3">
           ワールド生成
         </Typography>
         <ConfigRow label="シード値">{bedrock.levelSeed || '未設定'}</ConfigRow>
       </Stack>
       <Divider />
-      <Stack gap="l">
+      <Stack gap="xl">
         <Typography size="l" fontWeight="bold" component="h3">
           パフォーマンスと処理
         </Typography>
@@ -1739,7 +1796,7 @@ const GameBody = ({
 }) => {
   // 各 Manager の components/Setting（GameSettingsView ＋ GameSettingsModal ＋ ResetGameSettingsModal）
   const settings = (
-    <Card>
+    <Card {...gamePaperProps}>
       <Stack gap="xl">
         <SettingTitle onEdit={onEdit} onReset={() => open('reset')} />
         <Divider />
@@ -1762,12 +1819,22 @@ const GameBody = ({
           >
             {/* GAP-NEW: 実アプリは左側を残りの幅いっぱいに広げ（Grid size='grow'）、その中を 2 列（各 6/12）に分ける。
                 ActionPaper の左側を広げる手段が無いので、2 つを横に並べるだけにしている */}
+            {/* 項目名は py 2（上下 16px）の s 太字、値は Typography の無い地の文（body1・16px） */}
             <Stack flexDirection="row" gap="xxl">
-              <ConfigRow label="サーバーの種類">{server.mod}</ConfigRow>
-              <ConfigRow label="バージョン">{server.version}</ConfigRow>
+              {[
+                ['サーバーの種類', server.mod],
+                ['バージョン', server.version],
+              ].map(([label, value]) => (
+                <Stack key={label} gap="m">
+                  <Typography size="s" fontWeight="bold" component="span">
+                    {label}
+                  </Typography>
+                  <Typography component="span">{value}</Typography>
+                </Stack>
+              ))}
             </Stack>
           </ActionPaper>
-          <RecreateWorldPaper onOpen={() => open('recreateWorld')} />
+          <RecreateWorldPaper gap="m" onOpen={() => open('recreateWorld')} />
           <MinecraftJavaSettingPaper onEdit={onEdit} onReset={() => open('reset')} />
         </>
       )
@@ -1776,6 +1843,7 @@ const GameBody = ({
         <>
           <VersionPaper
             version={bedrock.version}
+            gap="m"
             label="アップデート"
             onOpen={() => open('versionUp')}
           />
@@ -1799,15 +1867,17 @@ const GameBody = ({
             onOpen={() => open('versionUp')}
           />
           {/* FactorioManager/components/RecreateWorld */}
+          {/* 見出しは h6（20px）。この Paper だけ上に mt 2（16px）が足される */}
           <ActionPaper
             title="ワールドの初期化"
+            titleSize="xl"
             action={
               <Button appearance="outlined" onPress={() => open('initWorld')}>
                 初期化
               </Button>
             }
           >
-            <Typography size="s">
+            <Typography size="s" component="div">
               現在の設定でワールドを初期化することができます。初期化すると現在のワールドのデータが変更されます。
             </Typography>
           </ActionPaper>
@@ -1821,7 +1891,7 @@ const GameBody = ({
           {/* GameSettings/RegenerateGameWorldView */}
           <RecreateWorldPaper onOpen={() => open('recreateWorld')} />
           {/* AstroneerManager/components/ServerConnectionInfo */}
-          <InfoPaper title="接続情報">
+          <InfoPaper title="接続情報" large>
             <CopyRow label="サーバーURL" display={astroneerServerUrl} copy={astroneerServerUrl} />
           </InfoPaper>
           {settings}
@@ -1832,16 +1902,19 @@ const GameBody = ({
         <>
           <VersionUpPaper onOpen={() => open('versionUp')} />
           {/* WindroseManager/components/InviteCode */}
-          <Card>
-            <Stack gap="s">
+          {/* Stack spacing 2（16px） */}
+          <Card {...gamePaperProps}>
+            <Stack gap="m">
               <Typography size="l" fontWeight="bold" component="h2">
                 招待コード
               </Typography>
               <Stack flexDirection="row" gap="s" justifyContent="space-between" alignItems="center">
-                <Typography size="s">{windroseInviteCode}</Typography>
+                <Typography size="s" component="div">
+                  {windroseInviteCode}
+                </Typography>
                 <CopyButton />
               </Stack>
-              <Typography size="s" density="comfort" color="medium_emphasis">
+              <Typography size="s" density="comfort" color="medium_emphasis" component="div">
                 Direct
                 IP接続が有効な場合、招待コードでは参加できません。IPアドレスで直接接続してください。
               </Typography>
@@ -1859,7 +1932,8 @@ const GameBody = ({
             <ConfigRow label="接続先">
               {/* GAP-NEW: 文中のリンク（Link）が無い。実物は新しいタブで開くリンク ＋ OpenInNew のアイコン */}
               <Stack flexDirection="row" gap="xxs" alignItems="center">
-                <Typography size="s" color="informative" component="span">
+                {/* Link は body1（16px） */}
+                <Typography size="m" color="informative" component="span">
                   {fivem.txAdminUrl}
                 </Typography>
                 <Typography size="s" color="informative" component="span">

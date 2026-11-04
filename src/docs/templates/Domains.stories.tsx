@@ -44,9 +44,9 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// 面の余白は Paper の padding で付ける（GAP-1 は解消）。ドメインのカード（実物は px-6 py-4）は既定の l、
-// 中に置く DNS レコードのコピー欄（実物は px-3 py-2）は m。
-// GAP-NEW: 行ごとに余白をとる部品が無い。カードの行と詳細欄は面の余白の内側に並ぶので、区切り線が面の端まで届かない。
+// 面の余白は Paper の padding で付ける（GAP-1 は解消）。ドメインのカードは none にし、行と詳細欄（実物は px-6 py-4）を
+// それぞれ m の入れ子の Paper にする。DNS レコードのコピー欄（実物は px-3 py-2）は s。
+// GAP-NEW: Paper の padding は上下左右で同じ値しか取れない。行と詳細欄は 4 辺とも m（16px）になり、左右が実物より 8px 狭い。
 
 // ─── データ（実物の DomainView と同じ形。値はダミー） ───
 
@@ -470,9 +470,10 @@ const DomainCard = ({
     recordsToShow(domain).length > 0 || detailMessage(domain) !== null || showMethodTabs
   const progress = <DomainProgress domain={domain} />
   return (
-    <Paper outlined>
-      {/* 行と詳細欄の上下は実物の py-4（16px） */}
-      <Stack gap="m">
+    // 実物は Paper outlined の中に、行（px-6 py-4）と、上に罫線の付いた詳細欄（px-6 py-4）を重ねる。
+    // 罫線を面の端まで通すため、面は none にし、行と詳細欄をそれぞれ padding="m" の入れ子の Paper にする（Deploys と同じ）
+    <Paper padding="none" outlined>
+      <Paper padding="m" elevation={0}>
         <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
           {/* GAP-NEW: 長いホスト名の truncate（省略表示）が無い */}
           <Typography component="span" size="s">
@@ -504,10 +505,12 @@ const DomainCard = ({
             )}
           </Stack>
         </Stack>
-        {hasDetail && (
-          <>
-            <Divider />
-            {/* GAP-NEW: Paper に地色の違う面が無い。実物の詳細欄は bg-neutral-50 */}
+      </Paper>
+      {hasDetail && (
+        <>
+          <Divider />
+          {/* GAP-NEW: Paper に地色の違う面が無い。実物の詳細欄は bg-neutral-50 */}
+          <Paper padding="m" elevation={0}>
             <Stack gap="s">
               {domain.status === 'エラー' && (
                 <DomainErrorCallout
@@ -558,9 +561,9 @@ const DomainCard = ({
                 progress
               )}
             </Stack>
-          </>
-        )}
-      </Stack>
+          </Paper>
+        </>
+      )}
     </Paper>
   )
 }

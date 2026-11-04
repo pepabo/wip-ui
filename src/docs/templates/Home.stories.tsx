@@ -237,35 +237,38 @@ const ServerSpecRow = ({ label, children }: { label: string; children: ReactNode
 const ServerCard = ({ server, onRename }: { server: Server; onRename: () => void }) => {
   const navigate = useGamersNavigate()
   return (
-    <Card padding="m">
+    // 実物の CardActionArea は p 4（32px）。ステッカーと名前の間は mb 1（8px）、名前・状態・IP アドレス・プランの間は my 2（16px）
+    <Card padding="xl">
       <Stack gap="m">
-        <Stack flexDirection="row" gap="s" alignItems="flex-start" justifyContent="space-between">
-          {/* components/Sticker の spec='game-title' */}
-          <Sticker color="informative" size="s">
-            {gameNames[server.game]}
-          </Sticker>
-          <Button
-            appearance="transparent"
-            size="s"
-            iconOnly
-            aria-label="サーバーネーム変更"
-            onPress={onRename}
-          >
-            <Icon name="pencil" size="m" />
-          </Button>
-        </Stack>
-        {/* GAP-3: 実物はカード全体がサーバー詳細（/servers/{id}）へのリンク（CardActionArea）。
+        <Stack gap="xs">
+          <Stack flexDirection="row" gap="s" alignItems="flex-start" justifyContent="space-between">
+            {/* components/Sticker の spec='game-title' */}
+            <Sticker color="informative" size="s">
+              {gameNames[server.game]}
+            </Sticker>
+            <Button
+              appearance="transparent"
+              size="s"
+              iconOnly
+              aria-label="サーバーネーム変更"
+              onPress={onRename}
+            >
+              <Icon name="pencil" size="m" />
+            </Button>
+          </Stack>
+          {/* GAP-3: 実物はカード全体がサーバー詳細（/servers/{id}）へのリンク（CardActionArea）。
           押せる面にできないので、名前をボタンにしてそこから移る。
           GAP-NEW: 1 行で省略（text-overflow: ellipsis）する指定が無く、長い名前は折り返す */}
-        <Stack flexDirection="row">
-          <Button appearance="transparent" onPress={() => navigate('server')}>
-            <Typography size="xxl" fontWeight="bold" component="span">
-              {server.name}
-            </Typography>
-          </Button>
+          <Stack flexDirection="row">
+            <Button appearance="transparent" onPress={() => navigate('server')}>
+              <Typography size="xxl" fontWeight="bold" component="span">
+                {server.name}
+              </Typography>
+            </Button>
+          </Stack>
         </Stack>
         <ServerStatusView server={server} />
-        <Stack gap="xs">
+        <Stack gap="m">
           <ServerSpecRow label="IPアドレス">
             <Typography size="s" component="span">
               {server.ip}
@@ -323,20 +326,27 @@ const ServerCardsList = ({
   </Grid>
 )
 
-/** home/_components/EmptyServersView（home/not-found.tsx）。実物は Paper の高さ 400px・p={8}（GAP-NEW: 高さの指定が無い） */
+/**
+ * home/_components/EmptyServersView（home/not-found.tsx）。実物は Paper の高さ 400px・p={8}（64px）で、中身を縦の中央に置く。
+ * GAP-NEW: 高さの指定が無い。Paper の padding は xxl（48px）が最大。Container の上の mt 6（48px）も出せない
+ */
 const EmptyServersView = () => {
   const navigate = useGamersNavigate()
   return (
     <Container size="s">
-      <Card elevation={0}>
-        <Stack gap="l">
-          {/* GAP-NEW: 画像の枠（Image）が無い。実アプリは buy.svg を 12em 角（192px）で置いている */}
-          <Stack alignItems="center">
-            <img src={buyImage} alt="購入のイラスト" width={192} height={192} />
-          </Stack>
-          <Stack gap="xs">
-            <Typography>契約中のサーバーがありません</Typography>
-            <Typography>契約してゲームを楽しみましょう！！</Typography>
+      <Card elevation={0} padding="xxl">
+        {/* 実物は 2 つ目の文の下が mb 6（48px）、画像の下は mb 2 ＋ mt 1（24px）、文の間は mt 1（8px） */}
+        <Stack gap="xxl">
+          <Stack gap="l">
+            {/* GAP-NEW: 画像の枠（Image）が無い。実アプリは buy.svg を 12em 角（192px）で置いている */}
+            <Stack alignItems="center">
+              <img src={buyImage} alt="購入のイラスト" width={192} height={192} />
+            </Stack>
+            <Stack gap="xs">
+              {/* 実物の variant='m' は span。p にすると UA の margin が付くので div */}
+              <Typography component="div">契約中のサーバーがありません</Typography>
+              <Typography component="div">契約してゲームを楽しみましょう！！</Typography>
+            </Stack>
           </Stack>
           {/* 実物は href='/servers/new/game-select' */}
           <Button color="interactive" size="l" width="full" onPress={() => navigate('server-new')}>
@@ -385,7 +395,7 @@ const BackupListTable = ({
     </TableHeader>
     <TableBody
       renderEmptyState={() => (
-        <Typography size="s" color="medium_emphasis">
+        <Typography size="s" color="medium_emphasis" component="div">
           バックアップがありません
         </Typography>
       )}
@@ -485,12 +495,13 @@ const MyBackupPaper = ({ items }: { items: Backup[] }) => {
   const close = () => setDialog(null)
   return (
     <>
-      {/* 実アプリの Paper は p={{ xs: 3, md: 6 }}・中身の間隔は spacing={4} */}
-      <Card>
+      {/* 実アプリの Paper は p={{ xs: 3, md: 6 }}・中身の間隔は spacing={4}。
+          GAP: タブの下の mt 4（32px）は、タブの本文の間隔（16px）のまま */}
+      <Card padding={{ xxs: 'l', m: 'xxl' }}>
         <Stack gap="xl">
           <Stack
             flexDirection={{ xxs: 'column', s: 'row' }}
-            gap="s"
+            gap="m"
             alignItems="flex-start"
             justifyContent="space-between"
           >
@@ -638,7 +649,7 @@ const RestoreBackupDialog = ({ backup, onClose }: { backup: Backup; onClose: () 
         <DialogTitle>「{backup.name}」を復元しますか？</DialogTitle>
       </DialogHeader>
       <Stack gap="l">
-        <Typography size="s">
+        <Typography size="s" component="div">
           「{backup.name}」作成日時：{toLocale(backup.createdAt)} サイズ：
           {formatBytes(backup.sizeBytes)} を復元します。
           <br />
@@ -664,7 +675,7 @@ const DeleteBackupDialog = ({ backup, onClose }: { backup: Backup; onClose: () =
       <DialogTitle>「{backup.name}」を削除しますか？</DialogTitle>
     </DialogHeader>
     <Stack gap="l">
-      <Typography size="s">
+      <Typography size="s" component="div">
         「{backup.name}」作成日時：{toLocale(backup.createdAt)} サイズ：
         {formatBytes(backup.sizeBytes)} を完全に削除します。
       </Typography>
@@ -787,7 +798,7 @@ const HomeScreen = ({
       <GamersPageContainer maxWidth="xl">
         <Stack gap="m">
           {/* HomeHeader。実物は variant='xxxl_comfort' の太字・白、mb 2。component の指定は無い */}
-          <Typography size="xxxl" fontWeight="bold" component="h1">
+          <Typography size="xxxl" density="comfort" fontWeight="bold" component="h1">
             ホーム
           </Typography>
           <HomeContents items={serverItems} defaultTab={defaultTab} initialRenaming={renaming} />

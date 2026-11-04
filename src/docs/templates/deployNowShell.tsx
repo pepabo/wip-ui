@@ -1,7 +1,6 @@
 import { createContext, useContext } from 'react'
 
 import { AppBar, AppBarLeading, AppBarTrailing } from '../../AppBar'
-import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
 import { Button, LinkButton } from '../../Button'
 import { Callout } from '../../Callout'
 import { Container } from '../../Container'
@@ -167,15 +166,23 @@ const NavigationScope = ({
   )
 }
 
-// 実物のロゴは /logo.svg（390×54）を h-8 md:h-12 で出す。md 以上の高さ 48px に合わせる。
-// alt は (private) が「LOLIPOP! デプロイナウ」、/start が「ロリポップ！デプロイナウ」で、実物どおりに分ける
-const Logo = ({ alt }: { alt: string }) => (
-  <img src={deployNowLogo} alt={alt} width={347} height={48} />
+// 実物のロゴは /logo.svg（390×54）を h-8 md:h-12（/start は h-7 md:h-12）・w-auto で出す。
+// alt は (private) が「LOLIPOP! デプロイナウ」、/start が「ロリポップ！デプロイナウ」で、実物どおりに分ける。
+// GAP-NEW: 画像の部品（Image）が無い。素の img で、高さを md（768px）の境で切り替える（clamp で 2 段階にしている）
+const logoStyle = (small: number) =>
+  ({
+    display: 'block',
+    width: 'auto',
+    height: `clamp(${small}px, calc((100vw - 767px) * 9999), 48px)`,
+  }) as const
+const Logo = ({ alt, small }: { alt: string; small: number }) => (
+  <img src={deployNowLogo} alt={alt} width={390} height={54} style={logoStyle(small)} />
 )
 
 // 本文の枠。実物は mx-auto max-w-[1000px] px-5 py-6 md:px-10 md:py-10。
 // GAP: Container に 1000px の幅が無く、m（960px）を使う。左右の余白は Container が画面幅に応じて決めるので、
-//      実物の px-10（40px）とは一致しない。上の余白は AppBar との gap（xl）で取り、下の余白は付けられない
+//      実物の px-5 md:px-10（20px / 40px）とは一致しない（狭い幅では 4px）。上の余白は AppBar との gap で取り、
+//      下の余白は付けられない
 const Main = ({ children }: { children: ReactNode }) => (
   <Container size="m" component="main">
     {children}
@@ -242,11 +249,12 @@ export const DeployNowShell = ({
   children: ReactNode
 }) => (
   <NavigationScope onNavigate={onNavigate}>
-    <Stack gap="xl">
+    {/* 本文の上の余白は実物の py-6 md:py-10（24px / 40px）。md 以上の 40px は段階に無く xl（32px） */}
+    <Stack gap={{ xxs: 'l', m: 'xl' }}>
       {/* 実物は sticky top-0 z-20 の div で包む */}
       <AppBar appearance="white">
         <AppBarLeading>
-          <LogoLink to="projects" alt="LOLIPOP! デプロイナウ" />
+          <LogoLink to="projects" alt="LOLIPOP! デプロイナウ" small={32} />
         </AppBarLeading>
         <AppBarTrailing>
           <AccountMenu defaultOpen={defaultAccountMenuOpen} />
@@ -257,15 +265,24 @@ export const DeployNowShell = ({
   </NavigationScope>
 )
 
-const LogoLink = ({ to, alt }: { to: DeployNowDestination; alt: string }) => {
+const LogoLink = ({ to, alt, small }: { to: DeployNowDestination; alt: string; small: number }) => {
   const navigate = useDeployNowNavigate()
   return (
-    // 実物は next/link でロゴを包む。GAP: 画像だけのリンクの部品が無く、transparent の LinkButton で包む
-    <LinkButton appearance="transparent" href="#" onPress={() => navigate(to)}>
-      <Logo alt={alt} />
-    </LinkButton>
+    // 実物は next/link（flex items-center）でロゴを包む。GAP-NEW: 画像だけのリンクの部品が無く、素の a で包む
+    <a
+      href={to === 'start' ? '/start' : '/projects'}
+      style={logoLinkStyle}
+      onClick={(event) => {
+        event.preventDefault()
+        navigate(to)
+      }}
+    >
+      <Logo alt={alt} small={small} />
+    </a>
   )
 }
+
+const logoLinkStyle = { display: 'flex', alignItems: 'center' } as const
 
 /** ログイン前のお試しの枠（start/layout.tsx） */
 export const DeployNowStartShell = ({
@@ -276,10 +293,11 @@ export const DeployNowStartShell = ({
   children: ReactNode
 }) => (
   <NavigationScope onNavigate={onNavigate}>
-    <Stack gap="xl">
+    {/* 本文の上の余白は実物の py-6 md:py-10（24px / 40px）。md 以上の 40px は段階に無く xl（32px） */}
+    <Stack gap={{ xxs: 'l', m: 'xl' }}>
       <AppBar appearance="white">
         <AppBarLeading>
-          <LogoLink to="start" alt="ロリポップ！デプロイナウ" />
+          <LogoLink to="start" alt="ロリポップ！デプロイナウ" small={28} />
         </AppBarLeading>
         <AppBarTrailing>
           <StartActions />
@@ -329,26 +347,40 @@ const StartActions = () => {
 
 /**
  * AppBar の無い画面の枠（ログイン・新規登録・メンテナンス・404）。
- * 実物は main に min-h-[calc(100vh-3rem)] の中央寄せ・px-4 py-10 で、中に max-w-sm（384px）のカードを置く。
- * GAP: 高さを画面に合わせて縦の中央に置く部品が無く、上から積む。Container の xs（480px）はカードより広い
+ * 実物のカードの画面は main に min-h-[calc(100vh-3rem)] の中央寄せ・px-4 py-10 で、中に w-full max-w-sm（384px）の
+ * カードを置く。404（app/not-found.tsx）は main に min-height: 100dvh・中央寄せ・padding 2.5rem 1rem を inline style で当てる。
+ * GAP-NEW: 画面の高さに合わせて中身を縦横の中央に置く枠が無い。素の main と div に style を当てている
  */
+const bareMainStyle = (kind: 'card' | 'not-found') =>
+  ({
+    minHeight: kind === 'card' ? 'calc(100vh - 3rem)' : '100dvh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: kind === 'card' ? '40px 16px' : '2.5rem 1rem',
+  }) as const
+const cardColumnStyle = { width: '100%', maxWidth: 384 } as const
+
 export const DeployNowBareShell = ({
   onNavigate,
+  kind = 'card',
   children,
 }: {
   onNavigate?: Navigate
+  /** card: ログイン・新規登録・メンテナンスのカードの画面。not-found: 404 */
+  kind?: 'card' | 'not-found'
   children: ReactNode
 }) => (
   <NavigationScope onNavigate={onNavigate}>
-    <Container size="xs" component="main">
-      {children}
-    </Container>
+    <main style={bareMainStyle(kind)}>
+      {kind === 'card' ? <div style={cardColumnStyle}>{children}</div> : children}
+    </main>
   </NavigationScope>
 )
 
 /**
  * features/Auth・Signup・Maintenance のカード（rounded-lg border border-neutral-200 bg-white p-8 shadow-sm）。
- * GAP: Paper は outlined にすると影が消えるので、枠線を選ぶ
+ * GAP: Paper は outlined にすると影が消えるので、枠線を選ぶ。枠線の色は実物の border-neutral-200 より濃い
  */
 export const DeployNowCard = ({ children }: { children: ReactNode }) => (
   <Paper outlined padding="xl">
@@ -539,6 +571,9 @@ const ServingSourceLine = ({
     </Stack>
   )
 
+// 素の a の下線を消す（実物は Tailwind の preflight で下線が無い）
+const plainLinkStyle = { textDecoration: 'none' } as const
+
 /**
  * プロジェクト詳細の枠。上からパンくず・停止のお知らせ（停止中のみ）・ProjectHero・
  * 自動デプロイ停止のお知らせ（止めているときのみ）・タブ・タブの中身を、gap l で積む。
@@ -562,16 +597,33 @@ export const ProjectDetailLayout = ({
   const openDeploy = onOpenDeploy ?? (() => navigate('deploy-detail'))
   return (
     <Stack gap="l">
-      {/* 実物は nav（aria-label="パンくずリスト"・flex gap-2）に Link > Typography s medium_emphasis、
-          「/」（Typography s low_emphasis）、現在地（Typography s）を手で並べている。
-          GAP: Breadcrumbs に size が無く、文字が m（16px）になる（実物は s の 14px）。
-          リンクの色は low_emphasis・区切りは medium_emphasis で、実物と濃淡が逆。上下に 12px の余白が付く */}
-      <Breadcrumbs>
-        <Breadcrumb href="#" onPress={() => navigate('projects')}>
-          プロジェクト
-        </Breadcrumb>
-        <Breadcrumb>{hero.name}</Breadcrumb>
-      </Breadcrumbs>
+      {/* 実物は Breadcrumbs を使わず、nav（aria-label="パンくずリスト"・flex items-center gap-2）に
+          Link > Typography s medium_emphasis、「/」（Typography s low_emphasis）、現在地（Typography s）を手で並べている。
+          GAP-NEW: 文中のリンクが無いので素の a。実物の hover の下線は無い */}
+      <nav aria-label="パンくずリスト">
+        <Stack flexDirection="row" gap="xs" alignItems="center">
+          <a
+            href="/projects"
+            style={plainLinkStyle}
+            onClick={(event) => {
+              event.preventDefault()
+              navigate('projects')
+            }}
+          >
+            <Typography component="span" size="s" color="medium_emphasis">
+              プロジェクト
+            </Typography>
+          </a>
+          <span aria-hidden>
+            <Typography component="span" size="s" color="low_emphasis">
+              /
+            </Typography>
+          </span>
+          <Typography component="span" size="s">
+            {hero.name}
+          </Typography>
+        </Stack>
+      </nav>
 
       {/* components/ProjectSuspensionNotice */}
       {hero.suspension && (
@@ -653,7 +705,7 @@ const SETTINGS_NAV: { page: DeveloperSettingsPage; label: string; to: DeployNowD
  * 見出し「デベロッパー設定」（xl）と、左のメニュー（components/SettingsNav）・右の本文。
  * 実物は md 以上で横並び（gap-10）、メニューの幅は md:w-44（176px）。md 未満は縦に積む（gap-6）。
  * GAP: SideNavigation の幅は置いた場所で決まり、176px 固定にできないので Grid の 3/12 に置く。
- *      Grid の spacing は l（24px）。実物の md 以上の gap-10（40px）は段階に無い。
+ *      Grid の spacing は md 未満が l（24px・実物の gap-6）、md 以上が xl（32px）。実物の gap-10（40px）は段階に無い。
  *      項目は実物と同じ s（14px）・現在地は太字だが、現在地の地色は実物の bg-neutral-100 ではなく青の薄い面
  */
 export const DeveloperSettingsLayout = ({
@@ -672,7 +724,7 @@ export const DeveloperSettingsLayout = ({
       <Typography component="h1" size="xl" fontWeight="bold">
         デベロッパー設定
       </Typography>
-      <Grid spacing="l">
+      <Grid spacing={{ xxs: 'l', m: 'xl' }}>
         <GridItem size={{ xxs: 12, m: 3 }}>
           <SideNavigation aria-label="デベロッパー設定">
             {SETTINGS_NAV.map((item) => (

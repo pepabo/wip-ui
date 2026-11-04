@@ -94,7 +94,8 @@ import type { StoryRoute } from './storyLink'
  *   ここでは常設のみで、狭い幅では本文の上に積む。ハンバーガーも無い
  * - ServerListHeader の VESPY（AI アシスタント）のボタンとポッパーは出していない（フラグで出し分けている告知寄りの機能）
  * - ユーザーメニューの開くボタンは実物では MUI の Avatar（人のシルエット）。ここでは person のアイコンボタン
- * - お知らせバナーの「×」は実物では Card の右上（8px）に重ねて置かれる。ここでは題の行の右端に並ぶ。
+ * - お知らせバナーの「×」は実物では Card の右上（8px）に重ねて置かれる。ここでは題と説明の列の右に並ぶ。
+ *   上の余白は実物 16px（p 1 ＋ pt 1）・左右下 8px だが、Paper の padding は 4 辺同じなので xs（8px）。
  *   バナー全体がリンクではなく、地色（rgba(255,255,255,.05)）も無い。アイコンは LightbulbOutlined の代わりに info_on_circle
  * - Sidebar のアイコンは DnsOutlined / BackupOutlined / PaymentsOutlined の代わりに node / clock / bill。選択中の地色も実物（紫 16%）と違う
  * - ServerListMenu のボタンは実物では outlined・color inherit で、UnfoldMore の代わりに chevron_down。ほかのサーバーを選んでも行き先は同じ 'server'
@@ -277,7 +278,8 @@ const ServerListMenu = ({ defaultOpen = false }: { defaultOpen?: boolean }) => {
       <Button appearance="white" trailing={<Icon name="chevron_down" size="s" />}>
         {server.name}
       </Button>
-      <Menu placement="bottom start">
+      {/* 実物は anchorOrigin・transformOrigin がどちらも top right（ボタンの右端にそろえる） */}
+      <Menu placement="bottom end">
         {serverList.map((s) => (
           <MenuItem key={s.id} id={s.id} onAction={() => navigate?.('server')}>
             {s.name}
@@ -367,24 +369,23 @@ const menuItems: { id: ServerSection; text: string; icon: IconName }[] = [
  * 実物は上から順に、閉じていない最初のもの:「{ゲーム名}を始めよう」→「MODかんたんインストール機能の紹介」
  */
 const OnboardingBanner = ({ gameName }: { gameName: string }) => (
-  // 実物は Card（mt 2, mx 2）の CardActionArea（p 1）。全体がヘルプ記事へのリンク（別タブ）
-  <Paper padding="s">
-    <Stack gap="xs">
-      <Stack flexDirection="row" gap="s" alignItems="flex-start" justifyContent="space-between">
-        <Stack flexDirection="row" gap="s" alignItems="center">
-          {/* 実物は LightbulbOutlined。当たるアイコンが無いので info_on_circle */}
-          <Icon name="info_on_circle" size="m" />
-          <Typography size="s" fontWeight="bold" component="span">
-            {`${gameName}を始めよう`}
-          </Typography>
-        </Stack>
-        <Button appearance="transparent" size="s" iconOnly aria-label="閉じる">
-          <Icon name="cross" size="s" />
-        </Button>
+  // 実物は Card（mt 2, mx 2）の CardActionArea（p 1、中の Grid は pt 1）。全体がヘルプ記事へのリンク（別タブ）。
+  // アイコンの列（1.5/12）の右に題、その下に説明を題とそろえて置く（行の間 rowGap 2）
+  <Paper padding="xs">
+    <Stack flexDirection="row" gap="xs" alignItems="flex-start">
+      {/* 実物は LightbulbOutlined。当たるアイコンが無いので info_on_circle */}
+      <Icon name="info_on_circle" size="m" />
+      <Stack gap="m">
+        <Typography size="s" fontWeight="bold" component="span">
+          {`${gameName}を始めよう`}
+        </Typography>
+        <Typography size="s" component="span">
+          サーバーを起動して接続までの方法をチェック👀 <Icon name="launch" size="s" />
+        </Typography>
       </Stack>
-      <Typography size="s" component="span">
-        サーバーを起動して接続までの方法をチェック👀 <Icon name="launch" size="s" />
-      </Typography>
+      <Button appearance="transparent" size="s" iconOnly aria-label="閉じる">
+        <Icon name="cross" size="s" />
+      </Button>
     </Stack>
   </Paper>
 )
@@ -451,9 +452,12 @@ export const GamersServerShell = ({
 )
 
 // 実物の Drawer の紙面（幅 270px）。固定幅の段組みが wip-ui に無いので、ここだけ div で幅を決める。
+// バナー（Card mx 2）とリストの項目（ListItem px 2）は紙面の左右から 16px 内側に入る。
 // 紙面の地色・右の境界線は出していない
 const SidebarFrame = ({ children }: { children: ReactNode }) => (
-  <div style={{ flex: '0 0 270px', maxWidth: '100%' }}>{children}</div>
+  <div style={{ flex: '0 0 270px', maxWidth: '100%', boxSizing: 'border-box', padding: '0 16px' }}>
+    {children}
+  </div>
 )
 
 // 実物の main（flexGrow 1）。残りの幅を埋める段組みが wip-ui に無いので div で伸ばす

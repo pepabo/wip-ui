@@ -39,7 +39,6 @@ import type { Key, Selection } from 'react-aria-components'
  *   ExtensionOutlined（パズルのピース）だが、ここでは plus_on_circle
  * - 検索欄は幅 393px で、先頭に虫めがね、入力があると末尾に × が入る。ここでは × を欄の外に置いている
  * - MOD / プラグインの絞り込みは MUI の Chip。ここでは Button
- * - 行のゴミ箱のボタンのツールチップ「アンインストール」が無い
  * - MOD追加のカテゴリには Modrinth のアイコン（SVG）が付く。ここでは名前だけ
  * - MOD追加の左のカテゴリは幅 230px 固定。ここでは Grid の列
  * - Modrinth の名前・作者名、MODパックの注意の「バックアップ」は実物では文中のリンク。ここでは transparent の Button
@@ -450,11 +449,11 @@ const InstalledMods = ({
           </Stack>
         </Card>
       ) : (
-        <Paper padding="none" elevation={0} outlined>
+        <Paper padding="none" elevation={0}>
           <Paper padding="m" elevation={0}>
             {narrow ? (
-              // md 未満: 1 行目に「未選択」と small のアンインストール、2 行目にチップ
-              <Stack gap="s">
+              // md 未満: 1 行目に「未選択」と small のアンインストール、2 行目にチップ（間 8px）
+              <Stack gap="xs">
                 <Stack
                   flexDirection="row"
                   gap="m"
@@ -511,7 +510,7 @@ const InstalledMods = ({
             </TableHeader>
             <TableBody
               renderEmptyState={() => (
-                <Typography size="s" color="medium_emphasis">
+                <Typography size="s" color="medium_emphasis" component="div">
                   インストールされていません
                 </Typography>
               )}
@@ -529,14 +528,27 @@ const InstalledMods = ({
                       </Typography>
                     </Stack>
                   </Cell>
-                  <Cell>{m.type}</Cell>
-                  <Cell>{m.size}</Cell>
-                  <Cell>{m.installedAt}</Cell>
+                  {/* DataGrid のセルの文字は body2（14px） */}
                   <Cell>
+                    <Typography size="s" component="span">
+                      {m.type}
+                    </Typography>
+                  </Cell>
+                  <Cell>
+                    <Typography size="s" component="span">
+                      {m.size}
+                    </Typography>
+                  </Cell>
+                  <Cell>
+                    <Typography size="s" component="span">
+                      {m.installedAt}
+                    </Typography>
+                  </Cell>
+                  <Cell>
+                    {/* 実物は IconButton medium（40px）で、ツールチップは下に出る */}
                     <TooltipTrigger>
                       <Button
                         appearance="transparent"
-                        size="s"
                         iconOnly
                         aria-label={`${m.name}をアンインストール`}
                         onPress={() => {
@@ -546,7 +558,7 @@ const InstalledMods = ({
                       >
                         <Icon name="garbage_can" size="m" />
                       </Button>
-                      <Tooltip>アンインストール</Tooltip>
+                      <Tooltip placement="bottom">アンインストール</Tooltip>
                     </TooltipTrigger>
                   </Cell>
                 </Row>
@@ -597,11 +609,12 @@ const CategorySidebar = ({
   // CategorySidebar/hooks.ts の isCategoryOpen。最初は開いている
   const [isCategoryOpen, setIsCategoryOpen] = useState(true)
   return (
-    <Paper elevation={0} outlined>
+    <Paper elevation={0}>
       <Stack gap="m">
         <Stack gap="xs">
           <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
-            <Typography size="xs" color="medium_emphasis" component="h3">
+            {/* ListSubheader（14px・text.secondary） */}
+            <Typography size="s" color="medium_emphasis" component="h3">
               プラットフォーム
             </Typography>
             {onClose && (
@@ -616,11 +629,13 @@ const CategorySidebar = ({
               </Button>
             )}
           </Stack>
-          <Typography size="s">Modrinth</Typography>
+          <Typography size="s" component="div">
+            Modrinth
+          </Typography>
         </Stack>
         <Divider />
         <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
-          <Typography size="xs" color="medium_emphasis" component="h3">
+          <Typography size="s" color="medium_emphasis" component="h3">
             フィルタ
           </Typography>
           <Button appearance="transparent" size="s" onPress={onClear}>
@@ -628,7 +643,9 @@ const CategorySidebar = ({
           </Button>
         </Stack>
         <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
-          <Typography size="s">カテゴリ</Typography>
+          <Typography size="s" component="div">
+            カテゴリ
+          </Typography>
           {/* 実物は ExpandLess / ExpandMore */}
           <Button
             appearance="transparent"
@@ -659,65 +676,68 @@ const CategorySidebar = ({
 const ModResultItem = ({ mod }: { mod: SearchResult }) => {
   const navigate = useGamersNavigate()
   return (
-    <>
-      <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
-        <Stack flexDirection="row" gap="m" alignItems="center">
-          <ModIcon />
-          <Stack gap="xxs">
-            <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s" alignItems="flex-start">
-              {/* 名前は Modrinth のプロジェクトのページ（projectUrl）を新しいタブで開くリンク。文中のリンクが無いので Button */}
+    <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
+      <Stack flexDirection="row" gap="m" alignItems="center">
+        <ModIcon />
+        <Stack gap="xxs">
+          {/* 実物の間は xs で 0、sm 以上で 12px */}
+          <Stack
+            flexDirection={{ xxs: 'column', s: 'row' }}
+            gap={{ xxs: 'xxs', s: 's' }}
+            alignItems="flex-start"
+          >
+            {/* 名前は Modrinth のプロジェクトのページ（projectUrl）を新しいタブで開くリンク。文中のリンクが無いので Button */}
+            <Button
+              appearance="transparent"
+              size="s"
+              trailing={<Icon name="launch" size="s" />}
+              aria-label={`${mod.name}（新しいタブで開く）`}
+              onPress={() => navigate('external')}
+            >
+              {mod.name}
+            </Button>
+            <Stack flexDirection="row" gap="xxs" alignItems="center">
+              <Typography size="xs" color="medium_emphasis" component="span">
+                by
+              </Typography>
+              {/* 作者名は authorUrl を新しいタブで開くリンク（下線付き） */}
               <Button
                 appearance="transparent"
                 size="s"
-                trailing={<Icon name="launch" size="s" />}
-                aria-label={`${mod.name}（新しいタブで開く）`}
+                aria-label={`${mod.author}（新しいタブで開く）`}
                 onPress={() => navigate('external')}
               >
-                {mod.name}
+                {mod.author}
               </Button>
-              <Stack flexDirection="row" gap="xxs" alignItems="center">
-                <Typography size="xs" color="medium_emphasis" component="span">
-                  by
-                </Typography>
-                {/* 作者名は authorUrl を新しいタブで開くリンク（下線付き） */}
-                <Button
-                  appearance="transparent"
-                  size="s"
-                  aria-label={`${mod.author}（新しいタブで開く）`}
-                  onPress={() => navigate('external')}
-                >
-                  {mod.author}
-                </Button>
-              </Stack>
-            </Stack>
-            <Stack flexDirection="row" gap="s" alignItems="center">
-              <Stack flexDirection="row" gap="xxs" alignItems="center">
-                <Typography size="xs" color="medium_emphasis" component="span">
-                  <Icon name="download" size="s" />
-                </Typography>
-                <Typography size="xs" color="medium_emphasis" component="span">
-                  {mod.downloads}
-                </Typography>
-              </Stack>
-              <Stack flexDirection="row" gap="xxs" alignItems="center">
-                <Typography size="xs" color="medium_emphasis" component="span">
-                  <Icon name="heart_border" size="s" />
-                </Typography>
-                <Typography size="xs" color="medium_emphasis" component="span">
-                  {mod.follows}
-                </Typography>
-              </Stack>
-              <Typography size="xs" color="medium_emphasis" component="span">
-                更新: {mod.updated}
-              </Typography>
             </Stack>
           </Stack>
+          <Stack flexDirection="row" gap="xs" alignItems="center">
+            <Stack flexDirection="row" gap="xxs" alignItems="center">
+              <Typography size="xs" color="medium_emphasis" component="span">
+                <Icon name="download" size="s" />
+              </Typography>
+              <Typography size="xs" color="medium_emphasis" component="span">
+                {mod.downloads}
+              </Typography>
+            </Stack>
+            <Stack flexDirection="row" gap="xxs" alignItems="center">
+              <Typography size="xs" color="medium_emphasis" component="span">
+                <Icon name="heart_border" size="s" />
+              </Typography>
+              <Typography size="xs" color="medium_emphasis" component="span">
+                {mod.follows}
+              </Typography>
+            </Stack>
+            <Typography size="xs" color="medium_emphasis" component="span">
+              更新: {mod.updated}
+            </Typography>
+          </Stack>
         </Stack>
-        <Button color="interactive" size="s" isDisabled={mod.isInstalled}>
-          {mod.isInstalled ? 'インストール済' : 'インストール'}
-        </Button>
       </Stack>
-    </>
+      <Button color="interactive" size="s" isDisabled={mod.isInstalled}>
+        {mod.isInstalled ? 'インストール済' : 'インストール'}
+      </Button>
+    </Stack>
   )
 }
 
@@ -819,23 +839,26 @@ const AddMods = ({ initialQuery, onBack }: { initialQuery: string; onBack: () =>
   return (
     // AddModsDialog/view.tsx の Container maxWidth='md'（pt 3〜6, pb 16）
     <Container size="m">
-      <Stack gap="m">
-        <Stack alignItems="flex-start">
-          {/* GAP-NEW: ArrowBack に当たるアイコンが無いので chevron_left で代用 */}
-          <Button
-            appearance="outlined"
-            size="l"
-            leading={<Icon name="chevron_left" size="m" />}
-            onPress={onBack}
-          >
-            戻る
-          </Button>
-        </Stack>
-        <Stack flexDirection="row" gap="m" alignItems="center">
-          <Typography size={{ xxs: 'xxl', m: 'xxxl' }} fontWeight="bold" component="h1">
-            MOD追加
-          </Typography>
-          <ConfigSticker />
+      {/* 戻るの下は mb 2（16px）、見出しの下は mb 3（24px） */}
+      <Stack gap="l">
+        <Stack gap="m">
+          <Stack alignItems="flex-start">
+            {/* GAP-NEW: ArrowBack に当たるアイコンが無いので chevron_left で代用 */}
+            <Button
+              appearance="outlined"
+              size="l"
+              leading={<Icon name="chevron_left" size="m" />}
+              onPress={onBack}
+            >
+              戻る
+            </Button>
+          </Stack>
+          <Stack flexDirection="row" gap="m" alignItems="center">
+            <Typography size={{ xxs: 'xxl', m: 'xxxl' }} fontWeight="bold" component="h1">
+              MOD追加
+            </Typography>
+            <ConfigSticker />
+          </Stack>
         </Stack>
         <Grid spacing="m">
           {/* 実アプリは幅 230px の固定。md 未満ではサイドバーを隠し、「フィルタ」ボタンの Popover に入れる */}
@@ -849,7 +872,8 @@ const AddMods = ({ initialQuery, onBack }: { initialQuery: string; onBack: () =>
             </GridItem>
           )}
           <GridItem size={narrow ? 12 : { m: 8, l: 9 }}>
-            <Stack gap="m">
+            {/* ModSearchResults の Stack gap 1.5（12px） */}
+            <Stack gap="s">
               {/* ModSearchResults。HYBRID のサーバーは MOD / プラグイン / MODパック の 3 つ。
                 Select を Tabs の中に置くと落ちるため、Tabs にはタブの列だけを入れて中身は外に出している */}
               <Tabs
@@ -939,12 +963,14 @@ const AddMods = ({ initialQuery, onBack }: { initialQuery: string; onBack: () =>
                   onClose={() => setFilterOpen(false)}
                 />
               )}
-              <Paper padding="none" elevation={0} outlined>
+              <Paper padding="none" elevation={0}>
                 {results.length === 0 ? (
                   // 実アプリは上下 48px の余白
                   <Paper padding="xxl" elevation={0}>
                     <Stack alignItems="center">
-                      <Typography color="medium_emphasis">検索結果がありません</Typography>
+                      <Typography color="medium_emphasis" component="div">
+                        検索結果がありません
+                      </Typography>
                     </Stack>
                   </Paper>
                 ) : (

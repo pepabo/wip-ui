@@ -49,8 +49,7 @@ const MaintenanceScreen = () => {
   )
 }
 
-// 実物は main に min-height: 100dvh・中央寄せ・padding 2.5rem 1rem を inline style で当てている。
-// GAP: 画面の高さに合わせて縦の中央に置く部品が無く、上から積む
+// 実物は main に min-height: 100dvh・中央寄せ・padding 2.5rem 1rem を inline style で当てている（DeployNowBareShell の not-found）
 const NotFoundScreen = () => {
   const navigate = useDeployNowNavigate()
   return (
@@ -83,7 +82,7 @@ export const DeployNowMaintenance: Story = {
 
 export const DeployNowNotFound: Story = {
   render: () => (
-    <DeployNowBareShell>
+    <DeployNowBareShell kind="not-found">
       <NotFoundScreen />
     </DeployNowBareShell>
   ),

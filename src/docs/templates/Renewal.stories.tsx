@@ -60,13 +60,15 @@ const PaymentInfo = ({ loading }: { loading: boolean }) => {
     // 実物の Paper は pt 6・pb 8・px 4
     <Card padding="xl">
       <Stack gap="xl">
-        <Typography size="xxl" fontWeight="bold" component="h2">
+        {/* 実物は見出しの要素ではなく、variant='xxl' の span */}
+        <Typography size="xxl" fontWeight="bold" component="div">
           支払い方法
         </Typography>
         {/* GAP-NEW: Stack の alignItems にブレークポイントごとの値を渡せない。実物は縦並び（xs）のとき左揃え */}
+        {/* 実物の gap は xs のとき 1（8px） */}
         <Stack
           flexDirection={{ xxs: 'column', s: 'row' }}
-          gap="s"
+          gap="xs"
           justifyContent="space-between"
           alignItems="center"
         >
@@ -75,7 +77,7 @@ const PaymentInfo = ({ loading }: { loading: boolean }) => {
           ) : (
             <Stack flexDirection="row" gap="m" alignItems="center">
               <img src={paypayLogo} alt="PayPay" width={48} height={48} />
-              <Typography size="s" component="p">
+              <Typography size="s" component="div">
                 PayPay
               </Typography>
             </Stack>
@@ -122,11 +124,13 @@ const OrderRow = ({ title, value, help }: { title: string; value?: string; help?
 const OrderDetail = ({ loading }: { loading: boolean }) => {
   const navigate = useGamersNavigate()
   return (
-    // 実物の Paper は pt 6・pb 8・px 4。見出し・明細・区切り線・合計・ボタンの間はどれも 40px（mb 5 / my 5）
+    // 実物の Paper は pt 6・pb 8・px 4。見出し・明細・区切り線・合計・ボタンの間はどれも 40px（mb 5 / my 5）。
+    // 明細の最後の行と区切り線の間だけ、行の mb 1 が足されて 48px。Stack の gap は xxl（48px）
+    // GAP: 期間の補足（help）は実物では値のすぐ下（間 0）で右寄せの文字。Stack の gap の最小は xxs（4px）
     <Card padding="xl">
       <Stack gap="xxl">
-        {/* 実物は variant='xxl_comfort' */}
-        <Typography size="xxl" fontWeight="bold" component="h2">
+        {/* 実物は variant='xxl_comfort' の span（見出しの要素ではない） */}
+        <Typography size="xxl" density="comfort" fontWeight="bold" component="div">
           注文内容
         </Typography>
         <Stack gap="xs">

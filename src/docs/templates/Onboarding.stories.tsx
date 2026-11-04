@@ -372,8 +372,9 @@ const ChoiceCard = ({
   children: ReactNode
 }) => (
   <Paper padding="m" elevation={0} outlined={selected}>
+    {/* 実物の PeriodCard は Stack spacing 1（8px）。PlanCard は見出しの直下に 2 行が続く */}
     <Radio value={value}>
-      <Stack gap="s">{children}</Stack>
+      <Stack gap="xs">{children}</Stack>
     </Radio>
   </Paper>
 )
@@ -416,7 +417,7 @@ const OrderDetail = ({
       <Stack gap="xxl">
         <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
           {/* 実物は variant='xxl_comfort' */}
-          <Typography size="xxl" fontWeight="bold" component="h2">
+          <Typography size="xxl" density="comfort" fontWeight="bold" component="h2">
             注文内容
           </Typography>
           {/* changeButtonHref（orderDetailDialogChangeButtonHrefV2）。/servers/new/plan-select?game=…&plan=… */}
@@ -575,7 +576,7 @@ const GameSelect = () => {
           ))}
         </Grid>
         {q && hits.length === 0 && (
-          <Typography color="medium_emphasis">
+          <Typography color="medium_emphasis" component="div">
             「{query}」に一致するゲームは見つかりませんでした。
           </Typography>
         )}
@@ -676,9 +677,29 @@ const PlanSelect = () => {
                             <Stack gap="xxs">
                               {/* GAP-NEW: Typography に取り消し線が無い。実アプリは元の月額に line-through */}
                               {/* 実アプリは 1 行（flexWrap）。Stack に折り返しが無いので 2 行に分けている */}
-                              <Typography size="xs" color="low_emphasis" component="span">
-                                月額 {yen(base)} →
-                              </Typography>
+                              {/* 実物は「月額」xs、元の月額 s_comfort 太字（blueblack[400]）、「→」s_comfort */}
+                              <Stack flexDirection="row" gap="xs" alignItems="center">
+                                <Typography size="xs" component="span">
+                                  月額
+                                </Typography>
+                                <Typography
+                                  size="s"
+                                  density="comfort"
+                                  fontWeight="bold"
+                                  color="low_emphasis"
+                                  component="span"
+                                >
+                                  {yen(base)}
+                                </Typography>
+                                <Typography
+                                  size="s"
+                                  density="comfort"
+                                  color="low_emphasis"
+                                  component="span"
+                                >
+                                  →
+                                </Typography>
+                              </Stack>
                               <Typography size="xl" fontWeight="bold" component="span">
                                 {yen(unit)}
                               </Typography>
@@ -705,13 +726,13 @@ const PlanSelect = () => {
                 </Grid>
               </RadioGroup>
               {/* GAP-NEW: 文中のリンクが無い。「契約期間を変更する」「対応バージョン一覧」は本来リンク */}
-              <Typography size="xxs" density="comfort">
+              <Typography size="xxs" density="comfort" component="div">
                 ※
                 契約期間の変更が適用されるのは現在の契約期間満了後からとなります。詳しくは契約期間を変更するをご確認ください。
               </Typography>
               {/* ActiveGameNotion。Minecraft (Java版) のときだけ出る */}
               {game.id === 'minecraft-je' && (
-                <Typography size="xxs" density="comfort">
+                <Typography size="xxs" density="comfort" component="div">
                   対応バージョンについて事前にご確認ください。対応バージョン一覧
                 </Typography>
               )}
@@ -790,7 +811,7 @@ const RegisterPaymentCardForm = () => (
       />
       {/* 実物は rgb(255 255 255 / .05) の地。GAP-NEW: 面の地色だけを変える指定が無いので outlined で代用 */}
       <Paper padding="m" elevation={0} outlined>
-        <Typography size="xs">
+        <Typography size="xs" component="div">
           当社がお客様から収集した以下の個人情報等は、カード発行会社がおこなう不正利用検知・防止のために、お客様が利用されているカード発行会社へ提供させていただきます。氏名、電話番号、emailアドレス、請求先住所、配送先住所、インターネット利用環境に関する情報等（送信するパラメータの内容に応じて個人情報を記載ください）
           <br />
           お客様が利用されているカード発行会社が海外にある場合、これらの情報は当該発行会社が所属する国に移転される場合があります。お客様が未成年の場合、親権者または後見人の承諾を得た上で、本サービスを利用するものとします。
@@ -822,7 +843,7 @@ const InitialPaymentMethodRadioGroup = () => {
             <img src={paypayLogo} alt="PayPay" width={30} height={30} />
           </Stack>
           {/* GAP-NEW: 文中のリンクが無い。「利用できる支払い方法と対応ブランド」は本来リンク */}
-          <Typography size="xxs">
+          <Typography size="xxs" component="div">
             ※この支払い方法は自動更新に対応していません。詳しくは利用できる支払い方法と対応ブランドをご確認ください。
           </Typography>
         </Stack>
@@ -836,8 +857,12 @@ const PaymentCardDetail = () => (
   <Stack flexDirection="row" gap="s" alignItems="center">
     {/* GAP-NEW: カードブランドのアイコン（PaymentCardBrandIcon、60px）が無い */}
     <Stack gap="xs">
-      <Typography size="s">**** **** **** {REGISTERED_CARD.last4}</Typography>
-      <Typography size="s">有効期限 : {REGISTERED_CARD.expire}</Typography>
+      <Typography size="s" component="div">
+        **** **** **** {REGISTERED_CARD.last4}
+      </Typography>
+      <Typography size="s" component="div">
+        有効期限 : {REGISTERED_CARD.expire}
+      </Typography>
     </Stack>
   </Stack>
 )
@@ -930,7 +955,7 @@ const PaymentMethodChangeDialog = ({
                 <img src={paypayLogo} alt="PayPay" width={30} height={30} />
               </Stack>
               {/* GAP-NEW: 文中のリンクが無い。「利用できる支払い方法と対応ブランド」は本来リンク */}
-              <Typography size="xxs">
+              <Typography size="xxs" component="div">
                 ※このお支払い方法は自動更新に対応していません。詳しくは利用できる支払い方法と対応ブランドをご確認ください。
               </Typography>
             </Stack>
@@ -1043,7 +1068,7 @@ const PaymentInfo = ({
 
       {/* payment-info/_components/AssertCouponUnapplyDialog（タイトル無し） */}
       <Dialog isOpen={askCoupon} onOpenChange={setAskCoupon}>
-        <Typography>クーポンが適用されていません。購入を続けますか？</Typography>
+        <Typography component="div">クーポンが適用されていません。購入を続けますか？</Typography>
         <DialogFooter>
           <Button appearance="transparent" onPress={() => setAskCoupon(false)}>
             閉じる
@@ -1081,8 +1106,10 @@ const SoldOut = () => {
         <img src={soldOutImage} alt="クリスマスプレゼントのイラスト" width={192} height={192} />
       </Stack>
       <Stack gap="xs">
-        <Typography>サーバーが売り切れているため購入することができません</Typography>
-        <Typography>再入荷までお待ちください</Typography>
+        <Typography component="div">
+          サーバーが売り切れているため購入することができません
+        </Typography>
+        <Typography component="div">再入荷までお待ちください</Typography>
       </Stack>
       {/* href='/home' */}
       <Button color="interactive" size="l" width="full" onPress={() => navigate('home')}>
@@ -1110,7 +1137,7 @@ const PurchaseMaintenance = () => {
         <Typography size="xl" fontWeight="bold" component="h1">
           おっと！今は準備中みたいです。
         </Typography>
-        <Typography>
+        <Typography component="div">
           再開までしばらくお待ちください。
           <br />
           くわしくはお知らせをご覧ください。

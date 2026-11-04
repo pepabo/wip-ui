@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { TabPanel } from 'react-aria-components'
 
 import { Button, LinkButton } from '../../Button'
@@ -596,13 +596,14 @@ const ConnectionAddDialog = ({
                 </Stack>
               </Paper>
             ) : (
-              // 実物は Paper outlined の中の ul.divide-y で、行は px-4 py-3。
-              // GAP-NEW: 行ごとの余白が無いので、面の padding m（16px）と行の間の gap s（12px）+ Divider で近づける
-              <Paper outlined padding="m">
-                <Stack gap="s">
-                  {matched.map((r, i) => (
-                    <Stack key={r.id} gap="s">
-                      {i > 0 && <Divider />}
+              // 実物は Paper outlined の中の ul.divide-y で、行は px-4 py-3。区切り線を面の端まで通すため、
+              // 面は none にし、行を padding="s"（12px）の入れ子の Paper にする。
+              // GAP-NEW: Paper の padding は上下左右で同じ値しか取れない。行の左右が実物より 4px 狭い
+              <Paper outlined padding="none">
+                {matched.map((r, i) => (
+                  <Fragment key={r.id}>
+                    {i > 0 && <Divider />}
+                    <Paper padding="s" elevation={0}>
                       <Stack
                         flexDirection="row"
                         gap="m"
@@ -623,9 +624,9 @@ const ConnectionAddDialog = ({
                           選択
                         </Button>
                       </Stack>
-                    </Stack>
-                  ))}
-                </Stack>
+                    </Paper>
+                  </Fragment>
+                ))}
               </Paper>
             )}
             {/* 実物の GitHubRepositoryPicker の末尾（GitHub 側でアクセスを許可するリポジトリを変える導線） */}
@@ -1079,9 +1080,10 @@ const EnvVarList = ({
   onDelete: (env: EnvVar) => void
 }) => (
   // 実物は Paper outlined overflow-hidden。空の案内は px-6 py-16 なので padding を xxl（48px）にして近づける。
-  // 一覧は列見出しが px-6 py-2、行が px-6 py-4 で、間を区切り線で分ける。GAP-NEW: 行ごとの余白が無いので、
-  // 面の padding l（24px）と行の間の gap m（16px）+ Divider で近づける（列見出しの下も 16px になる）
-  <Paper outlined padding={vars.length === 0 ? 'xxl' : 'l'}>
+  // 一覧は列見出しが px-6 py-2、行が px-6 py-4 で、間を区切り線で分ける。区切り線を面の端まで通すため、
+  // 面は none にし、列見出しと行をそれぞれ padding="m" の入れ子の Paper にする（Deploys と同じ）。
+  // GAP-NEW: Paper の padding は上下左右で同じ値しか取れない。列見出しは上下が実物より 8px 広く、左右は 8px 狭い
+  <Paper outlined padding={vars.length === 0 ? 'xxl' : 'none'}>
     {vars.length === 0 ? (
       target === 'preview' ? (
         <EmptyState
@@ -1095,57 +1097,61 @@ const EnvVarList = ({
         />
       )
     ) : (
-      <Stack gap="m">
+      <Fragment>
         {/* GAP-NEW: 実物の列は md 以上で 320px 固定 / 1fr / auto。Grid の 12 分割で近づけている */}
-        <Grid spacing="s">
-          <GridItem size={{ xxs: 10, m: 4 }}>
-            <Typography component="span" size="xs" color="medium_emphasis">
-              キー
-            </Typography>
-          </GridItem>
-          <GridItem size={{ xxs: 12, m: 7 }}>
-            <Typography component="span" size="xs" color="medium_emphasis">
-              値
-            </Typography>
-          </GridItem>
-        </Grid>
+        <Paper padding="m" elevation={0}>
+          <Grid spacing="s">
+            <GridItem size={{ xxs: 10, m: 4 }}>
+              <Typography component="span" size="xs" color="medium_emphasis">
+                キー
+              </Typography>
+            </GridItem>
+            <GridItem size={{ xxs: 12, m: 7 }}>
+              <Typography component="span" size="xs" color="medium_emphasis">
+                値
+              </Typography>
+            </GridItem>
+          </Grid>
+        </Paper>
         {vars.map((env) => (
-          <Stack key={env.id} gap="m">
+          <Fragment key={env.id}>
             <Divider />
-            <Grid spacing="s" alignContent="center">
-              <GridItem size={{ xxs: 10, m: 4 }}>
-                <Typography component="span" size="s">
-                  {env.key}
-                </Typography>
-              </GridItem>
-              <GridItem size={{ xxs: 12, m: 7 }}>
-                <EnvValueCell env={env} />
-              </GridItem>
-              <GridItem size={{ xxs: 2, m: 1 }}>
-                <Stack alignItems="flex-end">
-                  <MenuTrigger>
-                    <Button
-                      appearance="transparent"
-                      color="neutral"
-                      size="s"
-                      iconOnly
-                      aria-label={`${env.key} の操作`}
-                    >
-                      <Icon name="ellipsis_horizontal" size="s" />
-                    </Button>
-                    <Menu placement="bottom end">
-                      <MenuItem onAction={() => onEdit(env)}>編集</MenuItem>
-                      <MenuItem color="negative" onAction={() => onDelete(env)}>
-                        削除
-                      </MenuItem>
-                    </Menu>
-                  </MenuTrigger>
-                </Stack>
-              </GridItem>
-            </Grid>
-          </Stack>
+            <Paper padding="m" elevation={0}>
+              <Grid spacing="s" alignContent="center">
+                <GridItem size={{ xxs: 10, m: 4 }}>
+                  <Typography component="span" size="s">
+                    {env.key}
+                  </Typography>
+                </GridItem>
+                <GridItem size={{ xxs: 12, m: 7 }}>
+                  <EnvValueCell env={env} />
+                </GridItem>
+                <GridItem size={{ xxs: 2, m: 1 }}>
+                  <Stack alignItems="flex-end">
+                    <MenuTrigger>
+                      <Button
+                        appearance="transparent"
+                        color="neutral"
+                        size="s"
+                        iconOnly
+                        aria-label={`${env.key} の操作`}
+                      >
+                        <Icon name="ellipsis_horizontal" size="s" />
+                      </Button>
+                      <Menu placement="bottom end">
+                        <MenuItem onAction={() => onEdit(env)}>編集</MenuItem>
+                        <MenuItem color="negative" onAction={() => onDelete(env)}>
+                          削除
+                        </MenuItem>
+                      </Menu>
+                    </MenuTrigger>
+                  </Stack>
+                </GridItem>
+              </Grid>
+            </Paper>
+          </Fragment>
         ))}
-      </Stack>
+      </Fragment>
     )}
   </Paper>
 )
@@ -1372,16 +1378,19 @@ const EnvVarsScreen = ({
                       color="neutral"
                       appearance="flat"
                       action={
-                        <LinkButton
+                        // 実物は素の a で Button を包み、中の span（inline-flex items-center gap-1）に文言とアイコンを並べている
+                        <a
                           href="https://lolipop.jp/ai/gateway/"
                           target="_blank"
                           rel="noopener noreferrer"
-                          appearance="outlined"
-                          size="s"
-                          trailing={<Icon name="launch" size="s" />}
                         >
-                          APIキーを発行
-                        </LinkButton>
+                          <Button appearance="outlined" size="s">
+                            <Stack flexDirection="row" gap="xxs" alignItems="center">
+                              APIキーを発行
+                              <Icon name="launch" size="s" />
+                            </Stack>
+                          </Button>
+                        </a>
                       }
                     >
                       <Stack gap="xxs">

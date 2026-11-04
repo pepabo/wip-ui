@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 
 import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
 import { Button, LinkButton } from '../../Button'
@@ -340,7 +340,8 @@ const DeployRowSummary = ({ deploy }: { deploy: Deploy }) => {
         {deploy.git.commitMessage || deploy.git.shortSha}
       </Typography>
       <Stack flexDirection="row" gap="xxs" alignItems="center">
-        <Typography component="span" size="xs" color="medium_emphasis">
+        {/* アイコンを包む Typography は dense にして、行の高さを文字の行（20px）にそろえる */}
+        <Typography component="span" size="xs" density="dense" color="medium_emphasis">
           <Icon name="github" size="s" color="currentColor" aria-hidden />
         </Typography>
         <Typography component="span" size="xs" color="medium_emphasis">
@@ -413,7 +414,7 @@ const DeployList = ({
             </Grid>
           </Paper>
           {project.deploys.map((d) => (
-            <Stack key={d.id}>
+            <Fragment key={d.id}>
               <Divider />
               <RowLink
                 label={`${d.git?.commitMessage ?? 'アップロード'} の詳細`}
@@ -444,7 +445,7 @@ const DeployList = ({
                   </GridItem>
                 </Grid>
               </RowLink>
-            </Stack>
+            </Fragment>
           ))}
         </Paper>
       )}
@@ -578,8 +579,8 @@ const BuildLog = ({ lines }: { lines: string[] }) => {
               component="div"
               // biome-ignore lint/suspicious/noArrayIndexKey: ログは同じ行が繰り返し出るため行番号を key にする
               key={i}
+              // 実物の text-xs leading-5（12px / 20px）
               size="xs"
-              density="dense"
               color={isErrorLine(line) ? 'negative' : 'medium_emphasis'}
             >
               {line || ' '}
@@ -758,7 +759,7 @@ const DeployDetail = ({
           GAP-NEW: Divider に色の指定が無く、行ごとの padding も 4 辺同じ値しか取れない */}
       <Paper padding="none" outlined>
         {stagesOf(d).map((stage, i) => (
-          <Stack key={stage.key}>
+          <Fragment key={stage.key}>
             {i > 0 && <Divider />}
             <Paper padding="m" elevation={0}>
               <Stack gap="s">
@@ -784,7 +785,7 @@ const DeployDetail = ({
                 {stage.key === 'build' && d.log && <BuildLog lines={d.log} />}
               </Stack>
             </Paper>
-          </Stack>
+          </Fragment>
         ))}
       </Paper>
 

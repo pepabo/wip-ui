@@ -164,7 +164,8 @@ const ConsentCheckboxes = ({
   agreed: boolean
   onAgreed: (value: boolean) => void
 }) => (
-  <Stack gap="xs">
+  // 実物は 1 つ目が mb 0.5、2 つ目が mt 0.5（4px）
+  <Stack gap="xxs">
     <Checkbox defaultSelected>サービスからのニュースレターを受信する</Checkbox>
     <Checkbox isSelected={agreed} onChange={onAgreed}>
       利用規約 と プライバシーポリシー に同意する
@@ -192,7 +193,7 @@ const ExternalSignupModal = () => {
             選択されたアカウントでの登録は確認できませんでした
           </CalloutBody>
         </Callout>
-        <Typography size="s" component="p">
+        <Typography size="s" component="div">
           このままアカウントを新規作成しますか？
         </Typography>
         <ConsentCheckboxes agreed={agreed} onAgreed={setAgreed} />
@@ -278,7 +279,8 @@ const SignupPaper = () => {
             <EmailTextField />
             <TurnstileWidget />
           </Stack>
-          <Stack gap="xs">
+          {/* 送信の下 mb 2・ログインの上 mt 1（16px） */}
+          <Stack gap="m">
             {/* 送ると /signup/authcode へ */}
             <Button
               color="interactive"

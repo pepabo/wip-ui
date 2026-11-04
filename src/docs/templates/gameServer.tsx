@@ -141,7 +141,8 @@ export const ConfigRow = ({
   description?: string
   children: ReactNode
 }) => (
-  <Stack gap="xxs">
+  // components/ConfigRow。項目名の下は mb 1（8px）
+  <Stack gap="xs">
     <Typography size="s" fontWeight="bold" component="span">
       {label}
     </Typography>
@@ -182,7 +183,9 @@ export const EmptyNotice = ({
   children: ReactNode
 }) => (
   <Stack alignItems="center">
-    <Typography size={size}>{children}</Typography>
+    <Typography size={size} component="div">
+      {children}
+    </Typography>
   </Stack>
 )
 
@@ -232,7 +235,8 @@ const ServerSwitch = ({ status }: { status: ServerStatus }) => {
         ? restartButton(false)
         : busy('読込中')
   return (
-    <Stack flexDirection="row" gap="s" alignItems="flex-start">
+    // 実物は Box display='flex' gap={2}（16px）
+    <Stack flexDirection="row" gap="m" alignItems="flex-start">
       {start}
       {restart}
     </Stack>

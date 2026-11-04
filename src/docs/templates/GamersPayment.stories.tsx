@@ -7,7 +7,6 @@ import { Callout } from '../../Callout'
 import { Checkbox } from '../../Checkbox'
 import { Container } from '../../Container'
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
-import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
@@ -108,7 +107,11 @@ const PaymentPaper = ({ children }: { children: ReactNode }) => (
  * PaymentsTimeline の 1 段。左に丸いアイコン、右に地色（background.default）の付いた面（flex: 1）。
  * 実物はアイコンの上下を 2px の縦線でつなぐ（線の色は成功が success、決済失敗が error、次回の段の下は warning）。
  * Timeline が無いので、アイコンと枠線の面を並べ、縦線は出していない。
- * 実物のアイコンは CheckCircleOutline / ErrorOutline（丸に感嘆符）。後者は三角の exclamation_on_triangle で代える
+ * 実物のアイコンは CheckCircleOutline / ErrorOutline（丸に感嘆符）。後者は三角の exclamation_on_triangle で代える。
+ * GAP: 実物の面は残りの幅いっぱいに伸びる（flex: 1）。Stack の子を伸ばせないので、Grid の 1 / 11 の列に分けている。
+ * 実物はアイコンの右 16px から面が始まるが、ここでは 1/12 の列の幅のぶん右から始まる。
+ * GAP: 実物のアイコンは pt 1.5（12px）下がり、面の 1 行目とそろう。ここではアイコンが面の上端にそろう。
+ * GAP: 実物の面は枠線の無い地色（background.default）・角丸 8px。Paper の色・角丸を変えられないので、枠線の Paper
  */
 const TimelineStep = ({
   icon,
@@ -121,30 +124,42 @@ const TimelineStep = ({
   children: ReactNode
   action?: ReactNode
 }) => (
-  <Stack flexDirection="row" gap="m" alignItems="flex-start">
-    <Typography component="span" color={tone}>
-      <Icon name={icon} size="m" />
-    </Typography>
-    <Paper padding="s" elevation={0} outlined>
-      <Stack
-        flexDirection={{ xxs: 'column', s: 'row' }}
-        gap="m"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <Stack gap="xxs">{children}</Stack>
-        {action}
-      </Stack>
-    </Paper>
-  </Stack>
+  <Grid gapless wrap="nowrap">
+    <GridItem size={1}>
+      <Typography component="span" color={tone}>
+        <Icon name={icon} size="m" />
+      </Typography>
+    </GridItem>
+    <GridItem size={11}>
+      {/* 実物は px { xs: 1.5, sm: 2 }・py 1.5（12px / 16px） */}
+      <Paper padding={{ xxs: 's', s: 'm' }} elevation={0} outlined>
+        <Stack
+          flexDirection={{ xxs: 'column', s: 'row' }}
+          gap="m"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Stack gap="xxs">{children}</Stack>
+          {action}
+        </Stack>
+      </Paper>
+    </GridItem>
+  </Grid>
 )
 
-/** 真ん中の「〇〇を契約中」。実物は 2 つの段をつなぐ縦線の右（pl 7）に文字だけを置く */
+/**
+ * 真ん中の「〇〇を契約中」。実物は 2 つの段をつなぐ縦線の右（pl 7・py 2）に文字だけを置き、文字の頭は上下の面の文字とそろう。
+ * 縦線は出さず、上下の段と同じ 1 / 11 の列に分け、面と同じ左右の余白（m）の、地の無い Paper に文字を置く
+ */
 const TimelineMiddle = ({ children }: { children: ReactNode }) => (
-  <Stack flexDirection="row" gap="l" alignItems="center">
-    <Divider orientation="vertical" flexItem />
-    {children}
-  </Stack>
+  <Grid gapless wrap="nowrap">
+    <GridItem size={1}> </GridItem>
+    <GridItem size={11}>
+      <Paper padding="m" elevation={0}>
+        {children}
+      </Paper>
+    </GridItem>
+  </Grid>
 )
 
 const LatestStep = ({ state, dialogs }: { state: GamersState; dialogs: DialogControl }) => (
@@ -217,7 +232,8 @@ const NextStep = ({ state, dialogs }: { state: GamersState; dialogs: DialogContr
  * components/PaymentCardDetail。ブランドの図柄（fontSize 60、白地に角丸 0.125rem）の右に、番号と有効期限の 2 行
  */
 const PaymentCardDetail = () => (
-  <Stack flexDirection="row" gap="m" alignItems="center">
+  // 実物は display: flex のまま（縦は上端にそろう）。図柄の右 mr 2（16px）
+  <Stack flexDirection="row" gap="m" alignItems="flex-start">
     <img src={visaLogo} alt="Visa" width={60} height={38} />
     <Stack gap="xs">
       <Typography size="s" component="span">
@@ -239,8 +255,10 @@ const RecentPaymentsPaper = ({
   dialogs: DialogControl
 }) => (
   <PaymentPaper>
+    {/* 実物は見出しの下（PaymentsTimeline の mt 5）が 40px。Stack の gap は xl（32px）。
+        見出しは見出しの要素ではなく variant='xl' の span */}
     <Stack gap="xl">
-      <Typography size="xl" fontWeight="bold" component="h2">
+      <Typography size="xl" fontWeight="bold" component="div">
         最近の支払い
       </Typography>
       <Stack gap="l">
@@ -276,7 +294,7 @@ const PaymentMethodsPaper = ({
       alignItems="center"
     >
       <Stack gap="m">
-        <Typography size="xl" fontWeight="bold" component="h2">
+        <Typography size="xl" fontWeight="bold" component="div">
           決済手段
         </Typography>
         {state.loading ? <LoadingBlock /> : <PaymentCardDetail />}
@@ -292,7 +310,8 @@ const PaymentMethodsPaper = ({
 const PaymentHistoryPaper = ({ dialogs }: { dialogs: DialogControl }) => (
   <PaymentPaper>
     <Stack gap="xl">
-      <Typography size="xl" fontWeight="bold" component="h2">
+      {/* 実物は Box mb 4（32px）の中の variant='xl' の span */}
+      <Typography size="xl" fontWeight="bold" component="div">
         支払い履歴
       </Typography>
       <Table aria-label="支払い履歴">
@@ -394,12 +413,14 @@ const SatisfactionSurveyDialog = ({ close }: { close: () => void }) => (
     <DialogHeader>
       <DialogTitle>サーバーの使い心地はどうでしたか？</DialogTitle>
     </DialogHeader>
-    <Stack gap="l">
+    {/* 実物は絵の並びとその下の行の間に余白を置かない（FormControlLabel の高さだけ）。Stack の gap は xs */}
+    <Stack gap="xs">
+      {/* GAP: 実物の 3 枚は幅いっぱいに等分（width 100%）。ここでは絵の幅のまま中央に寄せる */}
       <Stack flexDirection="row" gap="m" justifyContent="center">
         {surveyItems.map((item) => (
           // 実物は Paper（px 2, py 3）の中の絵で、ホバーで角丸 16px のグラデーションの枠が出る。
           // 画像のトグルボタンが wip-ui に無いので素の button
-          <Paper key={item.label} padding="s" elevation={0}>
+          <Paper key={item.label} padding="m" elevation={0}>
             <button
               type="button"
               onClick={close}
@@ -420,13 +441,24 @@ const SatisfactionSurveyDialog = ({ close }: { close: () => void }) => (
   </Dialog>
 )
 
-/** InvoiceDialog。「宛名」（m 太字）と説明（s）の下に、ラベルの無い入力欄 */
+/**
+ * InvoiceDialog。「宛名」（m 太字の h2、py 1）と説明（s）の下（mt 1）に、ラベルの無い入力欄。
+ * 入力欄の名前は見出しの「宛名」
+ */
 const InvoiceDialog = ({ close }: { close: () => void }) => (
   <Dialog isOpen onOpenChange={(open) => !open && close()}>
     <DialogHeader>
       <DialogTitle>領収書の宛名</DialogTitle>
     </DialogHeader>
-    <TextField label="宛名" caption="書類の交付を受ける事業者の氏名または名称" width="full" />
+    <Stack gap="xs">
+      <Typography fontWeight="bold" component="h2">
+        宛名
+      </Typography>
+      <Typography size="s" component="div">
+        書類の交付を受ける事業者の氏名または名称
+      </Typography>
+      <TextField aria-label="宛名" width="full" />
+    </Stack>
     <DialogFooter>
       <Button appearance="transparent" onPress={close}>
         閉じる
@@ -448,7 +480,8 @@ const years = Array.from({ length: 10 }, (_, i) => String(2026 + i))
 const RegisterPaymentCardForm = () => (
   <Paper padding="xl" elevation={0} outlined>
     <Stack gap="xl">
-      <Typography size="l" fontWeight="bold" component="h3">
+      {/* 実物は見出しの要素ではなく variant='l' の span */}
+      <Typography size="l" fontWeight="bold" component="div">
         クレジットカード情報
       </Typography>
       <TextField label="名義" autoComplete="cc-name" width="full" />
@@ -474,9 +507,9 @@ const RegisterPaymentCardForm = () => (
         </GridItem>
       </Grid>
       <TextField label="セキュリティコード" type="password" autoComplete="cc-csc" width="full" />
-      {/* 実物は p 2 の薄い地色の面 */}
+      {/* 実物は p 2 の薄い地色の面（角丸なし）。GAP: Paper の地色・角丸を変えられないので枠線の Paper */}
       <Paper padding="m" elevation={0} outlined>
-        <Typography size="xs" component="p">
+        <Typography size="xs" component="div">
           当社がお客様から収集した以下の個人情報等は、カード発行会社がおこなう不正利用検知・防止のために、お客様が利用されているカード発行会社へ提供させていただきます。氏名、電話番号、emailアドレス、請求先住所、配送先住所、インターネット利用環境に関する情報等（送信するパラメータの内容に応じて個人情報を記載ください）
           <br />
           お客様が利用されているカード発行会社が海外にある場合、これらの情報は当該発行会社が所属する国に移転される場合があります。お客様が未成年の場合、親権者または後見人の承諾を得た上で、本サービスを利用するものとします。
@@ -531,7 +564,8 @@ const PaymentMethodChangeDialog = ({ close }: { close: () => void }) => {
         </Callout>
         {/* 実物の RadioGroup に見える見出しは無い */}
         <RadioGroup aria-label="支払い方法" defaultValue="credit-card">
-          <Stack gap={editing ? 'xl' : 'm'}>
+          {/* 実物はカード情報の入力中だけ gap 4（32px）、ほかは 0。Stack の gap の最小は xxs（4px） */}
+          <Stack gap={editing ? 'xl' : 'xxs'}>
             <Stack gap="m">
               <Stack flexDirection="row" gap="xs" alignItems="center">
                 <Radio value="credit-card">クレジットカード</Radio>
@@ -560,7 +594,7 @@ const PaymentMethodChangeDialog = ({ close }: { close: () => void }) => {
                 <img src={paypayLogo} alt="PayPay" width={30} height={30} />
               </Stack>
               {/* 実物は「利用できる支払い方法と対応ブランド」がヘルプ記事へのリンク（別タブ） */}
-              <Typography size="xxs" component="p">
+              <Typography size="xxs" component="div">
                 ※この支払い方法は自動更新に対応していません。詳しくは利用できる支払い方法と対応ブランドをご確認ください。
               </Typography>
             </Stack>
@@ -598,7 +632,8 @@ const PaymentScreen = ({
       <Container size="xl">
         <Stack gap="xl">
           {/* ServerPaymentHeader */}
-          <Typography size="xxxl" fontWeight="bold" component="h1">
+          {/* 実物は見出しの要素ではなく variant='xxxl' の span。client.tsx の Stack は spacing 5（40px）で、gap は xl（32px） */}
+          <Typography size="xxxl" fontWeight="bold" component="div">
             支払い
           </Typography>
           <PaymentTabPanels state={state} tab={tab} dialogs={dialogs} />
