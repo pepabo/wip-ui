@@ -5,6 +5,7 @@ import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
+import { Meter } from '../../Meter'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
@@ -15,6 +16,7 @@ import { TextLink } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
+import type { MeterColor } from '../../Meter'
 import type { StickerColor } from '../../Sticker'
 import type { TypographyColor } from '../../Typography'
 
@@ -131,21 +133,9 @@ const usageMetrics: UsageMetric[] = [
 
 // ─── wip-ui に無い部品（inline style はここに集める）───
 
-// GAP-18: 進捗バーが無い。Typography で色を継承させ、currentColor で塗っている。
-// 実物は高さ h-1.5・角丸 full・トラック bg-neutral-200。トラックの不透明度は出典の無い暫定値。
-const meterTrackStyle = { height: 6, borderRadius: 3, opacity: 0.15, background: 'currentColor' }
-const meterFillStyle = { height: 6, borderRadius: 3, marginTop: -6, background: 'currentColor' }
-
 // 実物の barColorClass：0.9 以上 red-600、0.75 以上 amber-500、それ未満 neutral-800
-const meterTone = (ratio: number): TypographyColor =>
-  ratio >= 0.9 ? 'negative' : ratio >= 0.75 ? 'notice' : 'high_emphasis'
-
-const Meter = ({ ratio }: { ratio: number }) => (
-  <Typography component="div" color={meterTone(ratio)}>
-    <div style={meterTrackStyle} />
-    <div style={{ ...meterFillStyle, width: `${Math.round(Math.min(1, ratio) * 100)}%` }} />
-  </Typography>
-)
+const meterColor = (ratio: number): MeterColor =>
+  ratio >= 0.9 ? 'negative' : ratio >= 0.75 ? 'notice' : 'neutral'
 
 const DOT_COLOR: Record<StickerColor, TypographyColor> = {
   positive: 'positive',
@@ -243,7 +233,14 @@ const UsageMetricCard = ({ metric }: { metric: UsageMetric }) => {
       <Typography component="div" size="xl" fontWeight="bold">
         {usedPercent}%
       </Typography>
-      <Meter ratio={ratio} />
+      {/* 実物のバーは高さ 6px。数値が主役なので s */}
+      <Meter
+        aria-label={metric.label}
+        size="s"
+        value={usedPercent}
+        valueLabel={`${usedPercent}%`}
+        color={meterColor(ratio)}
+      />
     </Stack>
   )
 }
