@@ -192,7 +192,7 @@ const mainStyle: CSSProperties = {
   borderTop: '1px solid #c4c9d8', // lolipopColors.gray[200]
   borderLeft: '1px solid #c4c9d8',
   borderTopLeftRadius: 12,
-  backgroundColor: '#fff',
+  // 地の色は wip-ui のページの地（lolipop では brown 50）に任せる。実物は白（#fff）
 }
 const pageSectionStyle: CSSProperties = { paddingTop: 24, paddingBottom: 24 }
 
