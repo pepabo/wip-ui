@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../Accordion'
 import { Button, LinkButton } from '../../Button'
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
@@ -361,63 +362,60 @@ const UploadProjectContent = ({ initialSelection }: { initialSelection: boolean 
                 .{ZONE}
               </Typography>
             </Stack>
-            {/* GAP-NEW: Accordion / Disclosure が無い。実物は Button + aria-expanded で開閉している */}
-            <Stack flexDirection="row">
-              <Button
-                appearance="transparent"
-                color="neutral"
-                size="s"
-                aria-expanded={advanced}
-                leading={<Icon name={advanced ? 'chevron_up' : 'chevron_down'} size="s" />}
-                onPress={() => setAdvanced(!advanced)}
-              >
-                詳細設定
-              </Button>
-            </Stack>
-            {/* 実物は fragment で、親の Stack gap l にそのまま並ぶ */}
-            {advanced && (
-              <Stack gap="l">
-                <TextField
-                  label="プロジェクト名"
-                  placeholder={domain.trim() === '' ? 'my-app' : domain}
-                  size="s"
-                  width="full"
-                  color="neutral"
-                  caption="未入力の場合は公開URLと同じ名前になります。"
-                  autoComplete="off"
-                  spellCheck="false"
-                />
-                {/* 静的サイトはビルド工程が無いので、ビルド設定欄を出さない */}
-                {framework?.name !== 'static' && (
-                  <>
+            {/* 実物は Button + aria-expanded で開閉している。閉じた状態で始まる */}
+            <Accordion
+              expandedKeys={advanced ? ['advanced'] : []}
+              onExpandedChange={(keys) => setAdvanced(keys.has('advanced'))}
+            >
+              <AccordionItem id="advanced">
+                <AccordionTrigger headingLevel="none" indicator="start">
+                  詳細設定
+                </AccordionTrigger>
+                <AccordionContent>
+                  <Stack gap="l">
                     <TextField
-                      label="インストールコマンド"
-                      placeholder={framework?.install}
+                      label="プロジェクト名"
+                      placeholder={domain.trim() === '' ? 'my-app' : domain}
                       size="s"
                       width="full"
+                      color="neutral"
+                      caption="未入力の場合は公開URLと同じ名前になります。"
                       autoComplete="off"
                       spellCheck="false"
                     />
-                    <TextField
-                      label="ビルドコマンド"
-                      placeholder={framework?.build}
-                      size="s"
-                      width="full"
-                      autoComplete="off"
-                      spellCheck="false"
-                    />
-                    <TextField
-                      label="出力ディレクトリ"
-                      placeholder={framework?.out}
-                      size="s"
-                      width="full"
-                      autoComplete="off"
-                      spellCheck="false"
-                    />
-                  </>
-                )}
-              </Stack>
-            )}
+                    {/* 静的サイトはビルド工程が無いので、ビルド設定欄を出さない */}
+                    {framework?.name !== 'static' && (
+                      <>
+                        <TextField
+                          label="インストールコマンド"
+                          placeholder={framework?.install}
+                          size="s"
+                          width="full"
+                          autoComplete="off"
+                          spellCheck="false"
+                        />
+                        <TextField
+                          label="ビルドコマンド"
+                          placeholder={framework?.build}
+                          size="s"
+                          width="full"
+                          autoComplete="off"
+                          spellCheck="false"
+                        />
+                        <TextField
+                          label="出力ディレクトリ"
+                          placeholder={framework?.out}
+                          size="s"
+                          width="full"
+                          autoComplete="off"
+                          spellCheck="false"
+                        />
+                      </>
+                    )}
+                  </Stack>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
             <Stack flexDirection="row" gap="xs" justifyContent="flex-end">
               <Button
                 appearance="outlined"
@@ -778,58 +776,56 @@ const NewProjectSection = ({
             spellCheck="false"
             defaultValue={repository.defaultBranch}
           />
-          {/* GAP-NEW: Accordion / Disclosure が無い。実物は Button + aria-expanded で開閉している */}
-          <Stack flexDirection="row">
-            <Button
-              appearance="transparent"
-              color="neutral"
-              size="s"
-              aria-expanded={advanced}
-              leading={<Icon name={advanced ? 'chevron_up' : 'chevron_down'} size="s" />}
-              onPress={() => setAdvanced(!advanced)}
-            >
-              詳細設定
-            </Button>
-          </Stack>
-          {advanced && (
-            <Stack gap="l">
-              <TextField
-                label="ルートディレクトリ"
-                size="s"
-                width="full"
-                color="neutral"
-                autoComplete="off"
-                spellCheck="false"
-              />
-              <TextField
-                label="インストールコマンド"
-                placeholder={fw?.install}
-                size="s"
-                width="full"
-                color="neutral"
-                autoComplete="off"
-                spellCheck="false"
-              />
-              <TextField
-                label="ビルドコマンド"
-                placeholder={fw?.build}
-                size="s"
-                width="full"
-                color="neutral"
-                autoComplete="off"
-                spellCheck="false"
-              />
-              <TextField
-                label="出力ディレクトリ"
-                placeholder={fw?.out}
-                size="s"
-                width="full"
-                color="neutral"
-                autoComplete="off"
-                spellCheck="false"
-              />
-            </Stack>
-          )}
+          {/* 実物は Button + aria-expanded で開閉している。閉じた状態で始まる */}
+          <Accordion
+            expandedKeys={advanced ? ['advanced'] : []}
+            onExpandedChange={(keys) => setAdvanced(keys.has('advanced'))}
+          >
+            <AccordionItem id="advanced">
+              <AccordionTrigger headingLevel="none" indicator="start">
+                詳細設定
+              </AccordionTrigger>
+              <AccordionContent>
+                <Stack gap="l">
+                  <TextField
+                    label="ルートディレクトリ"
+                    size="s"
+                    width="full"
+                    color="neutral"
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                  <TextField
+                    label="インストールコマンド"
+                    placeholder={fw?.install}
+                    size="s"
+                    width="full"
+                    color="neutral"
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                  <TextField
+                    label="ビルドコマンド"
+                    placeholder={fw?.build}
+                    size="s"
+                    width="full"
+                    color="neutral"
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                  <TextField
+                    label="出力ディレクトリ"
+                    placeholder={fw?.out}
+                    size="s"
+                    width="full"
+                    color="neutral"
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                </Stack>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
           {/* 実物は作成に成功すると、そのプロジェクトの詳細（デプロイのタブ）へ移る */}
           <Stack flexDirection="row">
             <Button onPress={() => navigate('project-deploys')}>デプロイ</Button>

@@ -298,7 +298,7 @@ const UsageChart = ({ series, entries }: { series: Series; entries: Entry[] }) =
                     justifyContent="space-between"
                     gap="s"
                   >
-                    {/* GAP-NEW: 説明の InfoTip が無い */}
+                    {/* 実物は DeepSeek のモデルにだけ、名前の右に InfoTip（現在の提供モデル）を出す。ここのモデルには無い */}
                     <Stack flexDirection="row" gap="xs" alignItems="center">
                       {/* GAP-NEW: 画像の枠（Image）が無い。実物は object-fit: contain で縮めず収める */}
                       {e.logo && <img src={e.logo} alt="" width={16} height={16} />}

@@ -9,6 +9,7 @@ import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Menu, MenuItem, MenuTrigger } from '../../Menu'
+import { Meter } from '../../Meter'
 import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
@@ -47,28 +48,6 @@ type Story = StoryObj<typeof meta>
 // 削った状態（読み込み中・使用量の上限なし）にあった GAP の記録
 // GAP-NEW: Skeleton が無い。実物はサーバーの状態（幅 120）と IP アドレス（幅 150）の取得までテキストの Skeleton を出す
 // GAP-NEW: Stack の alignItems に baseline が無い。実物の使用量は上限が無いとき実数と単位を items-baseline で並べる
-
-// ─── GAP の回避策（inline style はここに集める） ───
-
-// GAP-18: 進捗バーが無い。Typography で色を継承させ、currentColor で塗っている。
-// 高さ 20・角丸 8 は components/BackupUsage の LinearProgress。トラックの不透明度はトークンに出典が無い暫定値。
-// 90% 以上で赤（実アプリは pink[700]）。
-const meterTrackStyle = { height: 20, borderRadius: 8, opacity: 0.15 }
-const meterFillStyle = { height: 20, borderRadius: 8, marginTop: -20 }
-
-// GAP-18: 役割（meter）も持てないので、数値は隣の文言で読ませる
-const Meter = ({ ratio }: { ratio: number }) => (
-  <Typography component="div" color={ratio >= 0.9 ? 'negative' : 'informative'}>
-    <div style={{ ...meterTrackStyle, background: 'currentColor' }} />
-    <div
-      style={{
-        ...meterFillStyle,
-        width: `${Math.min(ratio, 1) * 100}%`,
-        background: 'currentColor',
-      }}
-    />
-  </Typography>
-)
 
 // ─── データ：ゲームサーバー（形は apollo の API レスポンスに合わせ、値はダミー）───
 
@@ -378,7 +357,13 @@ const BackupUsage = ({ usageBytes }: { usageBytes: number }) => (
     <Grid spacing="s">
       {/* 実アプリのバーは最大 400px で、md 以上は文言と横に並ぶ */}
       <GridItem size={{ xxs: 12, m: 5 }}>
-        <Meter ratio={usageBytes / LIMIT_BYTES} />
+        <Meter
+          aria-label="容量使用状況"
+          value={usageBytes}
+          maxValue={LIMIT_BYTES}
+          valueLabel={`${formatBytes(usageBytes)} / ${formatBytes(LIMIT_BYTES)}`}
+          color={usageBytes / LIMIT_BYTES >= 0.9 ? 'negative' : 'neutral'}
+        />
       </GridItem>
       <GridItem size={{ xxs: 12, m: 7 }}>
         <Typography size="s" component="span">

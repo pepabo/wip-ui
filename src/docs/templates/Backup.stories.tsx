@@ -7,6 +7,7 @@ import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Menu, MenuItem, MenuTrigger } from '../../Menu'
+import { Meter } from '../../Meter'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
@@ -120,19 +121,6 @@ const palworldBackups: Backup[] = [
 
 // ─── 部品 ───
 
-// GAP-18: 進捗バー / メーターが無い。Typography で色を継承させ、currentColor で塗っている。
-// 高さ・角丸・トラックの不透明度はトークンに出典が無い暫定値。90% 以上で赤（実アプリは pink[700]）。
-const meterTrackStyle = { height: 20, borderRadius: 8, opacity: 0.15, background: 'currentColor' } // GAP-18
-const meterFillStyle = { height: 20, borderRadius: 8, marginTop: -20, background: 'currentColor' } // GAP-18
-
-// GAP-18: 役割（meter）も持てないので、数値は隣の文言で読ませる
-const Meter = ({ ratio }: { ratio: number }) => (
-  <Typography component="div" color={ratio >= 0.9 ? 'negative' : 'informative'}>
-    <div style={meterTrackStyle} />
-    <div style={{ ...meterFillStyle, width: `${Math.min(ratio, 1) * 100}%` }} />
-  </Typography>
-)
-
 /**
  * 各 Paper の見出しと右のボタン。実アプリは variant='xxl' の太字で、狭い幅ではボタンが下に回る（gap 2）。
  * 実物は sm 以上で縦の中央にそろえる（alignItems が xs: flex-start / sm: center）。Stack の alignItems が
@@ -161,7 +149,13 @@ const BackupUsage = ({ usageBytes }: { usageBytes: number }) => (
     <Grid spacing="m">
       {/* 実アプリのバーは最大 400px */}
       <GridItem size={{ xxs: 12, m: 5 }}>
-        <Meter ratio={usageBytes / LIMIT_BYTES} />
+        <Meter
+          aria-label="容量使用状況"
+          value={usageBytes}
+          maxValue={LIMIT_BYTES}
+          valueLabel={`${formatBytes(usageBytes)} / ${formatBytes(LIMIT_BYTES)}`}
+          color={usageBytes / LIMIT_BYTES >= 0.9 ? 'negative' : 'neutral'}
+        />
       </GridItem>
       <GridItem size={{ xxs: 12, m: 7 }}>
         <Typography size="s" component="span">

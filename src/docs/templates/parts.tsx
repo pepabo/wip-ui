@@ -1,9 +1,12 @@
+import { useState } from 'react'
+
 import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
 import { Button } from '../../Button'
 import { Icon } from '../../Icon'
 import { Paper } from '../../Paper'
 import { RadioGroup } from '../../Radio'
 import { Stack } from '../../Stack'
+import { Tooltip, TooltipTrigger } from '../../Tooltip'
 import { Typography } from '../../Typography'
 
 import type { ReactNode } from 'react'
@@ -46,10 +49,7 @@ import type { RadioGroupProps } from '../../Radio'
 //        → FileManager が folder / code / image / note / clip で代用している。
 // GAP-16 Pagination が無い。→ 件数の送りを iconOnly ボタン 2 つで代用している。
 // GAP-17 Stack の alignItems がレスポンシブ非対応（flexDirection と gap は対応済み）。
-// GAP-18 進捗バー / メーターが無い（Loader は円形のみ）。adapter に progress-indicator の
-//        トークンは既にあるのに未実装。→ Usage が Typography で色を継承した div で代用している。
-//        実消費側（hosting-deploy-now の Usage 画面）は Tailwind の bg-sky-500 を直書きしており、
-//        フレーバーに追従していない。ここを塞ぐと 2 サービスが同時に直る。
+// GAP-18 （解消）Meter が入ったので、使用量や予算のバーは Meter で組んでいる。
 // GAP-19 グラフの primitive が無い。→ Usage が同じ色継承の div を並べて棒グラフにしている。
 //        hosting-ai-gateway は UsageCharts を 261 行の自前 CSS で実装している。
 // GAP-20 等幅フォントのトークンが無い。API キーやコマンドを出す画面で必要。
@@ -208,3 +208,29 @@ export const RadioField = ({
     </RadioGroup>
   </Stack>
 )
+
+/**
+ * 項目名の横に置く補足（AI ゲートウェイの shared/ui/InfoTip）。
+ * hover とキーボードのフォーカスで開き、押すと開いたままになる。もう一度押すか、フォーカスが外れると閉じる。
+ * 実物と同じく、開くまで 200ms 待ち、ボタンから 6px 離して出す
+ */
+export const InfoTip = ({ label, children }: { label: string; children: ReactNode }) => {
+  const [pinned, setPinned] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  return (
+    <TooltipTrigger isOpen={pinned || hovered} onOpenChange={setHovered} delay={200}>
+      <Button
+        appearance="transparent"
+        color="neutral"
+        size="s"
+        iconOnly
+        aria-label={label}
+        onPress={() => setPinned((current) => !current)}
+        onBlur={() => setPinned(false)}
+      >
+        <Icon name="info_on_circle" size="s" aria-hidden="true" />
+      </Button>
+      <Tooltip offset={6}>{children}</Tooltip>
+    </TooltipTrigger>
+  )
+}

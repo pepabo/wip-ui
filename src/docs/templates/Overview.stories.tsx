@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../Accordion'
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
 import { Checkbox } from '../../Checkbox'
@@ -9,6 +10,7 @@ import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Menu, MenuItem, MenuTrigger } from '../../Menu'
+import { Meter } from '../../Meter'
 import { Paper } from '../../Paper'
 import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
@@ -190,25 +192,11 @@ const schedulesInitial: Schedule[] = [
 /** 各 Paper の余白。実物は p: { xs: 3, md: 6 }（24px / 48px） */
 const paperPadding: PaperProps['padding'] = { xxs: 'l', m: 'xxl' }
 
-// GAP-18: 進捗バー / メーターが無い。Typography で色を継承させ、currentColor で塗っている。
-// 高さ・角丸・トラックの不透明度はトークンに出典が無い暫定値。
-const meterTrackStyle = { height: 8, borderRadius: 4, opacity: 0.15, background: 'currentColor' }
-const meterFillStyle = { height: 8, borderRadius: 4, marginTop: -8, background: 'currentColor' }
-
-/** 実アプリは 9 割を超えるとゲージの色が error.dark に変わる */
-const Meter = ({ ratio }: { ratio: number }) => (
-  <Typography component="div" color={ratio >= 0.9 ? 'negative' : 'informative'}>
-    <div style={meterTrackStyle} />
-    {/* GAP-18: 幅だけは値ごとに変わるので毎回作る */}
-    <div style={{ ...meterFillStyle, width: `${Math.min(ratio, 1) * 100}%` }} />
-  </Typography>
-)
-
 /**
  * (server)/_components/ServerStatusPaper。実アプリは MUI x-charts の Gauge（170px の円）を
  * 3 つ縦罫で区切って並べる。
- * GAP-18: 円形ゲージが無いので数値＋横棒で代用。
- * GAP-NEW: Tooltip が無い。実アプリはゲージにカーソルを乗せると「😄 問題ありません。」、
+ * GAP-18: 円形ゲージが無いので数値＋横棒（Meter）で代用。
+ * GAP: Meter はフォーカスできないので、Tooltip のきっかけにできない。実アプリはゲージにカーソルを乗せると「😄 問題ありません。」、
  * 9 割を超えると「💦 負荷が高まっています。プランアップもおすすめです。」
  * （ディスクは「💦 使用量が高まっています。データの削除をおすすめします。」）がカーソルに付いて出る。
  * ここでは出せていない
@@ -252,7 +240,13 @@ const ServerStatusPaper = ({ status }: { status: ServerStatus }) => {
                     <Typography size="l" fontWeight="bold" component="span">
                       {m.text}
                     </Typography>
-                    <Meter ratio={m.ratio} />
+                    <Meter
+                      aria-label={m.label}
+                      value={m.ratio}
+                      maxValue={1}
+                      valueLabel={m.text}
+                      color={m.ratio >= 0.9 ? 'negative' : 'neutral'}
+                    />
                     <Typography size="xs" component="span">
                       {m.free}
                     </Typography>
@@ -673,19 +667,6 @@ const ContractPaper = ({
 }
 
 /** (server)/_components/ServerFirewallRulesPaper */
-// 開閉する見出しの行。開閉する面が wip-ui に無いので、素の button の見た目を消して Paper を載せている
-const disclosureButtonStyle = {
-  display: 'block',
-  width: '100%',
-  padding: 0,
-  border: 0,
-  background: 'none',
-  font: 'inherit',
-  color: 'inherit',
-  textAlign: 'left',
-  cursor: 'pointer',
-} as const
-
 const ServerFirewallRulesPaper = ({ defaultOpen = false }: { defaultOpen?: boolean }) => {
   const [port, setPort] = useState('')
   const [rulesOpen, setRulesOpen] = useState(defaultOpen)
@@ -713,60 +694,51 @@ const ServerFirewallRulesPaper = ({ defaultOpen = false }: { defaultOpen?: boole
             開放
           </Button>
         </Stack>
-        {/* 実物は MUI の Accordion（閉じた状態で始まる）。見出し「開放済ポート　N個」の行全体を押すと表が開く。
-            開閉する面が wip-ui に無いので、見出しの行だけ素の button にしている */}
+        {/* 実物は MUI の Accordion（閉じた状態で始まる）。閉じているときは影、開くと影が消えて枠線になる。
+            GAP: 実物の見出しの行は padding 24px 32px・文字は太字でない・2 つの間は md 以上で 175px。AccordionTrigger の見た目のまま */}
         <Paper padding="none" elevation={rulesOpen ? 0 : 1} outlined={rulesOpen}>
-          <button
-            type="button"
-            aria-expanded={rulesOpen}
-            onClick={() => setRulesOpen((v) => !v)}
-            style={disclosureButtonStyle}
+          <Accordion
+            expandedKeys={rulesOpen ? ['rules'] : []}
+            onExpandedChange={(keys) => setRulesOpen(keys.has('rules'))}
           >
-            {/* 実物は padding 24px 32px */}
-            <Paper padding="l" elevation={0}>
-              <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
-                {/* 実物の 2 つの間は md 以上で 175px */}
-                <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap={{ xxs: 's', m: 'xxxl' }}>
-                  <Typography component="span">開放済ポート</Typography>
-                  <Typography color="medium_emphasis" component="span">
-                    {firewallRules.length}個
-                  </Typography>
-                </Stack>
-                <Icon name={rulesOpen ? 'chevron_up' : 'chevron_down'} size="m" />
-              </Stack>
-            </Paper>
-          </button>
-          {rulesOpen && (
-            <Paper padding="m" elevation={0}>
-              <Table aria-label="開放済ポート">
-                <TableHeader>
-                  <Column isRowHeader allowsSorting>
-                    プロトコル
-                  </Column>
-                  <Column allowsSorting>ポート番号</Column>
-                  <Column aria-label="操作"> </Column>
-                </TableHeader>
-                <TableBody>
-                  {firewallRules.map((r) => (
-                    <Row key={`${r.protocol}-${r.port}`} id={`${r.protocol}-${r.port}`}>
-                      <Cell>{r.protocol}</Cell>
-                      <Cell>{r.port}</Cell>
-                      <Cell>
-                        <Button
-                          appearance="outlined"
-                          color="negative"
-                          size="s"
-                          leading={<Icon name="garbage_can" size="s" />}
-                        >
-                          閉鎖
-                        </Button>
-                      </Cell>
-                    </Row>
-                  ))}
-                </TableBody>
-              </Table>
-            </Paper>
-          )}
+            <AccordionItem id="rules">
+              <AccordionTrigger headingLevel="none">
+                <Typography component="span">開放済ポート</Typography>
+                <Typography color="medium_emphasis" component="span">
+                  {firewallRules.length}個
+                </Typography>
+              </AccordionTrigger>
+              <AccordionContent>
+                <Table aria-label="開放済ポート">
+                  <TableHeader>
+                    <Column isRowHeader allowsSorting>
+                      プロトコル
+                    </Column>
+                    <Column allowsSorting>ポート番号</Column>
+                    <Column aria-label="操作"> </Column>
+                  </TableHeader>
+                  <TableBody>
+                    {firewallRules.map((r) => (
+                      <Row key={`${r.protocol}-${r.port}`} id={`${r.protocol}-${r.port}`}>
+                        <Cell>{r.protocol}</Cell>
+                        <Cell>{r.port}</Cell>
+                        <Cell>
+                          <Button
+                            appearance="outlined"
+                            color="negative"
+                            size="s"
+                            leading={<Icon name="garbage_can" size="s" />}
+                          >
+                            閉鎖
+                          </Button>
+                        </Cell>
+                      </Row>
+                    ))}
+                  </TableBody>
+                </Table>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </Paper>
       </Stack>
     </Card>

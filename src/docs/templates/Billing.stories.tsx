@@ -28,6 +28,7 @@ import dinersLogo from './assets/ai-gateway/card-brands/diners.svg'
 import jcbLogo from './assets/ai-gateway/card-brands/jcb.svg'
 import mastercardLogo from './assets/ai-gateway/card-brands/mastercard.svg'
 import visaLogo from './assets/ai-gateway/card-brands/visa.svg'
+import { InfoTip } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -40,7 +41,6 @@ import type { ReactNode } from 'react'
  *
  * 実物と違って残っている点:
  * - GAP: Skeleton が無い。読み込み中は、実物が骨格を出す場所（残高・ボタンの行・表）に Loader を置いている
- * - GAP: InfoTip（hover とフォーカスで開く補足）が無い。開く先の無い iconOnly ボタンを置いている
  * - GAP: Money が無い。残高の小数部（.6789）は実物では 0.6em・gray[500]。ここでは同じ大きさ・色で続けて出す
  * - GAP: 残高・通知の面は実物では影の無い枠線（gray[200]）・角丸 12px。Paper の角丸のまま
  * - GAP: 残高・通知の 2 枚は実物では同じ高さに伸び、ボタンの行が下端にそろう（margin-top: auto）。ここでは中身の高さのまま
@@ -204,17 +204,11 @@ const WalletCards = ({ loading = false, onOpen }: { loading?: boolean; onOpen?: 
                 <Typography size="m" fontWeight="bold" component="div">
                   クレジット残高
                 </Typography>
-                {/* 中身は「追加したクレジットは、購入日から1年で失効します。」。骨格では出さない */}
+                {/* 骨格では出さない */}
                 {!loading && (
-                  <Button
-                    appearance="transparent"
-                    color="neutral"
-                    size="s"
-                    iconOnly
-                    aria-label="クレジットの有効期限とは"
-                  >
-                    <Icon name="info_on_circle" size="s" />
-                  </Button>
+                  <InfoTip label="クレジットの有効期限とは">
+                    追加したクレジットは、購入日から1年で失効します。
+                  </InfoTip>
                 )}
               </Stack>
               {loading ? (

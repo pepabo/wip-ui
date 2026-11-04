@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../Accordion'
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
 import { Checkbox } from '../../Checkbox'
@@ -876,7 +877,8 @@ const SettingsView = ({ groups }: { groups: Group[] }) => (
 
 /**
  * Accordion の中の「追加済ユーザー」の表（WhiteList / OpsList / components/UserListItem）。
- * 実物は閉じた状態で始まり、見出しの行を押すと表が開く。Accordion が無いので、右端の山のボタンで開閉する
+ * 実物は閉じた状態で始まり、見出しの行を押すと表が開く。
+ * GAP: 実物の見出しは xs で「追加済ユーザー」と「N人」が縦に積まれる。AccordionTrigger の中は横に並ぶ
  */
 const UserTable = ({
   label,
@@ -886,32 +888,15 @@ const UserTable = ({
   label: string
   users: string[]
   deletable?: boolean
-}) => {
-  const [expanded, setExpanded] = useState(false)
-  return (
-    <Paper padding="m" elevation={0} outlined>
-      <Stack gap="m">
-        <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
-          <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="m">
-            <Typography size="m" component="span">
-              追加済ユーザー
-            </Typography>
-            <Typography size="m" component="span">
-              {users.length}人
-            </Typography>
-          </Stack>
-          <Button
-            appearance="transparent"
-            size="s"
-            iconOnly
-            aria-label={`${label}の追加済ユーザー`}
-            aria-expanded={expanded}
-            onPress={() => setExpanded(!expanded)}
-          >
-            <Icon name={expanded ? 'chevron_up' : 'chevron_down'} size="m" />
-          </Button>
-        </Stack>
-        {expanded && (
+}) => (
+  <Paper padding="none" elevation={0} outlined>
+    <Accordion>
+      <AccordionItem>
+        <AccordionTrigger headingLevel="none">
+          <Typography component="span">追加済ユーザー</Typography>
+          <Typography component="span">{users.length}人</Typography>
+        </AccordionTrigger>
+        <AccordionContent>
           <Table aria-label={`${label}の追加済ユーザー`}>
             <TableHeader>
               <Column isRowHeader allowsSorting>
@@ -939,11 +924,11 @@ const UserTable = ({
               ))}
             </TableBody>
           </Table>
-        )}
-      </Stack>
-    </Paper>
-  )
-}
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  </Paper>
+)
 
 /** MinecraftJavaManager/components/Setting（読み取り専用の表示） */
 const MinecraftJavaSettingPaper = ({
@@ -1498,18 +1483,30 @@ const MinecraftJavaVersionBody = () => {
       {mod !== 'vanilla' && mod !== 'spigot' && (
         <>
           <Divider />
-          {/* GAP-NEW: Accordion が無い。実アプリは「高度な設定」を押すとビルドバージョンが開く。ここでは開いた状態で固定 */}
-          <Typography size="s" density="comfort" color="medium_emphasis" component="span">
-            高度な設定
-          </Typography>
-          <Select label="ビルドバージョン" size="s" width="full" defaultSelectedKey={modBuilds[0]}>
-            {modBuilds.map((b) => (
-              // mohist のビルドは <id>-<hash> の hash だけを出す（hideMohistId）
-              <SelectItem key={b} id={b}>
-                {mod === 'mohist' ? b.split('-')[1] : b}
-              </SelectItem>
-            ))}
-          </Select>
+          {/* 実物は閉じた状態で始まり、矢印は文字の左に付く。
+              GAP: 実物の「高度な設定」は 14px・medium_emphasis で太字でない。AccordionTrigger の見た目のまま */}
+          <Accordion>
+            <AccordionItem>
+              <AccordionTrigger headingLevel="none" indicator="start">
+                高度な設定
+              </AccordionTrigger>
+              <AccordionContent>
+                <Select
+                  label="ビルドバージョン"
+                  size="s"
+                  width="full"
+                  defaultSelectedKey={modBuilds[0]}
+                >
+                  {modBuilds.map((b) => (
+                    // mohist のビルドは <id>-<hash> の hash だけを出す（hideMohistId）
+                    <SelectItem key={b} id={b}>
+                      {mod === 'mohist' ? b.split('-')[1] : b}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </>
       )}
     </Stack>

@@ -16,6 +16,7 @@ import { Sticker } from '../../Sticker'
 import { Tab, TabList, Tabs } from '../../Tab'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
+import { Tooltip, TooltipTrigger } from '../../Tooltip'
 import { Typography } from '../../Typography'
 import { GamersServerShell, ServerPageLayout, useGamersNavigate } from './gamersShell'
 import { server } from './gameServer'
@@ -532,19 +533,21 @@ const InstalledMods = ({
                   <Cell>{m.size}</Cell>
                   <Cell>{m.installedAt}</Cell>
                   <Cell>
-                    {/* GAP-NEW: Tooltip が無い。実アプリはホバーで「アンインストール」 */}
-                    <Button
-                      appearance="transparent"
-                      size="s"
-                      iconOnly
-                      aria-label={`${m.name}をアンインストール`}
-                      onPress={() => {
-                        setSelected(new Set([m.filename]))
-                        setTargets([m.filename])
-                      }}
-                    >
-                      <Icon name="garbage_can" size="m" />
-                    </Button>
+                    <TooltipTrigger>
+                      <Button
+                        appearance="transparent"
+                        size="s"
+                        iconOnly
+                        aria-label={`${m.name}をアンインストール`}
+                        onPress={() => {
+                          setSelected(new Set([m.filename]))
+                          setTargets([m.filename])
+                        }}
+                      >
+                        <Icon name="garbage_can" size="m" />
+                      </Button>
+                      <Tooltip>アンインストール</Tooltip>
+                    </TooltipTrigger>
                   </Cell>
                 </Row>
               ))}
