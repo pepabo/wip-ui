@@ -142,29 +142,19 @@ const PaperTitle = ({ children, action }: { children: ReactNode; action: ReactNo
 
 /** components/BackupUsage（Stack spacing 2） */
 const BackupUsage = ({ usageBytes }: { usageBytes: number }) => (
-  <Stack gap="m">
-    <Typography size="l" fontWeight="bold" component="h3">
-      容量使用状況
-    </Typography>
-    <Grid spacing="m">
-      {/* 実アプリのバーは最大 400px */}
-      <GridItem size={{ xxs: 12, m: 5 }}>
-        <Meter
-          aria-label="容量使用状況"
-          value={usageBytes}
-          maxValue={LIMIT_BYTES}
-          valueLabel={`${formatBytes(usageBytes)} / ${formatBytes(LIMIT_BYTES)}`}
-          color={usageBytes / LIMIT_BYTES >= 0.9 ? 'negative' : 'neutral'}
-        />
-      </GridItem>
-      <GridItem size={{ xxs: 12, m: 7 }}>
-        <Typography size="s" component="span">
-          {formatBytes(usageBytes)} / {formatBytes(LIMIT_BYTES)} (
-          {formatBytes(Math.max(LIMIT_BYTES - usageBytes, 0))} 空き)
-        </Typography>
-      </GridItem>
-    </Grid>
-  </Stack>
+  // 実アプリのバーは最大 400px
+  <Grid>
+    <GridItem size={{ xxs: 12, m: 5 }}>
+      <Meter
+        label="容量使用状況"
+        value={usageBytes}
+        maxValue={LIMIT_BYTES}
+        valueLabel={`${formatBytes(usageBytes)} / ${formatBytes(LIMIT_BYTES)}`}
+        description={`${formatBytes(Math.max(LIMIT_BYTES - usageBytes, 0))} 空き`}
+        color={usageBytes / LIMIT_BYTES >= 0.9 ? 'negative' : 'neutral'}
+      />
+    </GridItem>
+  </Grid>
 )
 
 /** components/BackupListTable。サーバーのバックアップでは「ゲーム」列が無い */

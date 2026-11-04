@@ -225,34 +225,27 @@ const ServerStatusPaper = ({ status }: { status: ServerStatus }) => {
         <Grid spacing="xl">
           {items.map((m) => (
             <GridItem key={m.label} size={{ xxs: 12, l: 4 }}>
-              <Stack gap="s">
-                <Typography size="s" fontWeight="bold" component="h3">
-                  {m.label}
-                </Typography>
-                {status !== 'RUNNING' ? (
+              {status !== 'RUNNING' ? (
+                <Stack gap="s">
+                  <Typography size="s" fontWeight="bold" component="h3">
+                    {m.label}
+                  </Typography>
                   <EmptyNotice>
                     😴 サーバー停止中のため非表示になっています。
                     <br />
                     サーバーを起動後、最大30秒程度で表示されます。
                   </EmptyNotice>
-                ) : (
-                  <Stack gap="xs">
-                    <Typography size="l" fontWeight="bold" component="span">
-                      {m.text}
-                    </Typography>
-                    <Meter
-                      aria-label={m.label}
-                      value={m.ratio}
-                      maxValue={1}
-                      valueLabel={m.text}
-                      color={m.ratio >= 0.9 ? 'negative' : 'neutral'}
-                    />
-                    <Typography size="xs" component="span">
-                      {m.free}
-                    </Typography>
-                  </Stack>
-                )}
-              </Stack>
+                </Stack>
+              ) : (
+                <Meter
+                  label={m.label}
+                  value={m.ratio}
+                  maxValue={1}
+                  valueLabel={m.text}
+                  description={m.free}
+                  color={m.ratio >= 0.9 ? 'negative' : 'neutral'}
+                />
+              )}
             </GridItem>
           ))}
         </Grid>

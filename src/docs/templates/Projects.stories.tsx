@@ -212,36 +212,12 @@ const UsageMetricCard = ({ metric }: { metric: UsageMetric }) => {
   // model.ts：使用率は floor、残りは 100 - 使用率（0 未満にしない）
   const usedPercent = Math.floor(ratio * 100)
   return (
-    // 実物の flex flex-col gap-2 p-5。GAP-NEW: セルの p-5（20px）は Stack に padding が無く出せない
-    <Stack gap="xs">
-      {/* 実物は md の 3 カラムだけラベルと「残り n%」を縦積み（gap-y-0.5）にし、lg 以上で横並び（gap-x-2）に戻す。
-          GAP-17: 横並びのときの items-center（縦積みのときは items-start）が alignItems のレスポンシブで出せない。
-          gap-y-0.5（2px）は段階に無く、xxs（4px）にしている */}
-      <Stack
-        flexDirection={{ xxs: 'row', m: 'column', l: 'row' }}
-        gap={{ xxs: 'xs', m: 'xxs', l: 'xs' }}
-        justifyContent="space-between"
-      >
-        <Typography component="div" size="m" color="medium_emphasis">
-          {metric.label}
-        </Typography>
-        {/* GAP-NEW: 数字の桁をそろえる指定（tabular-nums）が無い */}
-        <Typography component="div" size="xs" color={ratio >= 0.9 ? 'negative' : 'medium_emphasis'}>
-          残り {Math.max(0, 100 - usedPercent)}%
-        </Typography>
-      </Stack>
-      <Typography component="div" size="xl" fontWeight="bold">
-        {usedPercent}%
-      </Typography>
-      {/* 実物のバーは高さ 6px。数値が主役なので s */}
-      <Meter
-        aria-label={metric.label}
-        size="s"
-        value={usedPercent}
-        valueLabel={`${usedPercent}%`}
-        color={meterColor(ratio)}
-      />
-    </Stack>
+    <Meter
+      label={metric.label}
+      value={usedPercent}
+      description={`残り ${Math.max(0, 100 - usedPercent)}%`}
+      color={meterColor(ratio)}
+    />
   )
 }
 
