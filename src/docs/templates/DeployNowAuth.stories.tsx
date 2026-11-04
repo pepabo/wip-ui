@@ -3,6 +3,7 @@ import { Callout } from '../../Callout'
 import { Stack } from '../../Stack'
 import { Typography } from '../../Typography'
 import { DeployNowBareShell, DeployNowCard, useDeployNowNavigate } from './deployNowShell'
+import { TextLink } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
@@ -11,7 +12,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
  * - features/Auth（dex モード専用のログイン。本番の /login は lolipop のログイン入口へ転送するだけで画面を持たない）
  * - features/Signup（lolipop モード）
  * どちらも app/(dashboard)/layout.tsx の直下で、AppBar を持たない。枠は DeployNowBareShell と DeployNowCard。
- * 実物のボタンは Tailwind の黒地（bg-neutral-900・h-10・w-full）の a を手組みしている。
+ * 実物のボタンは Tailwind の黒地（bg-neutral-900・h-10・w-full・text-sm font-medium）の a を手組みしている。
+ * GAP: Button の size m は高さ 40px（h-10）と合うが文字が 16px、size s は文字が 14px（text-sm）だが高さが 32px で、
+ *      両方を同時に合わせられない。高さを合わせて size m（既定）にしている。font-medium（500）も出せない
  */
 
 const meta = {
@@ -75,14 +78,15 @@ const SignupScreen = () => {
       >
         ロリポップ！ID で新規登録
       </LinkButton>
-      {/* 実物は 1 つの段落の中の a。GAP: 文中のリンクが無いので、文と transparent の LinkButton を並べる */}
+      {/* 実物は 1 つの Typography s low_emphasis の段落の中に、クラスの無い素の a を置く（色は段落から継ぎ、下線は無い）。
+          GAP: 文中のリンクが無いので、文と TextLink を並べる。リンクの色は informative で実物と違う */}
       <Stack flexDirection="row" gap="xxs" alignItems="center">
         <Typography size="s" color="low_emphasis" component="span">
           すでにアカウントをお持ちの方は
         </Typography>
-        <LinkButton appearance="transparent" size="s" href="#" onPress={() => navigate('login')}>
+        <TextLink href="/login" onPress={() => navigate('login')}>
           ログイン
-        </LinkButton>
+        </TextLink>
       </Stack>
     </DeployNowCard>
   )

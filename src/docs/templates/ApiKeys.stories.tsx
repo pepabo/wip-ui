@@ -25,7 +25,7 @@ import {
 import claudeLogo from './assets/ai-gateway/providers/claude.svg'
 import geminiLogo from './assets/ai-gateway/providers/gemini.svg'
 import openaiLogo from './assets/ai-gateway/providers/openai.svg'
-import { Card, TextLink } from './parts'
+import { TextLink } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -194,6 +194,7 @@ const expiryDayChoices = ['1', '7', '30', '90', '180', '365']
 // キー詳細の「使用状況」。7 日分の利用額
 const days = ['10/27', '10/28', '10/29', '10/30', '10/31', '11/01', '11/02']
 const dailyCost = [420, 380, 910, 1020, 760, 702, 620]
+const dailyRequests = [182, 160, 391, 437, 325, 301, 266]
 
 const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`
 
@@ -232,23 +233,26 @@ const Meter = ({ ratio }: { ratio: number }) => (
   </Typography>
 )
 
-// GAP-NEW: Table のセルに 2 段目の補足（DataTableText tone="secondary"。14px・灰色）を置く型が無い
+// GAP-NEW: Table のセルに 2 段目の補足（DataTableText tone="secondary"。14px・行の高さ 20px・gray[700]）を置く型が無い。
+// 色は Typography の medium_emphasis で写している
 const TwoLine = ({ primary, secondary }: { primary: ReactNode; secondary?: string }) => (
   <Stack gap="xxs">
     <Typography component="span">{primary}</Typography>
     {secondary ? (
-      <Typography size="s" color="medium_emphasis" component="span">
+      <Typography size="s" density="dense" color="medium_emphasis" component="span">
         {secondary}
       </Typography>
     ) : null}
   </Stack>
 )
 
-// GAP-NEW: 項目名を左・値を右に置く設定行が無い（shared/ui/SettingField の SettingControlRow など）
+// GAP-NEW: 項目名を左・値を右に置く設定行が無い（shared/ui/SettingField の SettingControlRow など）。
+// 実物は 600px 以上で「項目名 180px（右寄せの行は 1fr）・値」の 2 列の grid で、列の間 16px、項目名は上揃えで上に 8px。
+// 項目名は wip-ui の TextField のラベルと同じ 14px・太字・行の高さ 24px
 const SettingRow = ({ label, children }: { label: ReactNode; children: ReactNode }) => (
   <Stack
-    flexDirection={{ xxs: 'column', m: 'row' }}
-    gap="s"
+    flexDirection={{ xxs: 'column', s: 'row' }}
+    gap="m"
     justifyContent="space-between"
     alignItems="center"
   >
@@ -271,15 +275,19 @@ const SettingGroup = ({
   action?: ReactNode
   children: ReactNode
 }) => (
-  <Card outlined elevation={0}>
+  // SettingFields variant="cards"：Paper outlined・padding 16px。
+  // GAP: 見出しの帯（gray[50] の地・下に gray[100] の罫線・面の端まで伸ばす）は無い
+  <Paper outlined padding="m">
     <Stack gap="m">
-      <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
+      <Stack flexDirection="row" gap="xs" alignItems="center" justifyContent="space-between">
         <Stack gap="xxs">
-          <Typography size="m" fontWeight="bold" component="h2">
+          {/* .groupLabel：14px・太字・行の高さ 24px */}
+          <Typography size="s" fontWeight="bold" component="div">
             {label}
           </Typography>
+          {/* 実物は p（.groupDescription で margin 0）。UA の margin が残らない div にする */}
           {description ? (
-            <Typography size="xs" color="medium_emphasis" component="p">
+            <Typography size="xs" color="medium_emphasis" component="div">
               {description}
             </Typography>
           ) : null}
@@ -288,7 +296,7 @@ const SettingGroup = ({
       </Stack>
       {children}
     </Stack>
-  </Card>
+  </Paper>
 )
 
 // 項目名と、その右に並ぶ印や操作（KeyDetail/inheritance.tsx の action）
@@ -301,11 +309,12 @@ const FieldLabel = ({ label, action }: { label: string; action?: ReactNode }) =>
   </Stack>
 )
 
-// inheritance.tsx：ルールで決まっている項目は「ルール」の印、個別に変えた項目は戻すボタン
+// inheritance.tsx：ルールで決まっている項目は「ルール」の文字（.ruleSource：12px・行の高さ 16px・gray[600]）、
+// 個別に変えた項目は戻すボタン
 const RuleMark = () => (
-  <Sticker size="s" color="neutral">
+  <Typography size="xs" density="dense" color="medium_emphasis" component="span">
     ルール
-  </Sticker>
+  </Typography>
 )
 // GAP-NEW: ResetIcon が無い。cross で代用
 const ResetOverride = ({ label }: { label: string }) => (
@@ -320,18 +329,49 @@ const ResetOverride = ({ label }: { label: string }) => (
   </Button>
 )
 
-// shared/ui/UsagePeriodFilter（期間は 24時間 / 7日 / 14日 / 30日 だけ）。暦アイコンを差せないのは GAP-NEW
-const UsagePeriodFilter = () => (
-  <Select aria-label="期間" size="s" defaultSelectedKey="7d">
-    <SelectItem id="24h">24時間</SelectItem>
-    <SelectItem id="7d">7日</SelectItem>
-    <SelectItem id="14d">14日</SelectItem>
-    <SelectItem id="30d">30日</SelectItem>
-  </Select>
-)
+// shared/ui/UsagePeriodFilter（ListFilterMenu の toggle。期間は 24時間 / 7日 / 14日 / 30日 だけで、既定は 7日）
+const periodOptions = [
+  { id: '24h', label: '24時間' },
+  { id: '7d', label: '7日' },
+  { id: '14d', label: '14日' },
+  { id: '30d', label: '30日' },
+]
+const UsagePeriodFilter = () => {
+  const [period, setPeriod] = useState('7d')
+  const selected = periodOptions.find((o) => o.id === period) ?? periodOptions[1]
+  return (
+    <MenuTrigger>
+      <Button
+        appearance="outlined"
+        color="neutral"
+        size="s"
+        aria-label={`期間: ${selected.label}`}
+        leading={<Icon name="calendar" size="s" aria-hidden="true" />}
+        trailing={<Icon name="chevron_down" size="s" />}
+      >
+        {selected.label}
+      </Button>
+      <Menu
+        placement="bottom start"
+        selectionMode="single"
+        selectedKeys={[selected.id]}
+        onSelectionChange={(keys) => {
+          const next = keys === 'all' ? undefined : [...keys][0]
+          if (next !== undefined) setPeriod(String(next))
+        }}
+      >
+        {periodOptions.map((o) => (
+          <MenuItem key={o.id} id={o.id}>
+            {o.label}
+          </MenuItem>
+        ))}
+      </Menu>
+    </MenuTrigger>
+  )
+}
 
-// GAP-19: グラフの primitive が無い。実装の UsageCharts はモデル別の積み上げ・ポップオーバー・軸を持つ
-const plotStyle = { display: 'flex', alignItems: 'flex-end', gap: 6, height: 120 } // GAP-19
+// GAP-19: グラフの primitive が無い。実装の UsageCharts はモデル別の積み上げ・ポップオーバー・軸を持つ。高さは実物の 96px
+const plotStyle = { display: 'flex', alignItems: 'flex-end', gap: 6, height: 96 } // GAP-19
 const BarChart = ({ values }: { values: number[] }) => {
   const peak = Math.max(...values)
   return (
@@ -392,200 +432,225 @@ const KeyList = ({
         title="APIキー"
         description="このプロジェクトで利用するAPIキーを発行・管理します"
       />
-      {/* shared/ui/ListToolbar：左に検索・絞り込み、右端に主アクション。0 件でも検索欄は出したまま */}
-      {loaded && (
-        <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="s" justifyContent="space-between">
-          <Stack flexDirection="row" gap="s" alignItems="center">
-            {/* GAP-NEW: TextField に虫眼鏡のアイコンを差せない（ListSearch は CSS で重ねている） */}
-            <TextField
-              aria-label="APIキーを名前で検索する"
-              placeholder="名前で検索"
-              size="s"
-              type="search"
-              value={query}
-              onChange={setQuery}
-            />
-            {/* shared/ui/ListFilterMenu の代わり。実装は Menu で、閉じているときは「ルール」と出す。
-                選んだ値を残す絞り込みなので、wip-ui では Menu ではなく Select を使う（Menu.md） */}
-            <Select
-              aria-label="ルール"
-              size="s"
-              selectedKey={ruleFilter}
-              onSelectionChange={(k) => setRuleFilter(String(k))}
-            >
-              <SelectItem id="all">すべてのルール</SelectItem>
-              {rules.map((r) => (
-                <SelectItem key={r.id} id={r.id}>
-                  {r.name}
-                </SelectItem>
-              ))}
-            </Select>
-          </Stack>
-          <Stack flexDirection="row" gap="s" alignItems="center">
-            {selectedKeys.length > 0 ? (
-              <Button
-                color="negative"
-                leading={<Glyph name="garbage_can" />}
-                onPress={() => onConfirm({ name: 'deleteSelected', keys: selectedKeys })}
-              >
-                選択した{selectedKeys.length}件を削除する
-              </Button>
-            ) : null}
-            <Button color="neutral" leading={<Glyph name="plus" />} onPress={onIssue}>
-              APIキーを発行する
-            </Button>
-          </Stack>
-        </Stack>
-      )}
-      {view === 'error' && (
-        <Callout color="negative">
-          APIキーを読み込めませんでした。時間をおいて再読み込みしてください。
-        </Callout>
-      )}
-      {loaded && (
-        // shared/ui/DataTable は表を枠線の Paper（padding 0）に入れる。GAP-NEW: Table が幅 100% にならない（実物は CSS で width: 100%）
-        <Paper outlined padding="none">
-          {/* 選択は react-aria の Table に任せ、Checkbox は slot="selection" で表に繋ぐ */}
-          <Table
-            aria-label="APIキー一覧"
-            selectionMode="multiple"
-            selectionBehavior="toggle"
-            selectedKeys={selectedKeys.map((k) => k.id)}
-            onSelectionChange={(sel) =>
-              setSelected(sel === 'all' ? visible.map((k) => k.id) : [...sel].map(String))
-            }
-            // 行を押すとキーの詳細へ（KeyTable の onRowAction → onOpen）
-            onRowAction={() => onNavigate?.('key-detail')}
-          >
-            <TableHeader>
-              <Column aria-label="選択">
-                <Checkbox
-                  slot="selection"
-                  aria-label={allSelected ? '選択をすべて外す' : '一覧のAPIキーをすべて選択する'}
+      {/* ツールバーの下 12px（.tableContainer の margin-top）に表 */}
+      <Stack gap="s">
+        {/* shared/ui/ListToolbar（responsive-row-sm）：600px 以上で横 1 行。左に検索・絞り込み、右端に主アクション。
+          0 件でも検索欄は出したまま。
+          GAP: 実物は 600px 以上で縦中央に揃える。Stack の alignItems はブレークポイントごとに変えられないので揃えていない。
+          GAP: 検索欄（ListSearch）の虫眼鏡と、600px 以上での幅 280px */}
+        {loaded && (
+          <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s" justifyContent="space-between">
+            <Stack flexDirection="row" gap="s" alignItems="center">
+              {/* GAP-NEW: TextField に虫眼鏡のアイコンを差せない（ListSearch は CSS で重ねている） */}
+              <TextField
+                aria-label="APIキーを名前で検索する"
+                placeholder="名前で検索"
+                size="s"
+                type="search"
+                value={query}
+                onChange={setQuery}
+              />
+              {/* shared/ui/ListFilterMenu。閉じているときは、絞り込んでいなければ「ルール」、絞り込み中はその値を出す。
+                GAP: 実物のボタンは白い地（hover で gray[50]）。絞り込み中に面と枠を一段濃くするのも無い */}
+              <MenuTrigger>
+                <Button
+                  color="neutral"
+                  appearance="outlined"
+                  size="s"
+                  aria-label={ruleFilter === 'all' ? 'ルール' : `ルール: ${ruleName(ruleFilter)}`}
+                  trailing={<Icon name="chevron_down" size="s" />}
                 >
-                  {null}
-                </Checkbox>
-              </Column>
-              <Column isRowHeader>名前</Column>
-              <Column>ルール</Column>
-              {/* 見出しは usageChargeLabel（前払いは「利用額」） */}
-              <Column>利用額</Column>
-              <Column>有効期限</Column>
-              <Column>状態</Column>
-              {/* 実装は ariaLabel だけで、見出しの文字を出さない */}
-              <Column aria-label="操作">{null}</Column>
-            </TableHeader>
-            {/* GAP-NEW: EmptyState が無い（DataTableEmpty はアイコン + 一行の見出し） */}
-            <TableBody
-              renderEmptyState={() => (
-                <Stack gap="s" alignItems="center">
-                  <Glyph name="lock" size="l" />
-                  <Typography size="m" fontWeight="bold" component="div">
+                  {ruleFilter === 'all' ? 'ルール' : ruleName(ruleFilter)}
+                </Button>
+                <Menu
+                  placement="bottom start"
+                  selectionMode="single"
+                  disallowEmptySelection
+                  selectedKeys={[ruleFilter]}
+                  onSelectionChange={(keys) => {
+                    const next = keys === 'all' ? undefined : [...keys][0]
+                    if (next !== undefined) setRuleFilter(String(next))
+                  }}
+                >
+                  <MenuItem id="all">すべてのルール</MenuItem>
+                  {rules.map((r) => (
+                    <MenuItem key={r.id} id={r.id}>
+                      {r.name}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </MenuTrigger>
+            </Stack>
+            <Stack flexDirection="row" gap="s" alignItems="center">
+              {selectedKeys.length > 0 ? (
+                <Button
+                  color="negative"
+                  leading={<Glyph name="garbage_can" />}
+                  onPress={() => onConfirm({ name: 'deleteSelected', keys: selectedKeys })}
+                >
+                  選択した{selectedKeys.length}件を削除する
+                </Button>
+              ) : null}
+              <Button color="neutral" leading={<Glyph name="plus" />} onPress={onIssue}>
+                APIキーを発行する
+              </Button>
+            </Stack>
+          </Stack>
+        )}
+        {view === 'error' && (
+          <Callout color="negative">
+            APIキーを読み込めませんでした。時間をおいて再読み込みしてください。
+          </Callout>
+        )}
+        {loaded && (
+          // shared/ui/DataTable は表を枠線の Paper（padding 0）に入れる。GAP-NEW: Table が幅 100% にならない（実物は CSS で width: 100%）
+          <Paper outlined padding="none">
+            {/* 選択は react-aria の Table に任せ、Checkbox は slot="selection" で表に繋ぐ */}
+            <Table
+              aria-label="APIキー一覧"
+              selectionMode="multiple"
+              selectionBehavior="toggle"
+              selectedKeys={selectedKeys.map((k) => k.id)}
+              onSelectionChange={(sel) =>
+                setSelected(sel === 'all' ? visible.map((k) => k.id) : [...sel].map(String))
+              }
+              // 行を押すとキーの詳細へ（KeyTable の onRowAction → onOpen）
+              onRowAction={() => onNavigate?.('key-detail')}
+            >
+              <TableHeader>
+                <Column aria-label="選択">
+                  <Checkbox
+                    slot="selection"
+                    aria-label={allSelected ? '選択をすべて外す' : '一覧のAPIキーをすべて選択する'}
+                  >
+                    {null}
+                  </Checkbox>
+                </Column>
+                <Column isRowHeader>名前</Column>
+                <Column>ルール</Column>
+                {/* 見出しは usageChargeLabel（前払いは「利用額」） */}
+                <Column>利用額</Column>
+                <Column>有効期限</Column>
+                <Column>状態</Column>
+                {/* 実装は ariaLabel だけで、見出しの文字を出さない */}
+                <Column aria-label="操作">{null}</Column>
+              </TableHeader>
+              {/* DataTableEmpty：h3（s・太字）の一行。GAP: 上下 24px の余白と中央寄せは無い */}
+              <TableBody
+                renderEmptyState={() => (
+                  <Typography component="h3" size="s" fontWeight="bold">
                     {filtering ? '絞り込みに一致するAPIキーはありません' : 'APIキーはありません'}
                   </Typography>
-                </Stack>
-              )}
-            >
-              {visible.map((k) => {
-                const status = keyStatus(k)
-                return (
-                  <Row key={k.id} id={k.id}>
-                    <Cell>
-                      <Checkbox slot="selection" aria-label={`${k.alias} を選択する`}>
-                        {null}
-                      </Checkbox>
-                    </Cell>
-                    <Cell>
-                      {/* 実装は名前が詳細へのリンク（GAP-NEW: Link が無い） */}
-                      <TwoLine primary={k.alias} secondary={project} />
-                    </Cell>
-                    <Cell>
-                      <Typography size="s" component="span">
-                        {ruleName(k.ruleId) ?? '—'}
-                      </Typography>
-                    </Cell>
-                    <Cell>
-                      {/* GAP-NEW: 表のセルに周期のチップとメーター（DataTableChip・DataTableMeter）を置く型が無い */}
-                      <Stack gap="xxs">
-                        <Stack flexDirection="row" gap="xxs" alignItems="center">
-                          <Typography size="s" component="span">
-                            {yen(k.usage)}
-                            {k.budget !== null ? ` / ${yen(k.budget)}` : ''}
-                          </Typography>
-                          {k.duration ? (
-                            <Sticker size="s" color="neutral">
-                              {durationChip[k.duration]}
-                            </Sticker>
-                          ) : null}
+                )}
+              >
+                {visible.map((k) => {
+                  const status = keyStatus(k)
+                  return (
+                    <Row key={k.id} id={k.id}>
+                      <Cell>
+                        <Checkbox slot="selection" aria-label={`${k.alias} を選択する`}>
+                          {null}
+                        </Checkbox>
+                      </Cell>
+                      <Cell>
+                        {/* 実装は名前が詳細へのリンク（GAP-NEW: Link が無い） */}
+                        <TwoLine primary={k.alias} secondary={project} />
+                      </Cell>
+                      <Cell>
+                        {/* DataTableText tone="aux"（14px・行の高さ 20px） */}
+                        <Typography size="s" density="dense" component="span">
+                          {ruleName(k.ruleId) ?? '—'}
+                        </Typography>
+                      </Cell>
+                      <Cell>
+                        {/* GAP-NEW: 表のセルに周期のチップとメーター（DataTableChip・DataTableMeter）を置く型が無い。
+                          実物のチップは 12px・gray[100] の地の角丸で、値の右端に寄せる。金額は DataTableText の既定（16px） */}
+                        <Stack gap="xxs">
+                          <Stack
+                            flexDirection="row"
+                            gap="xs"
+                            alignItems="center"
+                            justifyContent="space-between"
+                          >
+                            <Typography component="span">
+                              {yen(k.usage)}
+                              {k.budget !== null ? ` / ${yen(k.budget)}` : ''}
+                            </Typography>
+                            {k.duration ? (
+                              <Sticker size="s" color="neutral">
+                                {durationChip[k.duration]}
+                              </Sticker>
+                            ) : null}
+                          </Stack>
+                          {k.budget !== null ? <Meter ratio={k.usage / k.budget} /> : null}
                         </Stack>
-                        {k.budget !== null ? <Meter ratio={k.usage / k.budget} /> : null}
-                      </Stack>
-                    </Cell>
-                    <Cell>
-                      <Typography size="s" component="span">
-                        {k.expiresAt}
-                      </Typography>
-                    </Cell>
-                    <Cell>
-                      <Sticker size="s" color={keyStatusColor[status]}>
-                        {status}
-                      </Sticker>
-                    </Cell>
-                    <Cell>
-                      <MenuTrigger>
-                        <Button
-                          appearance="transparent"
-                          color="neutral"
-                          size="s"
-                          iconOnly
-                          aria-label={`${k.alias} の操作メニュー`}
-                        >
-                          <Glyph name="ellipsis_vertical" />
-                        </Button>
-                        <Menu placement="bottom end">
-                          <MenuItem
-                            leading={<Glyph name="launch" />}
-                            onAction={() => onNavigate?.('key-detail')}
+                      </Cell>
+                      <Cell>
+                        <Typography size="s" density="dense" component="span">
+                          {k.expiresAt}
+                        </Typography>
+                      </Cell>
+                      <Cell>
+                        <Sticker size="s" color={keyStatusColor[status]}>
+                          {status}
+                        </Sticker>
+                      </Cell>
+                      <Cell>
+                        <MenuTrigger>
+                          <Button
+                            appearance="transparent"
+                            color="neutral"
+                            size="s"
+                            iconOnly
+                            aria-label={`${k.alias} の操作メニュー`}
                           >
-                            詳細を開く
-                          </MenuItem>
-                          {/* 無効にするは確認を挟む。有効にするは確認なしでその場で戻す（Snackbar「APIキーを有効にしました」） */}
-                          {k.blocked ? (
-                            <MenuItem leading={<Glyph name="check_on_circle" />}>
-                              有効にする
-                            </MenuItem>
-                          ) : (
+                            <Glyph name="ellipsis_vertical" />
+                          </Button>
+                          <Menu placement="bottom end">
                             <MenuItem
-                              leading={<Glyph name="cross_on_circle" />}
-                              onAction={() => onConfirm({ name: 'block', key: k })}
+                              leading={<Glyph name="launch" />}
+                              onAction={() => onNavigate?.('key-detail')}
                             >
-                              無効にする
+                              詳細を開く
                             </MenuItem>
-                          )}
-                          {/* GAP-NEW: RenewIcon が無い。arrow_right_left で代用 */}
-                          <MenuItem
-                            leading={<Glyph name="arrow_right_left" />}
-                            onAction={() => onConfirm({ name: 'rotate', key: k })}
-                          >
-                            再生成する
-                          </MenuItem>
-                          <MenuItem
-                            color="negative"
-                            leading={<Glyph name="garbage_can" />}
-                            onAction={() => onConfirm({ name: 'delete', key: k })}
-                          >
-                            削除する
-                          </MenuItem>
-                        </Menu>
-                      </MenuTrigger>
-                    </Cell>
-                  </Row>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </Paper>
-      )}
+                            {/* 無効にするは確認を挟む。有効にするは確認なしでその場で戻す（Snackbar「APIキーを有効にしました」） */}
+                            {k.blocked ? (
+                              <MenuItem leading={<Glyph name="check_on_circle" />}>
+                                有効にする
+                              </MenuItem>
+                            ) : (
+                              <MenuItem
+                                leading={<Glyph name="cross_on_circle" />}
+                                onAction={() => onConfirm({ name: 'block', key: k })}
+                              >
+                                無効にする
+                              </MenuItem>
+                            )}
+                            {/* GAP-NEW: RenewIcon が無い。arrow_right_left で代用 */}
+                            <MenuItem
+                              leading={<Glyph name="arrow_right_left" />}
+                              onAction={() => onConfirm({ name: 'rotate', key: k })}
+                            >
+                              再生成する
+                            </MenuItem>
+                            <MenuItem
+                              color="negative"
+                              leading={<Glyph name="garbage_can" />}
+                              onAction={() => onConfirm({ name: 'delete', key: k })}
+                            >
+                              削除する
+                            </MenuItem>
+                          </Menu>
+                        </MenuTrigger>
+                      </Cell>
+                    </Row>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </Paper>
+        )}
+      </Stack>
     </>
   )
 }
@@ -641,6 +706,51 @@ const KeyShell = ({
 
 // ─── 詳細（features/CustomerConsole/KeyDetail/index.tsx）───
 
+// キー詳細の推移カード（shared/ui/UsageCharts の Chart）。キーの段は内訳を持たないので、カードの下の上位 3 件は無い
+const keyUsageSeries = [
+  { key: 'jpy', title: '利用額', values: dailyCost, format: yen },
+  {
+    key: 'requests',
+    title: 'リクエスト数',
+    values: dailyRequests,
+    format: (n: number) => n.toLocaleString('ja-JP'),
+  },
+  {
+    key: 'tokens',
+    title: 'トークン数',
+    values: dailyRequests.map((n) => n * 1830),
+    format: (n: number) => n.toLocaleString('ja-JP'),
+  },
+]
+
+const KeyUsageChart = ({ series }: { series: (typeof keyUsageSeries)[number] }) => (
+  // .chartCard（Paper outlined・padding 16px）。GAP: 枠の色は実物では gray[200]
+  <Paper outlined padding="m">
+    <Stack gap="s">
+      {/* 見出しと値の間は実物では 2px。Stack の最小の xxs（4px） */}
+      <Stack gap="xxs">
+        <Typography size="xs" color="medium_emphasis" fontWeight="bold" component="div">
+          {series.title}
+        </Typography>
+        <Typography size="xxl" fontWeight="bold" component="div">
+          {series.format(series.values.reduce((a, b) => a + b, 0))}
+        </Typography>
+      </Stack>
+      {/* グラフと目盛りの間は 4px（.chartAxis の margin-top） */}
+      <Stack gap="xxs">
+        <BarChart values={series.values} />
+        <Stack flexDirection="row" gap="xxs" justifyContent="space-between">
+          {days.map((d) => (
+            <Typography key={d} size="xxs" color="medium_emphasis" component="span">
+              {d}
+            </Typography>
+          ))}
+        </Stack>
+      </Stack>
+    </Stack>
+  </Paper>
+)
+
 const KeyDetail = ({
   apiKey,
   onNavigate,
@@ -653,30 +763,37 @@ const KeyDetail = ({
   const rule = ruleName(apiKey.ruleId)
   return (
     <>
-      <Card outlined elevation={0}>
+      {/* .infoCard（Paper outlined・padding 12px 16px）に SettingFields（行の間 16px・罫線なし）。
+          GAP: 上下 12px・左右 16px の余白は Paper の padding で出せず、m（16px）にしている */}
+      <Paper outlined padding="m">
         <Stack gap="m">
           <SettingRow label="APIキー名">
-            {/* SettingField：保存ボタンを持たず、入力欄から離れた時点で確定する */}
-            <TextField aria-label="APIキー名" value={alias} onChange={setAlias} isRequired />
+            {/* SettingField：保存ボタンを持たず、入力欄から離れた時点で確定する。
+                GAP: inputWidth="compact" の入力欄の幅 320px は TextField の width で出せない */}
+            <TextField
+              aria-label="APIキー名"
+              value={alias}
+              onChange={setAlias}
+              isRequired
+              color="neutral"
+            />
           </SettingRow>
-          <Divider />
           <SettingRow label="状態">
             <Sticker color={keyStatusColor[status]}>{status}</Sticker>
           </SettingRow>
-          <Divider />
+          {/* SettingValueRow：値は Typography s */}
           <SettingRow label="紐付け先">
             <Typography size="s" component="div">
               {project}
             </Typography>
           </SettingRow>
-          <Divider />
           <SettingRow label="有効期限">
             <Typography size="s" component="div">
               {apiKey.expiresAt}
             </Typography>
           </SettingRow>
-          <Divider />
-          {/* KeyDetail/BudgetRow：「¥x / ¥y」・メーター・「周期 ・ 次回リセット」の 3 段 */}
+          {/* KeyDetail/BudgetRow：「¥x / ¥y」・メーター・「周期 ・ 次回リセット」の 3 段を重ねる（間 2px）。
+              GAP: 実物の .budgetCell は幅 160px 以上で文字を右寄せにする。Stack を右寄せにするとメーターの幅が 0 になるので、左寄せのまま */}
           {apiKey.budget === null ? (
             <SettingRow label="予算">
               <Typography size="s" component="div">
@@ -699,16 +816,18 @@ const KeyDetail = ({
               </Stack>
             </SettingRow>
           )}
-          <Divider />
           <SettingRow label="適用中のルール">
             {rule ? (
-              // 実装はルールの詳細（/rules/:ruleId）へ移る
-              <TextLink
-                href={`/accounts/example/projects/${project}/rules/${encodeURIComponent(rule)}`}
-                onPress={() => onNavigate?.('rule-detail')}
-              >
-                {rule}
-              </TextLink>
+              // 実装はルールの詳細（/rules/:ruleId）へ移る。.ruleLink は 14px・行の高さ 20px。
+              // GAP: 実物のリンクの色は gray[700] で下線なし（hover で gray[900] と下線）
+              <Typography size="s" density="dense" component="span">
+                <TextLink
+                  href={`/accounts/example/projects/${project}/rules/${encodeURIComponent(rule)}`}
+                  onPress={() => onNavigate?.('rule-detail')}
+                >
+                  {rule}
+                </TextLink>
+              </Typography>
             ) : (
               <Typography size="s" color="medium_emphasis" component="div">
                 なし
@@ -716,34 +835,24 @@ const KeyDetail = ({
             )}
           </SettingRow>
         </Stack>
-      </Card>
-      {/* KeyDetail/UsageSection：キーの段は推移だけで、内訳を持たない。生成種別ごとの額はグラフの下 */}
-      <Stack gap="m">
-        <Stack flexDirection="row" gap="m" alignItems="center" justifyContent="space-between">
+      </Paper>
+      {/* KeyDetail/UsageSection（.usageSection：間 12px）。見出しと期間（.usageHeader：間 8px）、
+          DailyChartsSection（title={null}）の推移カード 3 枚、生成種別ごとの額（.generationAmounts：間 16px） */}
+      <Stack gap="s">
+        <Stack flexDirection="row" gap="xs" alignItems="center" justifyContent="space-between">
           <Typography size="xl" fontWeight="bold" component="h2">
             使用状況
           </Typography>
           <UsagePeriodFilter />
         </Stack>
-        <Card padding="m" outlined elevation={0}>
-          <Stack gap="s">
-            <Typography size="s" color="medium_emphasis" component="div">
-              利用額
-            </Typography>
-            <Typography size="xxl" fontWeight="bold" component="div">
-              {yen(dailyCost.reduce((a, b) => a + b, 0))}
-            </Typography>
-            <BarChart values={dailyCost} />
-            <Stack flexDirection="row" justifyContent="space-between">
-              <Typography size="xxs" color="low_emphasis" component="span">
-                {days[0]}
-              </Typography>
-              <Typography size="xxs" color="low_emphasis" component="span">
-                {days[days.length - 1]}
-              </Typography>
-            </Stack>
-          </Stack>
-        </Card>
+        {/* chartGrid：600px 未満は 1 列、600px 以上は 2 列、900px 以上は 3 列。間 16px */}
+        <Grid spacing="m">
+          {keyUsageSeries.map((series) => (
+            <GridItem key={series.key} size={{ xxs: 12, s: 6, m: 4 }}>
+              <KeyUsageChart series={series} />
+            </GridItem>
+          ))}
+        </Grid>
         <Stack flexDirection="row" gap="m">
           <Typography size="s" color="medium_emphasis" component="span">
             テキスト生成 {yen(apiKey.usage)}
@@ -753,15 +862,18 @@ const KeyDetail = ({
           </Typography>
         </Stack>
       </Stack>
-      {/* shared/ui/SettingsList：設定のまとまりを 1 枚の面に積み、行ごとに詳細ページへ渡す */}
-      <Paper padding="none" elevation={0} outlined>
+      {/* shared/ui/SettingsList：設定のまとまりを 1 枚の面に積み、行ごとに詳細ページへ渡す。
+          行の見出しは Typography s・太字、右に chevron_right（s） */}
+      <Paper padding="none" outlined>
         {(['limits', 'models', 'guardrails'] as const).map((sub, i) => (
           <Stack key={sub} gap="xxs">
             {i > 0 ? <Divider /> : null}
-            {/* GAP-NEW: width="full" のボタンは中身が中央寄せで、行として左に揃わない */}
+            {/* GAP-NEW: 実物の行は素の a（余白 12px 16px・高さ 48px・見出しは太字・左寄せ）。
+                Button の size="s"（14px）で文字の大きさだけ合わせ、width="full" は中身が中央に寄り太字にもならない */}
             <Button
               appearance="transparent"
               color="neutral"
+              size="s"
               width="full"
               trailing={<Glyph name="chevron_right" />}
               onPress={() => onNavigate?.(`key-${sub}`)}
@@ -968,16 +1080,28 @@ const ModelSettings = ({ apiKey }: { apiKey: ApiKey }) => {
         <GridItem size={{ xxs: 12, m: 6 }}>
           <SettingGroup label="モデルが直接指定されたとき">
             <Stack gap="m">
-              {/* shared/ui/LabeledSwitch */}
-              <Stack gap="xxs">
-                <Switch
-                  label="モデル名の指定を禁止する"
-                  color="neutral"
-                  isSelected={autoOnly}
-                  onChange={setAutoOnly}
-                />
+              {/* AutoOnlySwitch（.optOut：間 8px）。shared/ui/LabeledSwitch は項目名（14px・行の高さ 24px）を左、
+                  Switch（size="s"、名前は aria-label）を右に置く */}
+              <Stack gap="xs">
+                <Stack
+                  flexDirection="row"
+                  gap="xs"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Typography size="s" component="span">
+                    モデル名の指定を禁止する
+                  </Typography>
+                  <Switch
+                    aria-label="モデル名の指定を禁止する"
+                    size="s"
+                    isSelected={autoOnly}
+                    onChange={setAutoOnly}
+                  />
+                </Stack>
                 {!autoOnly && rule && (
-                  <Typography size="xs" color="medium_emphasis" component="p">
+                  // 実物は p（.hint で margin 0）。UA の margin が残らない div にする
+                  <Typography size="xs" color="medium_emphasis" component="div">
                     ルール「{rule}」は指定していないため、モデル名の指定を許します。
                   </Typography>
                 )}
@@ -1120,30 +1244,35 @@ const PatternChoices = ({
   const [selected, setSelected] = useState(initial)
   return (
     <SettingGroup label={title} description={description} action={action}>
-      {/* GAP-NEW: Stack に role / aria-label を渡せず、実装の role="group"（「…対象」）の名前を付けられない */}
-      <Stack gap="s">
+      {/* GAP-NEW: Stack に role / aria-label を渡せず、実装の role="group"（「…対象」）の名前を付けられない。
+          実物は行ごとに上へ gray[100] の罫線を引き、面の端まで伸ばす（高さ 56px 以上）。
+          GAP: 実物はチェックボックスを行の右端に置き、InfoTip は名前のすぐ右に入る */}
+      <Stack gap="xs">
         {groups.map((group) => (
-          <Stack key={group.id} flexDirection="row" gap="xxs" alignItems="flex-start">
-            <Checkbox
-              isSelected={selected.includes(group.id)}
-              onChange={(checked) =>
-                setSelected((prev) =>
-                  checked ? [...prev, group.id] : prev.filter((id) => id !== group.id)
-                )
-              }
-            >
-              <Stack gap="xxs">
-                <Typography size="s" component="span">
-                  {group.name}
-                </Typography>
-                {/* GAP-20: 例（実装は code）を等幅で出せない */}
-                <Typography size="xs" color="medium_emphasis" component="span">
-                  {group.description}。例: {group.example}
-                </Typography>
-              </Stack>
-            </Checkbox>
-            {/* 実装は名前の右の InfoTip で正規表現の一覧を出す */}
-            <InfoTip label={`${group.name}の正規表現を表示`} />
+          <Stack key={group.id} gap="xs">
+            <Divider />
+            <Stack flexDirection="row" gap="xxs" alignItems="flex-start">
+              <Checkbox
+                isSelected={selected.includes(group.id)}
+                onChange={(checked) =>
+                  setSelected((prev) =>
+                    checked ? [...prev, group.id] : prev.filter((id) => id !== group.id)
+                  )
+                }
+              >
+                <Stack gap="xxs">
+                  <Typography size="s" component="span">
+                    {group.name}
+                  </Typography>
+                  {/* GAP-20: 例（実装は code）を等幅で出せない */}
+                  <Typography size="xs" color="medium_emphasis" component="span">
+                    {group.description}。例: {group.example}
+                  </Typography>
+                </Stack>
+              </Checkbox>
+              {/* 実装は名前の右の InfoTip で正規表現の一覧を出す */}
+              <InfoTip label={`${group.name}の正規表現を表示`} />
+            </Stack>
           </Stack>
         ))}
       </Stack>
@@ -1193,6 +1322,7 @@ const IssueKeyDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           width="full"
           maxLength={100}
           isRequired
+          autoFocus
           value={alias}
           onChange={setAlias}
         />

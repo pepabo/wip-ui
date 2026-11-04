@@ -9,7 +9,7 @@ import { Divider } from '../../Divider'
 import { Icon } from '../../Icon'
 import { Menu, MenuDivider, MenuItem, MenuSection, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
-import { SideNavigation, SideNavigationItem, SideNavigationSection } from '../../SideNavigation'
+import { SideNavigation, SideNavigationItem } from '../../SideNavigation'
 import { Stack } from '../../Stack'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
@@ -78,7 +78,9 @@ import type { StoryRoute } from './storyLink'
  * - GAP: ユーザーメニューのアバターは実物では丸い地の上の人のアイコン。Icon だけを置いている
  * - GAP: 本文の面の表示時のフェードイン（content-fade-in 300ms）は無い
  * - GAP: Sidebar の下のユーザーメニューのボタンは、実物は幅いっぱいで中身が左寄せ。Button width="full" は中身が中央に寄る
- * - GAP: パンくずは実物では 14px・項目の間 6px。Breadcrumb の文字の大きさと余白のまま（間は Stack の xxs = 4px）
+ * - GAP: パンくずは実物では 14px・項目の間 6px。Breadcrumb の文字の大きさと余白のまま（間は Stack の xxs = 4px）。
+ *   リンクの色は実物では gray[600]（組織名は太さ 500）、現在のページは 14px・太さ 500・gray[900]。
+ *   Typography の fontWeight に 500 が無いので、現在のページは bold にしている
  * - GAP: 実物の PageHeader の h1 は margin 0。Typography の h1 には UA の margin が残り、見出しの上下が実物より開く
  * - ダイアログの送信中（Loader・保存中…）と失敗の Callout、作成後の Snackbar は入れていない。作成・保存を押すと閉じる
  */
@@ -367,10 +369,17 @@ const NavList = ({
       {item.label}
     </SideNavigationItem>
   ))
+  const navigation = <SideNavigation aria-label={label}>{list}</SideNavigation>
+  if (!title) return navigation
+  // 「管理」の見出しは Sidebar の NavigationContent と同じ Typography（div・xs・medium_emphasis・太字）。
+  // GAP: 実物の見出しは左右 20px・下 4px の余白（.sectionTitle）で項目の文字の頭に揃う
   return (
-    <SideNavigation aria-label={label}>
-      {title ? <SideNavigationSection title={title}>{list}</SideNavigationSection> : list}
-    </SideNavigation>
+    <Stack gap="xxs">
+      <Typography component="div" size="xs" color="medium_emphasis" fontWeight="bold">
+        {title}
+      </Typography>
+      {navigation}
+    </Stack>
   )
 }
 
@@ -536,8 +545,9 @@ const Sidebar = ({
 
 export type Crumb = { label: string; to?: string }
 
+// 実物の区切り（.breadcrumbSeparator）は 14px・gray[500]（#6c7798）。low_emphasis（rgba(20,20,20,.3)）より近い medium_emphasis にする
 const Separator = () => (
-  <Typography component="span" size="s" color="low_emphasis" aria-hidden="true">
+  <Typography component="span" size="s" color="medium_emphasis" aria-hidden="true">
     /
   </Typography>
 )

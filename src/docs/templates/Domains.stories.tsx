@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { TabPanel } from 'react-aria-components'
 
-import { Button, LinkButton } from '../../Button'
+import { Button } from '../../Button'
 import { Callout } from '../../Callout'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
@@ -215,23 +215,22 @@ const PromoBanner = () => (
     color="neutral"
     appearance="flat"
     action={
-      <LinkButton
-        href="https://muumuu-domain.com/"
-        target="_blank"
-        rel="noopener noreferrer"
-        appearance="outlined"
-        size="s"
-        trailing={<Icon name="launch" size="s" />}
-      >
-        ドメインを取得
-      </LinkButton>
+      // 実物は素の a で Button を包み、中の span（inline-flex items-center gap-1）に文言とアイコンを並べている
+      <a href="https://muumuu-domain.com/" target="_blank" rel="noopener noreferrer">
+        <Button appearance="outlined" size="s">
+          <Stack flexDirection="row" gap="xxs" alignItems="center">
+            ドメインを取得
+            <Icon name="launch" size="s" />
+          </Stack>
+        </Button>
+      </a>
     }
   >
     <Stack gap="xxs">
-      <Typography component="div" size="s" fontWeight="bold">
+      <Typography size="s" fontWeight="bold">
         Webアプリケーションに自分だけのドメインを設定しませんか？
       </Typography>
-      <Typography component="div" size="xs" color="medium_emphasis">
+      <Typography size="xs" color="medium_emphasis">
         ムームードメインは、ロリポップ！を運営するGMOペパボの独自ドメイン取得サービスです。
         <br />
         620種類以上のドメインの中からお選びいただけます。
@@ -242,9 +241,11 @@ const PromoBanner = () => (
 
 const STEP_LABELS = ['レコードを追加', '公開先を切り替え'] as const
 
-// GAP-2: Stepper が無い。実物の MigrationSteps は ol + 丸の番号（border）+ 横線のコネクタを手組みしている。
+// GAP-2: Stepper が無い。実物の MigrationSteps は ol + 丸の番号（size-5 の border、今の段は border-2 border-neutral-900）
+// + 横線のコネクタ（h-px w-5 bg-neutral-300）を手組みしている。丸の枠と横線は出せないので、番号とチェックだけを置く。
 // parts の StepIndicator は「発行待ち（スピナー）」の段を持てないので、ここでローカルに組む。
 // GAP-NEW: Stack に role / component が渡せず、実物の ol / li と aria-current="step" を再現できない。
+// GAP-NEW: Stack に折り返し（flex-wrap）と縦横別の gap が無い。実物は gap-x-3 gap-y-1 で折り返す。
 const MigrationSteps = ({ step }: { step: MigrationStep }) => (
   <Stack flexDirection="row" gap="s" alignItems="center">
     {STEP_LABELS.map((label, index) => {
@@ -262,12 +263,22 @@ const MigrationSteps = ({ step }: { step: MigrationStep }) => (
         <Stack key={label} flexDirection="row" gap="xs" alignItems="center">
           {/* GAP-2: 段をつなぐ横のコネクタが無いため縦罫を流用している */}
           {index > 0 && <Divider orientation="vertical" flexItem />}
+          {/* 実物の発行待ちは size-5（20px）の自前スピナー */}
           {state === 'busy' ? (
             <Loader size="s" />
+          ) : state === 'done' ? (
+            <Typography component="span" color="positive">
+              <Icon name="check" size="s" color="currentColor" />
+            </Typography>
           ) : (
-            <Sticker color={state === 'done' ? 'positive' : 'neutral'} size="s">
-              {state === 'done' ? <Icon name="check" size="s" /> : n}
-            </Sticker>
+            <Typography
+              component="span"
+              size="xs"
+              fontWeight="bold"
+              color={state === 'active' ? 'high_emphasis' : 'low_emphasis'}
+            >
+              {n}
+            </Typography>
           )}
           <Typography
             component="span"
@@ -292,13 +303,15 @@ const MigrationSteps = ({ step }: { step: MigrationStep }) => (
 // GAP-NEW: 押すとコピーされる値の欄（CopyableField）が無い。実物は native button の中に
 // ラベルと値を置き、押すと緑の枠で「✓ コピーしました」に 2 秒切り替える。
 // ここは値の欄とコピーボタンを分けて代える。長い値の truncate（省略表示）も wip-ui に無い。
+// GAP-NEW: Paper の padding は上下左右で同じ値しか取れない。実物は px-3 py-2 なので左右に合わせて s（12px）。
+// 実物の枠は border-neutral-200 の角丸 rounded（4px）で、コピー後は border-emerald-300 bg-emerald-50 に変わる。
 const CopyableField = ({ label, value }: { label: string; value: string }) => {
   const [copied, setCopied] = useState(false)
   return (
-    <Paper padding="m" elevation={0} outlined>
+    <Paper padding="s" elevation={0} outlined>
       <Stack gap="xxs">
         <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
-          <Typography component="span" size="xs" color="medium_emphasis">
+          <Typography size="xs" color="medium_emphasis">
             {label}
           </Typography>
           <Button
@@ -334,6 +347,8 @@ const CopyableField = ({ label, value }: { label: string; value: string }) => {
   )
 }
 
+// GAP-NEW: 実物は sm（640px）以上で横並びにし、タイプの欄を w-28（112px）に固定、名前と値を flex-1 で分ける。
+// 固定幅の列が作れないので Grid の 2 / 5 / 5 で代える（Grid の s は 600px から）。
 const RecordRow = ({ record }: { record: DnsRecord }) => (
   <Grid spacing="xs">
     <GridItem size={{ xxs: 12, s: 2 }}>
@@ -368,28 +383,28 @@ const DomainProgress = ({ domain }: { domain: Domain }) => {
   // 証明書を発行できなかった dns 方式はレコードを置き直しても進めないので、手動検証を出さない
   const showVerify =
     canVerify && !(domain.verificationMethod === 'dns' && domain.status === 'エラー')
+  // 段階の下は mb-2、レコードの上は mt-2、レコードどうしは space-y-2、「検証」の上は mt-3
   return (
-    <Stack gap="xs">
-      {step && <MigrationSteps step={step} />}
-      {message && (
-        <Stack flexDirection="row" gap="xs" alignItems="center">
-          {preparing && <Loader size="s" />}
-          <Typography
-            component="div"
-            size="s"
-            color={preparing ? 'medium_emphasis' : 'high_emphasis'}
-          >
-            {message}
-          </Typography>
-        </Stack>
-      )}
-      {records.length > 0 && (
-        <Stack gap="xs">
-          {records.map((r) => (
-            <RecordRow key={`${r.type}-${r.name}-${r.value}`} record={r} />
-          ))}
-        </Stack>
-      )}
+    <Stack gap="s">
+      <Stack gap="xs">
+        {step && <MigrationSteps step={step} />}
+        {message && (
+          <Stack flexDirection="row" gap="xs" alignItems="center">
+            {/* 実物は size-3.5（14px）の自前スピナー */}
+            {preparing && <Loader size="s" />}
+            <Typography size="s" color={preparing ? 'medium_emphasis' : 'high_emphasis'}>
+              {message}
+            </Typography>
+          </Stack>
+        )}
+        {records.length > 0 && (
+          <Stack gap="xs">
+            {records.map((r) => (
+              <RecordRow key={`${r.type}-${r.name}-${r.value}`} record={r} />
+            ))}
+          </Stack>
+        )}
+      </Stack>
       {showVerify && (
         <Stack alignItems="flex-end">
           <Button appearance="outlined" size="s" isDisabled={preparing}>
@@ -398,6 +413,45 @@ const DomainProgress = ({ domain }: { domain: Domain }) => {
         </Stack>
       )}
     </Stack>
+  )
+}
+
+/** 実物の DomainErrorCallout。設定エラーのときだけ、詳細欄の先頭（mb-3）に出す。 */
+const DomainErrorCallout = ({
+  domain,
+  onSwitchToHttp,
+}: {
+  domain: Domain
+  onSwitchToHttp?: () => void
+}) => {
+  if (domain.status !== 'エラー') return null
+  if (domain.verificationMethod !== 'dns') {
+    return (
+      <Callout color="negative" appearance="outline">
+        レコードが確認できませんでした。設定を見直してから、もう一度「検証」を押してください。
+      </Callout>
+    )
+  }
+  if (!onSwitchToHttp) {
+    return (
+      <Callout color="negative" appearance="outline">
+        証明書を発行できませんでした。ドメインを削除して追加し直してください。
+      </Callout>
+    )
+  }
+  return (
+    <Callout
+      color="negative"
+      appearance="outline"
+      action={
+        <Button appearance="outlined" color="negative" size="s" onPress={onSwitchToHttp}>
+          HTTP 検証に切り替える
+        </Button>
+      }
+    >
+      証明書を発行できませんでした。HTTP
+      検証に切り替えるか、ドメインを削除して追加し直してください。
+    </Callout>
   )
 }
 
@@ -416,14 +470,16 @@ const DomainCard = ({
     recordsToShow(domain).length > 0 || detailMessage(domain) !== null || showMethodTabs
   const progress = <DomainProgress domain={domain} />
   return (
-    <Paper elevation={0} outlined>
+    <Paper outlined>
       {/* 行と詳細欄の上下は実物の py-4（16px） */}
       <Stack gap="m">
         <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
+          {/* GAP-NEW: 長いホスト名の truncate（省略表示）が無い */}
           <Typography component="span" size="s">
             {domain.hostname}
           </Typography>
           <Stack flexDirection="row" gap="xs" alignItems="center">
+            {/* 実物は size-3.5（14px）の自前スピナー */}
             {IN_PROGRESS.includes(domain.status) && <Loader size="s" />}
             <Sticker color={st.color} size="s">
               {st.label}
@@ -437,7 +493,7 @@ const DomainCard = ({
                   iconOnly
                   aria-label={`${domain.hostname} の操作`}
                 >
-                  <Icon name="ellipsis_horizontal" size="s" aria-hidden="true" />
+                  <Icon name="ellipsis_horizontal" size="s" />
                 </Button>
                 <Menu placement="bottom end">
                   <MenuItem color="negative" onAction={onDelete}>
@@ -453,9 +509,17 @@ const DomainCard = ({
             <Divider />
             {/* GAP-NEW: Paper に地色の違う面が無い。実物の詳細欄は bg-neutral-50 */}
             <Stack gap="s">
+              {domain.status === 'エラー' && (
+                <DomainErrorCallout
+                  domain={domain}
+                  onSwitchToHttp={showMethodTabs ? () => onChangeMethod('http') : undefined}
+                />
+              )}
               {showMethodTabs ? (
                 // 実物は wip-ui の Tabs を使わず role="tablist" の native button で手組みしている
-                // （TabPanel が export されていない・下線色と文字サイズを変えられないため）
+                // （TabPanel が export されていない・下線色と文字サイズを変えられないため）。
+                // GAP-NEW: Tab の文字の大きさを変えられない。実物のタブ名は text-sm、選択中は font-bold
+                // text-neutral-900、それ以外は text-neutral-500。タブどうしの間は gap-6
                 <Tabs
                   selectedKey={domain.verificationMethod}
                   onSelectionChange={(k) => onChangeMethod(k as VerificationMethod)}
@@ -467,7 +531,15 @@ const DomainCard = ({
                         <Tab key={t.key} id={t.key}>
                           <Stack flexDirection="row" gap="xs" alignItems="center">
                             <span>{t.label}</span>
-                            <Typography component="span" size="xs" color="medium_emphasis">
+                            <Typography
+                              component="span"
+                              size="xs"
+                              color={
+                                t.key === domain.verificationMethod
+                                  ? 'medium_emphasis'
+                                  : 'low_emphasis'
+                              }
+                            >
                               {t.description}
                             </Typography>
                           </Stack>
@@ -513,7 +585,7 @@ const DomainAddDialog = ({ onClose }: { onClose: () => void }) => {
             value={value}
             onChange={setValue}
           />
-          <Typography component="div" size="s" color="medium_emphasis">
+          <Typography size="s" color="medium_emphasis">
             ※追加後に表示される DNS レコードを設定すると、ドメインが有効になります。
           </Typography>
         </Stack>
@@ -545,9 +617,12 @@ const DomainDeleteDialog = ({ hostname, onClose }: { hostname: string; onClose: 
         {`${hostname} を削除しますか？`}
       </DialogTitle>
     </DialogHeader>
-    <DialogDescription>
-      このドメインを削除すると、アプリケーションへ接続できなくなります。
-    </DialogDescription>
+    {/* 実物は失敗の Callout と説明を Stack gap="m" で積む */}
+    <Stack gap="m">
+      <DialogDescription>
+        このドメインを削除すると、アプリケーションへ接続できなくなります。
+      </DialogDescription>
+    </Stack>
     <DialogFooter>
       <Button appearance="outlined" color="neutral" size="m" onPress={onClose}>
         キャンセル
@@ -641,14 +716,14 @@ const ProjectLoadingAndError = () => (
     </DeployNowShell>
     <DeployNowShell>
       <Stack alignItems="center">
-        <Typography component="div" size="s" color="low_emphasis">
+        <Typography size="s" color="low_emphasis">
           プロジェクトの取得に失敗しました。時間をおいて再度お試しください。
         </Typography>
       </Stack>
     </DeployNowShell>
     <DeployNowShell>
       <Stack alignItems="center">
-        <Typography component="div" size="s" color="low_emphasis">
+        <Typography size="s" color="low_emphasis">
           プロジェクトが見つかりません。
         </Typography>
       </Stack>

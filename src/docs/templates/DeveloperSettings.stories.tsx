@@ -42,10 +42,16 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// 節の面（実物は px-6 py-4）の余白は Paper の既定の padding（l）で付く（GAP-1 は解消）。
-// 面の中の読み込み中・取得失敗・空（実物は px-6 py-16）と未連携の案内（px-6 py-10）の広い上下の余白は、
-// 入れ子の Paper の padding（xl・m）を面の padding（l）に足して近づける。
-// セッションの行（実物は py-3）の上下は、一覧の Stack の gap で付けている。
+// GAP-NEW: wip-ui に p の既定の margin を消す指定が無い。実物の Typography は既定の component（p）のまま使い、
+// Tailwind の preflight が margin を 0 にしている。ここでは実物が p の箇所を component="div" にして margin を出さない。
+
+// 節の面は実物と同じ Paper outlined（outlined のとき影は付かないので elevation は渡さない）。
+// GAP-NEW: Paper の padding は上下左右で同じ値しか取れない。実物の節の面は px-6 py-4（24px / 16px）で、
+// 既定の l（24px）にしているため上下が 8px ずつ広い。
+// 面の中の読み込み中・取得失敗・空（実物は素の div の py-16）と未連携の案内（py-10）の上下の余白は、
+// 入れ子の Paper の padding で付ける。面の端からの距離を実物（16+64 / 16+40）に寄せ、
+// 面の l（24px）に足して xxl（24+48=72px、実物 80px。Paper の padding は xxl が上限）と xl（24+32=56px、実物 56px）。
+// セッションの行（実物は ul の divide-y と li の py-3）の上下は、一覧の Stack の gap（s）と Divider で付けている。
 
 const DOT_COLOR: Record<StickerColor, TypographyColor> = {
   positive: 'positive',
@@ -57,27 +63,32 @@ const DOT_COLOR: Record<StickerColor, TypographyColor> = {
 }
 
 // GAP-NEW: StatusIndicator（色ドット + ラベル）が無い。Deploys.stories.tsx と同じ代用。
+// 実物は inline-flex items-center gap-1.5（6px）に 8px の丸（lolipop の solid 色の hex）と Typography s medium_emphasis。
+// gap-1.5 に当たる段階が無いので xxs（4px）。丸は circle のアイコン（s）を Typography の色で塗っている。
 const StatusIndicator = ({ color, children }: { color: StickerColor; children: ReactNode }) => (
   <Stack flexDirection="row" gap="xxs" alignItems="center">
     <Typography component="span" size="xs" color={DOT_COLOR[color]}>
       <Icon name="circle" size="s" color="currentColor" aria-hidden />
     </Typography>
-    <Typography component="span" size="s" color="medium_emphasis">
+    <Typography component="div" size="s" color="medium_emphasis">
       {children}
     </Typography>
   </Stack>
 )
 
+// 実物は flex justify-center py-16 + Loader
 const LoadingBody = () => (
-  <Paper elevation={0} padding="xl">
+  <Paper elevation={0} padding="xxl">
     <Stack alignItems="center">
       <Loader size="m" message="読み込み中" />
     </Stack>
   </Paper>
 )
 
+// 実物は px-6 py-16 text-center + Typography s low_emphasis。
+// GAP-NEW: Typography に文字の揃え（text-center）の指定が無い。Stack の alignItems で 1 行のときだけ中央に置く
 const CenteredMessage = ({ message }: { message: string }) => (
-  <Paper elevation={0} padding="xl">
+  <Paper elevation={0} padding="xxl">
     <Stack alignItems="center">
       <Typography component="div" size="s" color="low_emphasis">
         {message}
@@ -86,7 +97,8 @@ const CenteredMessage = ({ message }: { message: string }) => (
   </Paper>
 )
 
-// GAP-NEW: 箇条書き（ul / li）の部品が無い。実物は ul.list-disc の中に Typography s。
+// GAP-NEW: 箇条書き（ul / li）の部品が無い。実物は ul.list-disc pl-5 の li の中に Typography s。
+// 行の間は実物は 0。Stack の gap に 0 の段階が無いので最小の xxs（4px）。
 const Bullets = ({ items }: { items: string[] }) => (
   <Stack gap="xxs">
     {items.map((item) => (
@@ -97,19 +109,22 @@ const Bullets = ({ items }: { items: string[] }) => (
   </Stack>
 )
 
-/** 項目名（xs）と値（s）を横に並べる行。実物は flex-wrap items-baseline gap-x-4。 */
+/**
+ * 項目名（xs）と値（s）を横に並べる行。実物は 1 つの div（flex flex-wrap items-baseline gap-x-4 gap-y-1）に
+ * 項目名と値の Typography を兄弟として並べる。
+ * GAP-NEW: Stack に折り返し（flex-wrap）と、行と列で別の gap の指定が無い。
+ * GAP-NEW: Stack の alignItems に baseline が無い。center にしている
+ */
 const InlineFields = ({ fields }: { fields: { label: string; value: string }[] }) => (
   <Stack flexDirection="row" gap="m" alignItems="center">
-    {fields.map((f) => (
-      <Stack key={f.label} flexDirection="row" gap="m" alignItems="center">
-        <Typography component="span" size="xs" color="medium_emphasis">
-          {f.label}
-        </Typography>
-        <Typography component="span" size="s">
-          {f.value}
-        </Typography>
-      </Stack>
-    ))}
+    {fields.flatMap((f) => [
+      <Typography component="div" key={`${f.label}-label`} size="xs" color="medium_emphasis">
+        {f.label}
+      </Typography>,
+      <Typography component="div" key={`${f.label}-value`} size="s">
+        {f.value}
+      </Typography>,
+    ])}
   </Stack>
 )
 
@@ -149,9 +164,10 @@ const GitHubConnectionBody = ({
   }
   if (authorization === null) {
     return (
-      <Paper elevation={0} padding="m">
+      // 実物は flex flex-col items-center gap-3 px-6 py-10 text-center の div
+      <Paper elevation={0} padding="xl">
         <Stack gap="s" alignItems="center">
-          <Stack gap="xxs" alignItems="center">
+          <Stack gap="xxs">
             <Typography component="div" size="m" fontWeight="bold">
               連携している GitHub アカウントはありません。
             </Typography>
@@ -169,16 +185,21 @@ const GitHubConnectionBody = ({
   }
   return (
     <Stack gap="s">
+      {/* 実物は flex flex-wrap items-center justify-between gap-3。GAP-NEW: Stack に折り返しの指定が無い */}
       <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
         <Stack gap="xxs">
+          {/* GAP-NEW: 1 行で省略（truncate）する指定が無い */}
           <Typography component="span" size="s" fontWeight="bold">
             {authorization.githubUserLogin}
           </Typography>
           <StatusIndicator color="positive">有効</StatusIndicator>
         </Stack>
-        <Button appearance="transparent" color="negative" size="s" onPress={onDisconnect}>
-          取り消す
-        </Button>
+        {/* 実物は flex shrink-0 items-center gap-2。期限切れのときは「GitHub と接続し直す」（LinkButton outlined s）が前に入る */}
+        <Stack flexDirection="row" gap="xs" alignItems="center">
+          <Button appearance="transparent" color="negative" size="s" onPress={onDisconnect}>
+            取り消す
+          </Button>
+        </Stack>
       </Stack>
       <InlineFields fields={[{ label: '有効期限', value: authorization.expiresAtLabel }]} />
     </Stack>
@@ -244,7 +265,7 @@ const GitHubSettings = ({
   const [dialogOpen, setDialogOpen] = useState(initialDialogOpen)
   return (
     <>
-      <Paper elevation={0} outlined>
+      <Paper outlined>
         <Stack gap="m">
           <Typography component="h2" size="m" fontWeight="bold">
             GitHub 連携
@@ -310,9 +331,12 @@ const SessionDeleteDialog = ({ session, onClose }: { session: Session; onClose: 
     <DialogHeader>
       <DialogTitle>セッションを削除しますか？</DialogTitle>
     </DialogHeader>
-    <DialogDescription>
-      {`${session.kindLabel} のセッション（作成: ${session.createdAtLabel}）が失効し、その端末からのアクセスには再ログインが必要になります。`}
-    </DialogDescription>
+    {/* 実物は失敗時の Callout negative と説明を Stack gap m に置く */}
+    <Stack gap="m">
+      <DialogDescription>
+        {`${session.kindLabel} のセッション（作成: ${session.createdAtLabel}）が失効し、その端末からのアクセスには再ログインが必要になります。`}
+      </DialogDescription>
+    </Stack>
     <DialogFooter>
       <Button appearance="outlined" color="neutral" size="m" onPress={onClose}>
         キャンセル
@@ -328,6 +352,7 @@ const SessionLogoutDialog = ({ onClose }: { onClose: () => void }) => {
   const navigate = useDeployNowNavigate()
   return (
     <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+      {/* GAP-NEW: Dialog に幅の指定が無い。実物は w-[360px] に固定している */}
       <DialogHeader>
         <DialogTitle>ログアウトしますか？</DialogTitle>
       </DialogHeader>
@@ -362,6 +387,7 @@ const SessionRow = ({
   onDelete: () => void
   onLogout: () => void
 }) => (
+  // 実物は li の flex flex-wrap items-center justify-between gap-3 py-3。GAP-NEW: Stack に折り返しの指定が無い
   <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
     <Stack gap="xxs">
       <Stack flexDirection="row" gap="xs" alignItems="center">
@@ -404,7 +430,7 @@ const SessionSettings = ({
   const [dialog, setDialog] = useState<SessionDialog>(initialDialog)
   return (
     <>
-      <Paper elevation={0} outlined>
+      <Paper outlined>
         <Stack gap="m">
           <Stack gap="xxs">
             <Typography component="h2" size="m" fontWeight="bold">

@@ -46,9 +46,10 @@ import type { ReactNode } from 'react'
  * - GAP: 残高・通知の 2 枚は実物では同じ高さに伸び、ボタンの行が下端にそろう（margin-top: auto）。ここでは中身の高さのまま
  * - GAP: 残高・通知の面のボタンは実物では文字 12px・太字・影なし（walletActionButton）。Button の size="s" のまま
  * - GAP: shared/ui/DataTable の列の最小幅（minWidth）と右寄せ（align: 'end'。金額・付与額・残高）が無い。表は左寄せ
- * - GAP: DataTableText tone="aux"（14px）の文字を、Typography size="s" で出している
+ * - GAP: DataTableText tone="aux"（14px・行の高さ 20px）の文字を、Typography size="s" density="dense" で出している
  * - GAP: Dialog の幅（実物は styles.dialog の 520px）を指定できず、ダイアログは中身の幅になる
- * - GAP: SegmentedControl（shared/ui）が無い。選択中を flat、ほかを outlined の Button で並べている
+ * - GAP: SegmentedControl（shared/ui）が無い。実物は白い地に gray[200] の枠のトラックの中に 16px・gray[600] の項目を並べ、
+ *   選択中は gray[100] の地と太字。ここでは選択中を neutral の outlined、ほかを neutral の transparent の Button で並べている
  * - GAP: 内訳の面（chargeDetails）は実物では地が gray[50]。Paper の地のまま
  * - GAP: スイッチで開く欄の高さのアニメーション（collapsePanel）が無い。開いた状態だけを出している
  * - GAP: カード番号・有効期限・セキュリティコードは実物では決済代行の iframe（枠線 gray[200]・角丸 6px）。TextField で代用している
@@ -151,10 +152,13 @@ const RetryCallout = ({ message }: { message: string }) => (
   </Callout>
 )
 
-/** 節の見出し（Typography m 太字）。お支払い方法だけ右にボタンを持つ（styles.sectionHead） */
+/**
+ * 節の見出し（Typography m 太字）。お支払い方法だけ右にボタンを持つ（styles.sectionHead）。
+ * 実物は見出しではなく p（.sections p で margin 0）なので、UA の margin が残らない div にしている
+ */
 const SectionTitle = ({ children, action }: { children: string; action?: ReactNode }) => (
   <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
-    <Typography size="m" fontWeight="bold" component="h2">
+    <Typography size="m" fontWeight="bold" component="div">
       {children}
     </Typography>
     {action}
@@ -176,27 +180,28 @@ const TableEmpty = ({ title }: { title: string }) => (
   </Typography>
 )
 
-/** DataTableText tone="aux" */
+/** DataTableText tone="aux"（14px・行の高さ 20px） */
 const Aux = ({ children }: { children: ReactNode }) => (
-  <Typography size="s" component="span">
+  <Typography size="s" density="dense" component="span">
     {children}
   </Typography>
 )
 
 /**
  * sections.tsx の PrepaidBalanceSection（styles.wallet）と LowBalanceNotificationCard（styles.sideCard）。
- * どちらも padding 24px・中の gap 16px の枠線の面で、900px 以上で 2 列に等分する（styles.walletGrid、gap 16px）
+ * どちらも padding 24px・中の gap 16px の枠線の面で、900px 以上で 2 列に等分する（styles.walletGrid、gap 16px）。
+ * 面の中の文字は p（.sections p で margin 0）なので、UA の margin が残らない div にしている
  */
 const WalletCards = ({ loading = false, onOpen }: { loading?: boolean; onOpen?: OpenDialog }) => (
   <section aria-label="クレジット残高">
     <Grid spacing="m">
-      <GridItem size={{ xxs: 12, l: 6 }}>
-        <Paper elevation={0} outlined>
+      <GridItem size={{ xxs: 12, m: 6 }}>
+        <Paper outlined>
           <Stack gap="m">
             {/* walletHead（gap 4px）: 見出しの行（gap 8px）と残高 */}
             <Stack gap="xxs">
               <Stack flexDirection="row" gap="xs" alignItems="center">
-                <Typography size="m" fontWeight="bold">
+                <Typography size="m" fontWeight="bold" component="div">
                   クレジット残高
                 </Typography>
                 {/* 中身は「追加したクレジットは、購入日から1年で失効します。」。骨格では出さない */}
@@ -247,15 +252,15 @@ const WalletCards = ({ loading = false, onOpen }: { loading?: boolean; onOpen?: 
           </Stack>
         </Paper>
       </GridItem>
-      <GridItem size={{ xxs: 12, l: 6 }}>
+      <GridItem size={{ xxs: 12, m: 6 }}>
         <section aria-label="通知">
-          <Paper elevation={0} outlined>
+          <Paper outlined>
             <Stack gap="m">
               <Stack gap="xxs">
-                <Typography size="m" fontWeight="bold">
+                <Typography size="m" fontWeight="bold" component="div">
                   通知
                 </Typography>
-                <Typography size="s" color="medium_emphasis">
+                <Typography size="s" color="medium_emphasis" component="div">
                   クレジット残高が基準を下回ったときにメールでお知らせします。
                 </Typography>
               </Stack>
@@ -336,7 +341,7 @@ const BillingContent = ({
               </TableBody>
             </Table>
           </Paper>
-          <Typography size="s" color="medium_emphasis">
+          <Typography size="s" color="medium_emphasis" component="div">
             特典クレジットは、チャージしたクレジットより先に消費されます。
           </Typography>
         </Stack>
@@ -481,6 +486,7 @@ const ManualChargeDialog = ({ onClose, onOpen }: DialogProps) => (
     <Stack gap="m">
       {/* 「別のカードを登録する」を選ぶと、このダイアログを閉じてカードの登録を開く（registerCardFromCharge） */}
       <Select
+        autoFocus
         label="支払いカード"
         width="full"
         defaultSelectedKey="card-0"
@@ -493,9 +499,11 @@ const ManualChargeDialog = ({ onClose, onOpen }: DialogProps) => (
         </SelectItem>
         <SelectItem id="register-card">別のカードを登録する</SelectItem>
       </Select>
-      {/* amountSection（gap なし）: 金額の選択、「カスタム」のときだけ開く金額の欄、残りチャージ可能額 */}
-      <Stack>
-        <Stack gap="xxs">
+      {/* amountSection（gap なし）: 金額の選択、「カスタム」のときだけ開く金額の欄、残りチャージ可能額。
+          Stack の既定の gap は m（16px）なので、最小の xxs（4px）にする */}
+      <Stack gap="xxs">
+        {/* SegmentedControl のラベルの行（14px・太字・行の高さ 24px、下に 8px） */}
+        <Stack gap="xs">
           <Typography size="s" fontWeight="bold" component="span">
             追加する金額
           </Typography>
@@ -505,7 +513,7 @@ const ManualChargeDialog = ({ onClose, onOpen }: DialogProps) => (
                 key={o.id}
                 size="s"
                 color="neutral"
-                appearance={o.id === '5000' ? 'flat' : 'outlined'}
+                appearance={o.id === '5000' ? 'outlined' : 'transparent'}
                 aria-pressed={o.id === '5000'}
               >
                 {o.label}
@@ -749,7 +757,7 @@ const WelcomeCreditGrantedDialog = ({ onClose, onNavigate }: DialogProps) => (
       </Stack>
       <img src={welcomeCreditIllustration} alt="" width={512} height={168} />
       <DialogTitle>会員登録ありがとうございます！</DialogTitle>
-      <Paper elevation={0} outlined padding="m">
+      <Paper outlined padding="m">
         <Stack gap="xxs" alignItems="center">
           <Typography size="s" fontWeight="bold" color="negative" component="p">
             感謝の気持ちを込めて
@@ -817,7 +825,8 @@ const CardChallengeReturnScreen = ({ onNavigate }: { onNavigate?: (to: string) =
     <AiGatewayShell title="カード認証" onNavigate={onNavigate}>
       <PageContainer>
         <PageHeader title="カード認証" description="カード認証の結果を確認しています" />
-        <Paper>
+        {/* 実物の wip-ui（0.1.x）の Paper は余白を持たない。いまの Paper の既定は l なので none にする */}
+        <Paper padding="none">
           <Loader message="確認しています" />
         </Paper>
       </PageContainer>

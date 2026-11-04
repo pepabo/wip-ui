@@ -202,14 +202,15 @@ const AccountMenu = ({ defaultOpen }: { defaultOpen: boolean }) => {
   return (
     <MenuTrigger defaultOpen={defaultOpen}>
       {/* 実物のトリガーは native button。灰色の丸（bg-neutral-200・28px）に person のアイコン、
-          太字の「アカウント」、下向きの山。
-          GAP: Avatar が img 専用で、灰色の丸にアイコンを入れられない。アイコンだけを leading に置く */}
+          太字の「アカウント」（Typography s bold）、下向きの山（Icon s currentColor）を gap-2 で並べる。
+          GAP: Avatar が img 専用で、灰色の丸にアイコンを入れられない。アイコンだけを leading に置く。
+          GAP: 実物は sm 未満で「アカウント」を隠す（hidden sm:inline）。表示/非表示のレスポンシブ指定が無く常に出す */}
       <Button
         appearance="transparent"
         size="s"
         aria-label="アカウント"
         leading={<Icon name="person" size="s" />}
-        trailing={<Icon name="chevron_down" size="s" />}
+        trailing={<Icon name="chevron_down" size="s" color="currentColor" />}
       >
         <Typography component="span" size="s" fontWeight="bold">
           アカウント
@@ -243,7 +244,7 @@ export const DeployNowShell = ({
   <NavigationScope onNavigate={onNavigate}>
     <Stack gap="xl">
       {/* 実物は sticky top-0 z-20 の div で包む */}
-      <AppBar appearance="white" position="relative">
+      <AppBar appearance="white">
         <AppBarLeading>
           <LogoLink to="projects" alt="LOLIPOP! デプロイナウ" />
         </AppBarLeading>
@@ -276,7 +277,7 @@ export const DeployNowStartShell = ({
 }) => (
   <NavigationScope onNavigate={onNavigate}>
     <Stack gap="xl">
-      <AppBar appearance="white" position="relative">
+      <AppBar appearance="white">
         <AppBarLeading>
           <LogoLink to="start" alt="ロリポップ！デプロイナウ" />
         </AppBarLeading>
@@ -292,7 +293,8 @@ export const DeployNowStartShell = ({
 const StartActions = () => {
   const navigate = useDeployNowNavigate()
   return (
-    // 実物は flex gap-1。sm 未満は「ドキュメント」「ログイン」を隠す（ここでは常に出す）
+    // 実物は flex gap-1。sm 未満は「ドキュメント」「ログイン」を隠す。
+    // GAP: 表示/非表示のレスポンシブ指定が無く、常に出す。ロゴも実物は h-7 md:h-12 だが 48px 固定
     <Stack flexDirection="row" gap="xxs" alignItems="center">
       <LinkButton
         href="#"
@@ -300,10 +302,14 @@ const StartActions = () => {
         rel="noopener noreferrer"
         appearance="transparent"
         size="s"
-        trailing={<Icon name="launch" size="s" />}
         onPress={() => navigate('docs')}
       >
-        ドキュメント
+        {/* 実物は trailing を使わず、children の span（flex items-center gap-0.5）に文字と Icon を並べる。
+            GAP: Stack の gap に 2px（gap-0.5）が無く、xxs（4px）にしている */}
+        <Stack flexDirection="row" gap="xxs" alignItems="center">
+          ドキュメント
+          <Icon name="launch" size="s" color="currentColor" />
+        </Stack>
       </LinkButton>
       <LinkButton href="#" appearance="transparent" size="s" onPress={() => navigate('login')}>
         ログイン
@@ -507,13 +513,19 @@ const ServingSourceLine = ({
   repository?: string
 }) =>
   source.kind === 'upload' ? (
+    // 実物は Typography s（span・flex gap-1.5）の中に Icon（currentColor）と文字を並べる。
+    // GAP: Stack の gap に 6px（gap-1.5）が無く、xs（8px）にしている
     <Stack flexDirection="row" gap="xs" alignItems="center">
-      <Icon name="upload" size="s" aria-hidden />
+      <Typography component="span" size="s">
+        <Icon name="upload" size="s" color="currentColor" aria-hidden />
+      </Typography>
       <Typography component="span" size="s">
         アップロード
       </Typography>
     </Stack>
   ) : (
+    // 実物は Typography s medium_emphasis（span・flex-wrap gap-x-2 gap-y-1）。
+    // GAP: Stack に折り返しの指定が無く、狭い幅でも 1 行のまま。コミット件名の line-clamp-1 も無い
     <Stack flexDirection="row" gap="xs" alignItems="center">
       <Typography component="span" size="s" color="medium_emphasis">
         <Icon name="github" size="s" color="currentColor" aria-hidden />
@@ -550,7 +562,10 @@ export const ProjectDetailLayout = ({
   const openDeploy = onOpenDeploy ?? (() => navigate('deploy-detail'))
   return (
     <Stack gap="l">
-      {/* 実物は nav（aria-label="パンくずリスト"）に Typography s と「/」を手で並べている */}
+      {/* 実物は nav（aria-label="パンくずリスト"・flex gap-2）に Link > Typography s medium_emphasis、
+          「/」（Typography s low_emphasis）、現在地（Typography s）を手で並べている。
+          GAP: Breadcrumbs に size が無く、文字が m（16px）になる（実物は s の 14px）。
+          リンクの色は low_emphasis・区切りは medium_emphasis で、実物と濃淡が逆。上下に 12px の余白が付く */}
       <Breadcrumbs>
         <Breadcrumb href="#" onPress={() => navigate('projects')}>
           プロジェクト
@@ -575,13 +590,14 @@ export const ProjectDetailLayout = ({
             </LinkButton>
           }
         >
+          {/* 実物は div（flex-col gap-1）に span.font-bold と span を並べ、文字の色と大きさは Callout から継ぐ。
+              GAP: Typography に色を継ぐ指定が無い。太字の見出しは Typography にするしかなく、
+              色が Callout の negative の文字色ではなく high_emphasis になる。説明は素の文字で Callout から継ぐ */}
           <Stack gap="xxs">
             <Typography component="span" size="s" fontWeight="bold">
               {hero.suspension.title}
             </Typography>
-            <Typography component="span" size="s">
-              {hero.suspension.description}
-            </Typography>
+            {hero.suspension.description}
           </Stack>
         </Callout>
       )}
@@ -602,8 +618,10 @@ export const ProjectDetailLayout = ({
         </Callout>
       )}
 
-      {/* 実物は role="tablist"（aria-label="プロジェクト詳細タブ"）の中に next/link を並べ、
-          タブごとに URL（?tab=）を変える。下線は border-b の全幅の線と、選んだタブの 2px の線 */}
+      {/* 実物は role="tablist"（aria-label="プロジェクト詳細タブ"・gap-6）の中に next/link を並べ、
+          タブごとに URL（?tab=）を変える。下線は border-b の全幅の線と、選んだタブの 2px の線（neutral-900）。
+          GAP: Tabs に size が無く、文字が m（16px）・全タブ太字になる。実物は text-sm（14px）で、
+          選んだタブだけ太字（neutral-900）、ほかは通常の太さの neutral-500。選んだタブの線は interactive の色 */}
       <Tabs
         selectedKey={activeTab}
         onSelectionChange={(key) => navigate(tabDestination[key as ProjectTab])}
@@ -634,7 +652,9 @@ const SETTINGS_NAV: { page: DeveloperSettingsPage; label: string; to: DeployNowD
 /**
  * 見出し「デベロッパー設定」（xl）と、左のメニュー（components/SettingsNav）・右の本文。
  * 実物は md 以上で横並び（gap-10）、メニューの幅は md:w-44（176px）。md 未満は縦に積む（gap-6）。
- * GAP: SideNavigation の幅は置いた場所で決まり、176px 固定にできないので Grid の 3/12 に置く
+ * GAP: SideNavigation の幅は置いた場所で決まり、176px 固定にできないので Grid の 3/12 に置く。
+ *      Grid の spacing は l（24px）。実物の md 以上の gap-10（40px）は段階に無い。
+ *      項目は実物と同じ s（14px）・現在地は太字だが、現在地の地色は実物の bg-neutral-100 ではなく青の薄い面
  */
 export const DeveloperSettingsLayout = ({
   current,

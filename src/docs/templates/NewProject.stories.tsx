@@ -12,7 +12,6 @@ import { Stack } from '../../Stack'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { DeployNowShell, DeployNowStartShell, useDeployNowNavigate } from './deployNowShell'
-import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -58,12 +57,28 @@ const DEPLOY_PROMPT =
 // GAP-NEW: 余白をとる部品が無い。面を持たない読み込み中・取得失敗の案内（実物は px-6 py-16）の広い上下の余白。
 //          Stack の gap は要素の間にしか付かず、Paper は白い面になるので付けられない。
 
-// GAP-NEW: 文中のテキストリンクが無い。実物は native a / button + text-sky-700（または #0b3893）。
-// LinkButton の transparent で代えるので、文字の前後に余白が付く。
-const TextLink = ({ children, onPress }: { children: ReactNode; onPress?: () => void }) => (
-  <LinkButton appearance="transparent" color="interactive" size="s" onPress={onPress}>
+// GAP-NEW: 実物の Typography は既定の p（と明示の p）だが、Tailwind の preflight で margin が 0 になっている。
+// wip-ui は p・h1 の既定の margin を消さないので、p の代わりに div で描いている（h1 は見出しのため残し、上下に margin が付く）。
+// GAP-NEW: 文中のテキストリンク（ボタン）が無い。実物は native button + text-sm text-[#0b3893]、hover で下線。
+// Button の transparent で代えるので、文字の前後に余白が付き、文字色は interactive になる。
+const TextLink = ({
+  children,
+  onPress,
+  'aria-label': ariaLabel,
+}: {
+  children: ReactNode
+  onPress?: () => void
+  'aria-label'?: string
+}) => (
+  <Button
+    appearance="transparent"
+    color="interactive"
+    size="s"
+    aria-label={ariaLabel}
+    onPress={onPress}
+  >
     {children}
-  </LinkButton>
+  </Button>
 )
 
 const LoadingBody = ({ message = '読み込み中' }: { message?: string }) => (
@@ -83,7 +98,8 @@ const CenteredMessage = ({ message }: { message: string }) => (
 
 /** 実物の CenteredNotice（Paper outlined + px-6 py-16 + 中央寄せ）。 */
 const CenteredNotice = ({ message, children }: { message: string; children?: ReactNode }) => (
-  <Paper elevation={0} outlined padding="xxl">
+  // 実物は px-6 py-16。padding は上下左右同じ値しか取れないので上下に合わせて xxl（48px）
+  <Paper outlined padding="xxl">
     <Stack gap="m" alignItems="center">
       <Typography component="div" size="s" color="low_emphasis">
         {message}
@@ -109,7 +125,9 @@ const PageTitle = ({ title, description }: { title: string; description?: string
 // GAP-NEW: TextField / Select のエラー文言スロットが react-aria のネイティブ検証前提で、
 // 送信時の検査には使えない。実物も role="alert" の中に Typography xs negative を置いている。
 
-// GAP-NEW: 箇条書き（ul / li）の部品が無い。実物は Typography component="li" + list-disc。
+// GAP-NEW: 箇条書き（ul / li）の部品が無い。実物は ul.list-disc.pl-5 の中に Typography component="li"。
+// Typography で ul / li を描くと、ブラウザの既定の margin と padding（上下 16px・左 40px）が残るので、
+// 行頭の点を文字で書いた div を並べている。実物の li の間は 0 だが、Stack の gap の最小の xxs（4px）
 const Bullets = ({ items }: { items: string[] }) => (
   <Stack gap="xxs">
     {items.map((item) => (
@@ -123,13 +141,16 @@ const Bullets = ({ items }: { items: string[] }) => (
 // GAP-NEW: 値とコピー完了フィードバック（「コピーしました」を 2 秒）をまとめた部品が無い。
 // 実物は DeployGuide / CliDeployCommand / NewProjectTrial で同じ処理を 3 回書いている。
 // GAP-20: 等幅フォントが無く、実物の font-mono を再現できない。
+// GAP-NEW: 実物の文字色は text-neutral-700。近い medium_emphasis にしている。
+// 実物は sm 以上で 1 行に truncate する。Typography に truncate の指定が無く折り返す。
 const CopyBox = ({ value }: { value: string }) => {
   const [copied, setCopied] = useState(false)
   return (
-    // 実物は border + bg-neutral-50 + shadow-sm。GAP-NEW: Paper に地色の違う面が無い
-    <Paper padding="m" elevation={1} outlined>
+    // 実物は border + bg-neutral-50 + shadow-sm の div。GAP-NEW: Paper に地色の違う面が無く、
+    // outlined にすると影が消えるため shadow-sm も出せない
+    <Paper padding="m" outlined>
       <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
-        <Typography size="s" color="medium_emphasis" component="span">
+        <Typography size="s" color="medium_emphasis" component="code">
           {value}
         </Typography>
         <Button
@@ -150,21 +171,28 @@ const CopyBox = ({ value }: { value: string }) => {
 
 // GAP-NEW: ファイルのドロップゾーン（DropZone / FileTrigger）が無い。
 // 実物は破線枠 + bg-neutral-100 の領域と、文中リンク風の「ファイル」「フォルダ」ボタン。
+// 実物は px-8 py-16。padding は上下左右同じ値しか取れないので上下に合わせて xxl（48px）
 const DropArea = ({ onSelect }: { onSelect?: () => void }) => (
-  <Paper padding="xxl" elevation={0} outlined>
+  <Paper padding="xxl" outlined>
     <Stack gap="xs" alignItems="center">
       <Typography component="div" size="m">
         アプリのフォルダやファイルをここにドロップ
       </Typography>
+      {/* 実物は 1 つの Typography（p）の中に文と native button を並べている。Button を文中に置くと
+          縦の位置が文字とずれるので、Stack の row で並べている（間に gap xxs が付く） */}
       <Stack flexDirection="row" gap="xxs" alignItems="center">
         <Typography component="span" size="s" color="medium_emphasis">
           または
         </Typography>
-        <TextLink onPress={onSelect}>ファイル</TextLink>
+        <TextLink aria-label="ファイルを選択" onPress={onSelect}>
+          ファイル
+        </TextLink>
         <Typography component="span" size="s" color="medium_emphasis">
           か
         </Typography>
-        <TextLink onPress={onSelect}>フォルダ</TextLink>
+        <TextLink aria-label="フォルダを選択" onPress={onSelect}>
+          フォルダ
+        </TextLink>
         <Typography component="span" size="s" color="medium_emphasis">
           を選択
         </Typography>
@@ -186,7 +214,9 @@ const selectedFiles = [
 const SelectedFilesCard = () => (
   // GAP-NEW: Paper に地色の違う面（bg-neutral-50）が無い。実物はファイル一覧を薄い灰色の面に置く
   // GAP-NEW: 高さを決めてスクロールさせる面が無い。実物の一覧は max-h-48 overflow-y-auto
-  <Paper padding="m" elevation={0} outlined>
+  // 実物は Paper ではなく border + bg-neutral-50 + p-4 の div
+  <Paper padding="m" outlined>
+    {/* 一覧の上の mt-3（12px） */}
     <Stack gap="s">
       <Stack gap="xxs">
         <Stack flexDirection="row" gap="xs" alignItems="center">
@@ -199,20 +229,29 @@ const SelectedFilesCard = () => (
           .git / node_modules / .env.local は除外され、送信されません。
         </Typography>
       </Stack>
-      <Paper padding="m" elevation={0} outlined>
-        {selectedFiles.map((file, i) => (
-          <Stack key={file.path}>
-            {i > 0 && <Divider />}
-            <Stack flexDirection="row" gap="xs" justifyContent="space-between">
-              <Typography component="span" size="xs">
-                {file.path}
-              </Typography>
-              <Typography component="span" size="xs" color="medium_emphasis">
-                {file.size}
-              </Typography>
+      {/* 実物は ul + rounded border + bg-white、行は li の px-3 py-2。
+          padding は上下左右同じ値しか取れないので左右に合わせて s（12px）、行の上下は gap xs（8px） */}
+      <Paper padding="s" outlined>
+        <Stack gap="xs">
+          {selectedFiles.map((file, i) => (
+            <Stack key={file.path} gap="xs">
+              {i > 0 && <Divider />}
+              <Stack
+                flexDirection="row"
+                gap="xs"
+                alignItems="center"
+                justifyContent="space-between"
+              >
+                <Typography component="span" size="xs">
+                  {file.path}
+                </Typography>
+                <Typography component="span" size="xs" color="medium_emphasis">
+                  {file.size}
+                </Typography>
+              </Stack>
             </Stack>
-          </Stack>
-        ))}
+          ))}
+        </Stack>
       </Paper>
     </Stack>
   </Paper>
@@ -273,46 +312,48 @@ const UploadProjectContent = ({ initialSelection }: { initialSelection: boolean 
   const framework = frameworks.find((f) => f.id === frameworkId)
 
   return (
+    // GAP-NEW: 実物は mx-auto w-full max-w-[920px]。Container に 920px の幅が無く、枠の幅のまま
     <Stack gap="l">
       <PageTitle
         title="プロジェクトを作成"
         description="プロジェクトを作成してデプロイする方法を選んでください。"
       />
       {hasSelection ? (
-        <Card outlined elevation={0}>
+        <Paper outlined>
           <Stack gap="l">
             <SelectedFilesCard />
-            <Stack gap="xxs">
-              <Select
-                label="フレームワーク"
-                size="s"
-                width="full"
-                caption={
-                  frameworkId === DETECTED_FRAMEWORK
-                    ? 'フォルダの内容から自動で判定しました。違う場合は選び直してください。'
-                    : undefined
-                }
-                selectedKey={frameworkId}
-                onSelectionChange={(key) => setFrameworkId(String(key))}
-              >
-                {frameworks.map((f) => (
-                  <SelectItem key={f.id} id={f.id}>
-                    {f.displayName}
-                  </SelectItem>
-                ))}
-              </Select>
-            </Stack>
+            <Select
+              label="フレームワーク"
+              size="s"
+              width="full"
+              caption={
+                frameworkId === DETECTED_FRAMEWORK
+                  ? 'フォルダの内容から自動で判定しました。違う場合は選び直してください。'
+                  : undefined
+              }
+              selectedKey={frameworkId}
+              onSelectionChange={(key) => setFrameworkId(String(key))}
+            >
+              {frameworks.map((f) => (
+                <SelectItem key={f.id} id={f.id}>
+                  {f.displayName}
+                </SelectItem>
+              ))}
+            </Select>
             <Stack gap="xxs">
               <TextField
                 label="公開URL"
                 placeholder="my-app"
                 size="s"
-                width="full"
-                caption="あとから変更できません。"
                 value={domain}
                 onChange={setDomain}
+                width="full"
+                color="neutral"
+                caption="あとから変更できません。"
+                autoComplete="off"
+                spellCheck="false"
               />
-              <Typography component="p" size="xxs" color="medium_emphasis">
+              <Typography component="div" size="xxs" color="medium_emphasis">
                 公開URL: https://
                 <Typography component="span" size="xxs" fontWeight="bold">
                   {domain.trim() === '' ? 'my-app' : domain}
@@ -333,6 +374,7 @@ const UploadProjectContent = ({ initialSelection }: { initialSelection: boolean 
                 詳細設定
               </Button>
             </Stack>
+            {/* 実物は fragment で、親の Stack gap l にそのまま並ぶ */}
             {advanced && (
               <Stack gap="l">
                 <TextField
@@ -340,7 +382,10 @@ const UploadProjectContent = ({ initialSelection }: { initialSelection: boolean 
                   placeholder={domain.trim() === '' ? 'my-app' : domain}
                   size="s"
                   width="full"
+                  color="neutral"
                   caption="未入力の場合は公開URLと同じ名前になります。"
+                  autoComplete="off"
+                  spellCheck="false"
                 />
                 {/* 静的サイトはビルド工程が無いので、ビルド設定欄を出さない */}
                 {framework?.name !== 'static' && (
@@ -350,18 +395,24 @@ const UploadProjectContent = ({ initialSelection }: { initialSelection: boolean 
                       placeholder={framework?.install}
                       size="s"
                       width="full"
+                      autoComplete="off"
+                      spellCheck="false"
                     />
                     <TextField
                       label="ビルドコマンド"
                       placeholder={framework?.build}
                       size="s"
                       width="full"
+                      autoComplete="off"
+                      spellCheck="false"
                     />
                     <TextField
                       label="出力ディレクトリ"
                       placeholder={framework?.out}
                       size="s"
                       width="full"
+                      autoComplete="off"
+                      spellCheck="false"
                     />
                   </>
                 )}
@@ -388,10 +439,10 @@ const UploadProjectContent = ({ initialSelection }: { initialSelection: boolean 
               </Button>
             </Stack>
           </Stack>
-        </Card>
+        </Paper>
       ) : (
         <>
-          <Card outlined elevation={0}>
+          <Paper outlined>
             <Stack gap="m">
               <Typography component="div" size="m" fontWeight="bold">
                 GitHub のリポジトリからデプロイ
@@ -417,27 +468,27 @@ const UploadProjectContent = ({ initialSelection }: { initialSelection: boolean 
                 </LinkButton>
               </Stack>
             </Stack>
-          </Card>
-          <Card outlined elevation={0}>
+          </Paper>
+          <Paper outlined>
             <Stack gap="m">
               <Typography component="div" size="m" fontWeight="bold">
                 AI エージェントでデプロイ
               </Typography>
-              <Typography component="p" size="s" color="medium_emphasis">
+              <Typography component="div" size="s" color="medium_emphasis">
                 お使いの AI エージェント (Claude / Codex / Cursor など)
                 に次のプロンプトを貼り付けると、デプロイ手順を読み取り、そのまま公開まで案内します。
               </Typography>
               <CopyBox value={DEPLOY_PROMPT} />
             </Stack>
-          </Card>
-          <Card outlined elevation={0}>
+          </Paper>
+          <Paper outlined>
             <Stack gap="m">
               <Typography component="div" size="m" fontWeight="bold">
                 フォルダやファイルをアップロードしてデプロイ
               </Typography>
               <DropArea onSelect={() => setHasSelection(true)} />
             </Stack>
-          </Card>
+          </Paper>
         </>
       )}
     </Stack>
@@ -453,25 +504,25 @@ const ProjectDeploymentScreen = () => (
         title="新しいバージョンをデプロイ"
         description="CLI、またはフォルダのアップロードで「portfolio」の新しいバージョンをデプロイできます。"
       />
-      <Card outlined elevation={0}>
+      <Paper outlined>
         <Stack gap="m">
           <Typography component="div" size="m" fontWeight="bold">
             CLI でデプロイ
           </Typography>
-          <Typography component="p" size="s" color="medium_emphasis">
+          <Typography component="div" size="s" color="medium_emphasis">
             アプリのフォルダで次のコマンドを実行すると、このプロジェクトにデプロイされます。
           </Typography>
           <CopyBox value="lolipop deploy --project 01JQ8Z5M3K7XW2N4V6B9C0D1EF" />
         </Stack>
-      </Card>
-      <Card outlined elevation={0}>
+      </Paper>
+      <Paper outlined>
         <Stack gap="m">
           <Typography component="div" size="m" fontWeight="bold">
             フォルダやファイルをアップロードしてデプロイ
           </Typography>
           <DropArea />
         </Stack>
-      </Card>
+      </Paper>
     </Stack>
   </DeployNowShell>
 )
@@ -531,6 +582,8 @@ const RepositoryPicker = ({
 
   return (
     <Stack gap="m">
+      {/* 実物は flex-col gap-3 sm:flex-row で、アカウントが sm:w-2/5・検索が sm:flex-1。
+          Grid の 12 分割に 2/5 が無く 5/12 にしている */}
       <Grid spacing="s">
         <GridItem size={{ xxs: 12, s: 5 }}>
           <Select
@@ -589,7 +642,8 @@ const RepositoryPicker = ({
         </GridItem>
       </Grid>
       {visible.length === 0 ? (
-        <Paper elevation={0} outlined>
+        // 実物は py-8 text-center。padding は上下左右同じ値しか取れないので上下に合わせて xl（32px）
+        <Paper outlined padding="xl">
           <Stack alignItems="center">
             <Typography component="div" size="s" color="low_emphasis">
               {`「${query}」に一致するリポジトリがありません。`}
@@ -597,8 +651,9 @@ const RepositoryPicker = ({
           </Stack>
         </Paper>
       ) : (
-        <Paper elevation={0} outlined>
-          {/* 行の上下は実物の py-3（12px） */}
+        // 実物は Paper outlined の中の ul.divide-y で、行は li の px-4 py-3。
+        // padding は上下左右同じ値しか取れないので左右に合わせて m（16px）、行の上下は gap s（12px）
+        <Paper outlined padding="m">
           <Stack gap="s">
             {visible.map((r, i) => (
               <Stack key={r.id} gap="s">
@@ -628,6 +683,7 @@ const RepositoryPicker = ({
           </Stack>
         </Paper>
       )}
+      {/* GAP-NEW: Stack に折り返し（flex-wrap）の指定が無い */}
       <Stack flexDirection="row" gap="xs" alignItems="center">
         <Typography component="div" size="s" color="medium_emphasis">
           目的のリポジトリがありませんか？
@@ -661,10 +717,11 @@ const NewProjectSection = ({
   const fw = frameworks.find((f) => f.id === frameworkId)
 
   return (
-    <Card outlined elevation={0}>
+    <Paper outlined>
       <Stack gap="l">
-        {/* GAP-NEW: Paper に地色の違う面（bg-neutral-100・枠なし）が無い。実物はインポート元を灰色の面に置く */}
-        <Paper padding="m" elevation={0} outlined>
+        {/* GAP-NEW: Paper に地色の違う面（bg-neutral-100・枠なし）が無い。実物はインポート元を
+            rounded-lg bg-neutral-100 p-4 の div に置く。面が見えるよう outlined で代えている */}
+        <Paper padding="m" outlined>
           <Stack gap="xxs">
             <Typography component="div" size="xs" color="medium_emphasis">
               GitHub からインポート
@@ -682,7 +739,9 @@ const NewProjectSection = ({
             label="プロジェクト名"
             size="s"
             width="full"
+            color="neutral"
             autoComplete="off"
+            spellCheck="false"
             defaultValue={repository.name}
           />
           <TextField
@@ -690,7 +749,9 @@ const NewProjectSection = ({
             caption={`公開 URL (<サブドメイン>.${ZONE}) になります。`}
             size="s"
             width="full"
+            color="neutral"
             autoComplete="off"
+            spellCheck="false"
             defaultValue={repository.name}
           />
           {/* GAP-NEW: Select に color="negative" が無く、未選択のエラーで枠を赤くできない（実物も同じ） */}
@@ -712,7 +773,9 @@ const NewProjectSection = ({
             label="デプロイするブランチ"
             size="s"
             width="full"
+            color="neutral"
             autoComplete="off"
+            spellCheck="false"
             defaultValue={repository.defaultBranch}
           />
           {/* GAP-NEW: Accordion / Disclosure が無い。実物は Button + aria-expanded で開閉している */}
@@ -730,27 +793,40 @@ const NewProjectSection = ({
           </Stack>
           {advanced && (
             <Stack gap="l">
-              <TextField label="ルートディレクトリ" size="s" width="full" autoComplete="off" />
+              <TextField
+                label="ルートディレクトリ"
+                size="s"
+                width="full"
+                color="neutral"
+                autoComplete="off"
+                spellCheck="false"
+              />
               <TextField
                 label="インストールコマンド"
                 placeholder={fw?.install}
                 size="s"
                 width="full"
+                color="neutral"
                 autoComplete="off"
+                spellCheck="false"
               />
               <TextField
                 label="ビルドコマンド"
                 placeholder={fw?.build}
                 size="s"
                 width="full"
+                color="neutral"
                 autoComplete="off"
+                spellCheck="false"
               />
               <TextField
                 label="出力ディレクトリ"
                 placeholder={fw?.out}
                 size="s"
                 width="full"
+                color="neutral"
                 autoComplete="off"
+                spellCheck="false"
               />
             </Stack>
           )}
@@ -765,7 +841,7 @@ const NewProjectSection = ({
           </Button>
         </Stack>
       </Stack>
-    </Card>
+    </Paper>
   )
 }
 
@@ -804,6 +880,7 @@ const GitHubImportContent = ({
   // 「インポート」でフォームに切り替わり、「別のリポジトリを選ぶ」で一覧に戻る（URL は変わらない）
   const [repository, setRepository] = useState(initialRepository)
   return (
+    // GAP-NEW: 実物は mx-auto w-full max-w-[920px]。Container に 920px の幅が無く、枠の幅のまま
     <Stack gap="m">
       <Typography size="xl" fontWeight="bold" component="h1">
         {repository === null ? 'GitHub リポジトリをインポート' : '新しいプロジェクト'}
@@ -847,10 +924,10 @@ const SignupPromptDialog = ({ onClose }: { onClose: () => void }) => {
         <DialogTitle>無料登録してデプロイ</DialogTitle>
       </DialogHeader>
       <Stack gap="xs">
-        <Typography component="p" size="s">
+        <Typography component="div" size="s">
           デプロイには無料の会員登録が必要です。登録後、フォルダをドロップするだけで公開できます。
         </Typography>
-        <Typography component="p" size="xs" color="medium_emphasis">
+        <Typography component="div" size="xs" color="medium_emphasis">
           ファイルはまだアップロードされていません。登録後にもう一度ドロップしてください。
         </Typography>
       </Stack>
@@ -883,31 +960,33 @@ const TrialContent = ({ dropped }: { dropped: boolean }) => {
   const [dropAttempted] = useState(dropped)
   const [dialogOpen, setDialogOpen] = useState(dropped)
   return (
+    // GAP-NEW: 実物は mx-auto w-full max-w-[920px]。Container に 920px の幅が無く、枠の幅のまま
     <Stack gap="l">
       {dialogOpen && <SignupPromptDialog onClose={() => setDialogOpen(false)} />}
       <PageTitle
         title="プロジェクトを作成"
         description="AI エージェントへの指示、またはフォルダのアップロードでプロジェクトを作成し、デプロイできます。"
       />
-      <Card outlined elevation={0}>
+      <Paper outlined>
         <Stack gap="m">
           <Typography component="div" size="m" fontWeight="bold">
             AI エージェントでデプロイ
           </Typography>
-          <Typography component="p" size="s" color="medium_emphasis">
+          <Typography component="div" size="s" color="medium_emphasis">
             お使いの AI エージェント (Claude / Codex / Cursor など)
             に次のプロンプトを貼り付けると、デプロイ手順を読み取り、そのまま公開まで案内します。
           </Typography>
           <CopyBox value={DEPLOY_PROMPT} />
         </Stack>
-      </Card>
-      <Card outlined elevation={0}>
+      </Paper>
+      <Paper outlined>
         <Stack gap="m">
           <Typography component="div" size="m" fontWeight="bold">
             フォルダをアップロードしてデプロイ
           </Typography>
           {/* GAP-NEW: ドロップゾーンが無い（DropArea と同じ）。ドロップ後に枠の色を濃くする表現もできない */}
-          <Paper padding="xxl" elevation={0} outlined>
+          {/* 実物は px-8 py-16。padding は上下左右同じ値しか取れないので上下に合わせて xxl（48px） */}
+          <Paper padding="xxl" outlined>
             <Stack gap="s" alignItems="center">
               <Icon name="upload" />
               <Stack gap="xxs" alignItems="center">
@@ -943,7 +1022,7 @@ const TrialContent = ({ dropped }: { dropped: boolean }) => {
             </Stack>
           </Paper>
         </Stack>
-      </Card>
+      </Paper>
     </Stack>
   )
 }
@@ -992,8 +1071,8 @@ const CliSkillScreen = () => {
     <DeployNowShell>
       <Stack gap="l">
         <Stack gap="xs">
-          {/* 実物は Typography の既定（p）で見出しになっていない。ページの見出しなので h1 にしている */}
-          <Typography component="h1" size="xl" fontWeight="bold">
+          {/* 実物は Typography の既定（p）のままで、見出しの要素になっていない */}
+          <Typography component="div" size="xl" fontWeight="bold">
             lolipop CLI スキル
           </Typography>
           <Typography component="div" size="s" color="medium_emphasis">
@@ -1014,15 +1093,15 @@ const CliSkillScreen = () => {
             コピー
           </Button>
           {copied && (
-            <Typography component="span" size="s" color="positive">
+            <Typography component="div" size="s" color="positive">
               コピーしました
             </Typography>
           )}
         </Stack>
         {/* GAP-20: 等幅フォントが無い。実物は pre + font-mono + whitespace-pre-wrap。
           GAP-NEW: 高さを決めてスクロールさせる面が無い。実物は max-h-[60vh] overflow-auto。
-          GAP-NEW: Paper に地色の違う面（bg-neutral-50）が無い */}
-        <Paper padding="m" elevation={0} outlined>
+          GAP-NEW: Paper に地色の違う面（bg-neutral-50）が無い。実物は rounded-md border p-4 text-sm の pre */}
+        <Paper padding="m" outlined>
           <Stack>
             {SKILL_MARKDOWN.split('\n').map((line, i) => (
               <Typography

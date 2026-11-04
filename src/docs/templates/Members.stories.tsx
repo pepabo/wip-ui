@@ -36,7 +36,10 @@ import type { ReactNode } from 'react'
  * - GAP: Table の列に右寄せ（DataTableColumn の align: 'end'）と最小幅が無い。実物はロール・参加プロジェクト・操作の列が右寄せ
  * - GAP: Table が幅 100% にならない（実物は DataTable の CSS で width: 100%）
  * - GAP: 表のセルの文字の大きさ。実物の DataTableText は既定 16px、aux 14px、secondary 14px の灰色。ここでは Typography の m / s で写している
- * - GAP: 0 件の表示（DataTableEmpty）は実物では h3（s・太字）を中央に置く。TableBody の renderEmptyState に文字だけを渡している
+ * - GAP: 0 件の表示（DataTableEmpty）は実物では h3（s・太字）を上下 24px の余白で中央に置く。h3 は写したが余白と中央寄せは無い
+ * - GAP: DataTableText の secondary は実物では gray[700]（#3d455b）。Typography の medium_emphasis（rgba(20,20,20,.6)）で写している
+ * - GAP: ListToolbar（responsive-row-sm）は 600px 以上で縦中央に揃える。Stack の alignItems はブレークポイントごとに変えられないので揃えていない
+ * - GAP: 表の見出しセルは実物では 14px・太字・gray[50] の地、セルの余白は上下 8px。Table の見出しのまま
  * - GAP: 検索欄（ListSearch）の虫眼鏡のアイコンと、600px 以上での幅 280px
  * - GAP: Skeleton が無い。読み込み中は実物では表の形の骨格（SkeletonTable、4 行）を出す。ここでは見出しだけの表の中に Loader を置く
  * - 招待と発行した URL のダイアログは aiGatewayInvite.tsx（そちらの GAP を参照）
@@ -206,17 +209,24 @@ const ActionsMenu = ({ label, children }: { label: string; children: ReactNode }
   </MenuTrigger>
 )
 
-/** DataTableText の tone="aux"（14px） */
+/** DataTableText の tone="aux"（14px・行の高さ 20px） */
 const Aux = ({ children }: { children: ReactNode }) => (
-  <Typography size="s" component="span">
+  <Typography size="s" density="dense" component="span">
     {children}
   </Typography>
 )
 
-/** DataTableText の tone="secondary"（14px の灰色） */
+/** DataTableText の tone="secondary"（14px・行の高さ 20px の灰色） */
 const Secondary = ({ children }: { children: ReactNode }) => (
-  <Typography size="s" color="medium_emphasis" component="span">
+  <Typography size="s" density="dense" color="medium_emphasis" component="span">
     {children}
+  </Typography>
+)
+
+/** shared/ui/DataTable の DataTableEmpty。h3（s・太字） */
+const TableEmpty = ({ title }: { title: string }) => (
+  <Typography component="h3" size="s" fontWeight="bold">
+    {title}
   </Typography>
 )
 
@@ -412,9 +422,13 @@ const AccountMembers = ({
             >
               <MemberColumns />
               <TableBody
-                renderEmptyState={() =>
-                  needle === '' ? 'メンバーはいません' : '絞り込みに一致するメンバーはいません'
-                }
+                renderEmptyState={() => (
+                  <TableEmpty
+                    title={
+                      needle === '' ? 'メンバーはいません' : '絞り込みに一致するメンバーはいません'
+                    }
+                  />
+                )}
               >
                 {visible.map((m) => (
                   <Row key={m.id} id={m.id}>
@@ -471,7 +485,7 @@ const AccountMembers = ({
                   <Column>有効期限</Column>
                   <Column aria-label="操作"> </Column>
                 </TableHeader>
-                <TableBody renderEmptyState={() => '有効な招待はありません'}>
+                <TableBody renderEmptyState={() => <TableEmpty title="有効な招待はありません" />}>
                   {invitations.map((inv) => (
                     <Row key={inv.id}>
                       <Cell>
@@ -547,7 +561,9 @@ const MemberProjectsPanel = ({
                 <Column>ロール</Column>
                 <Column aria-label="操作"> </Column>
               </TableHeader>
-              <TableBody renderEmptyState={() => '参加しているプロジェクトはありません'}>
+              <TableBody
+                renderEmptyState={() => <TableEmpty title="参加しているプロジェクトはありません" />}
+              >
                 {member.projects.map((p) => (
                   <Row key={p.id}>
                     <Cell>

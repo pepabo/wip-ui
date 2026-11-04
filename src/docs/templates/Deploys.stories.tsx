@@ -44,6 +44,9 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+// 実物の Typography は component を省いた p が多いが、実物は Tailwind の preflight で p の margin が 0 になる。
+// この Storybook では p の既定の margin（上下 1em）が残るため、p を div（行内は span）にしている。
+
 // ─── GAP の回避策（inline style はここに集める） ───
 
 // 面の余白は Paper の padding で付ける（GAP-1 は解消）。一覧の面は none にして区切り線を面の端まで通し、
@@ -297,9 +300,13 @@ const heroOf = (p: Project): ProjectHeroData => {
   }
 }
 
+// 実物は 1 つの Typography s（span）の中にアイコン（currentColor）と文字を gap-1.5（6px）で並べる。
+// GAP-NEW: Typography に flex の並びが無いので Stack で並べ、gap は xxs（4px）にしている
 const UploadSource = () => (
   <Stack flexDirection="row" gap="xxs" alignItems="center">
-    <Icon name="upload" size="s" aria-hidden />
+    <Typography component="span" size="s">
+      <Icon name="upload" size="s" color="currentColor" aria-hidden />
+    </Typography>
     <Typography component="span" size="s">
       アップロード
     </Typography>
@@ -312,7 +319,9 @@ const DeployRowSummary = ({ deploy }: { deploy: Deploy }) => {
   if (!deploy.git) {
     return (
       <Stack flexDirection="row" gap="xxs" alignItems="center">
-        <Icon name="upload" size="s" aria-hidden />
+        <Typography component="span" size="s">
+          <Icon name="upload" size="s" color="currentColor" aria-hidden />
+        </Typography>
         <Typography component="span" size="s">
           {deploy.preview ? `プレビュー PR #${deploy.preview.pullRequestNumber}` : 'アップロード'}
         </Typography>
@@ -325,8 +334,9 @@ const DeployRowSummary = ({ deploy }: { deploy: Deploy }) => {
     deploy.git.shortSha,
   ]
   return (
+    // 実物はメタ行が mt-0.5（2px）。GAP-NEW: 2px は段階に無く xxs（4px）にしている。件名の line-clamp-1 も無い
     <Stack gap="xxs">
-      <Typography component="div" size="s">
+      <Typography component="span" size="s">
         {deploy.git.commitMessage || deploy.git.shortSha}
       </Typography>
       <Stack flexDirection="row" gap="xxs" alignItems="center">
@@ -364,8 +374,8 @@ const DeployList = ({
         </LinkButton>
       </Stack>
       {project.deploys.length === 0 ? (
-        // 実物は px-6 py-16。面の padding を xxl にして近づける
-        <Paper elevation={0} outlined padding="xxl">
+        // 実物は Paper outlined の中の flex-col items-center gap-1 px-6 py-16。面の padding を xxl にして近づける
+        <Paper outlined padding="xxl">
           <Stack gap="xxs" alignItems="center">
             <Typography component="div" size="m" fontWeight="bold">
               デプロイはまだありません
@@ -379,7 +389,9 @@ const DeployList = ({
           </Stack>
         </Paper>
       ) : (
-        <Paper padding="none" elevation={0} outlined>
+        // 実物は Paper outlined（overflow-hidden）。列見出しの下線は #e0e0e0、行の区切りは #e0e0e0 の 40%。
+        // GAP-NEW: Divider に色の指定が無く、行の区切りが実物より濃い
+        <Paper padding="none" outlined>
           {/* GAP-NEW: 表示/非表示のレスポンシブ指定が無い。実物は md 未満で列見出しを隠す */}
           <Paper padding="m" elevation={0}>
             <Grid spacing="s">
@@ -407,16 +419,19 @@ const DeployList = ({
                 label={`${d.git?.commitMessage ?? 'アップロード'} の詳細`}
                 onOpen={() => onOpenDeploy(d.id)}
               >
-                {/* GAP-NEW: Grid に alignItems が無く、右列を左列の縦中央にそろえられない */}
-                <Grid spacing="s" alignContent="center">
+                {/* GAP-NEW: Grid に alignItems が無く、右列を左列の縦中央にそろえられない。
+                    実物は grid-cols-[1fr_auto] gap-x-3、md 以上は grid-cols-[1fr_10rem] gap-x-0。
+                    spacing に 0 の段階が無く、gapless もレスポンシブにできないので常に s にしている */}
+                <Grid spacing="s">
                   <GridItem size={{ xxs: 8, m: 9 }}>
                     <DeployRowSummary deploy={d} />
                   </GridItem>
                   <GridItem size={{ xxs: 4, m: 3 }}>
                     {/* GAP-17: 実物は md 未満で右寄せの縦積み、md 以上で横並び。alignItems がレスポンシブにできない */}
+                    {/* 実物は flex-col items-end gap-0.5、md 以上は flex-row items-center justify-between gap-2 */}
                     <Stack
                       flexDirection={{ xxs: 'column', m: 'row' }}
-                      gap="xxs"
+                      gap={{ xxs: 'xxs', m: 'xs' }}
                       justifyContent="space-between"
                     >
                       <StatusIndicator color={statusColor(d.status)}>
@@ -553,7 +568,7 @@ const BuildLog = ({ lines }: { lines: string[] }) => {
               setTimeout(() => setCopied(false), 2000)
             }}
           >
-            <Icon name={copied ? 'check' : 'copy'} size="s" />
+            <Icon name={copied ? 'check' : 'copy'} size="s" color="currentColor" />
           </Button>
         </Stack>
         <Divider />
@@ -665,6 +680,8 @@ const DeployDetail = ({
   const publicHost = previewHost ?? project.domain
   return (
     <Stack gap="l">
+      {/* 実物は nav（flex-wrap gap-1.5）に Link > Typography s medium_emphasis、「/」（s low_emphasis）、
+          現在地（s）を手で並べている。GAP は deployNowShell の ProjectDetailLayout のパンくずと同じ */}
       <Breadcrumbs>
         <Breadcrumb href="#" onPress={() => navigate('projects')}>
           プロジェクト
@@ -675,7 +692,14 @@ const DeployDetail = ({
         <Breadcrumb>デプロイ詳細</Breadcrumb>
       </Breadcrumbs>
 
-      <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="m" justifyContent="space-between">
+      {/* 実物は flex-col gap-3、sm 以上で flex-row items-start justify-between gap-4。
+          GAP-17: items-start を sm 以上だけに付けられないので常に flex-start にしている */}
+      <Stack
+        flexDirection={{ xxs: 'column', s: 'row' }}
+        gap={{ xxs: 's', s: 'm' }}
+        alignItems="flex-start"
+        justifyContent="space-between"
+      >
         <Stack gap="xs">
           <Typography size="xxl" fontWeight="bold" component="h1">
             {d.git?.commitMessage || 'デプロイ詳細'}
@@ -688,6 +712,7 @@ const DeployDetail = ({
             </Stack>
           )}
         </Stack>
+        {/* 実物は flex-wrap も付けている。GAP-NEW: Stack に折り返しが無い */}
         <Stack flexDirection="row" gap="s" alignItems="center">
           {!d.preview && (
             <Button
@@ -700,17 +725,16 @@ const DeployDetail = ({
             </Button>
           )}
           {d.status === 'READY' && publicHost && (
-            <LinkButton
-              href={`https://${publicHost}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            // 実物は LinkButton ではなく Button で、押すと window.open で別タブに開く
+            <Button
               appearance="flat"
               color="neutral"
               size="s"
-              trailing={<Icon name="launch" size="s" />}
+              onPress={() => window.open(`https://${publicHost}`, '_blank', 'noopener,noreferrer')}
+              trailing={<Icon name="launch" size="s" color="currentColor" />}
             >
               公開URLを開く
-            </LinkButton>
+            </Button>
           )}
         </Stack>
       </Stack>
@@ -729,7 +753,10 @@ const DeployDetail = ({
         </MetaRow>
       </Stack>
 
-      <Paper padding="none" elevation={0} outlined>
+      {/* 実物は Paper outlined（overflow-hidden）の ul。行は min-h-[52px] pl-6 pr-5 で、グリフと文字の間は gap-2.5（10px）、
+          ビルドログは行の下の px-6 pb-5。区切りは #e0e0e0 の 40%。
+          GAP-NEW: Divider に色の指定が無く、行ごとの padding も 4 辺同じ値しか取れない */}
+      <Paper padding="none" outlined>
         {stagesOf(d).map((stage, i) => (
           <Stack key={stage.key}>
             {i > 0 && <Divider />}

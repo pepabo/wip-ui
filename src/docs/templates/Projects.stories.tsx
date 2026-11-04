@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { Button } from '../../Button'
+import { Button, LinkButton } from '../../Button'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
@@ -11,6 +11,7 @@ import { Sticker } from '../../Sticker'
 import { Typography } from '../../Typography'
 import contestBanner from './assets/deploy-now/contest-banner.webp'
 import { DeployNowShell, useDeployNowNavigate } from './deployNowShell'
+import { TextLink } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -39,6 +40,9 @@ const meta = {
 
 export default meta
 type Story = StoryObj<typeof meta>
+
+// 実物の Typography は component を省いた p が多いが、実物は Tailwind の preflight で p の margin が 0 になる。
+// この Storybook では p の既定の margin（上下 1em）が残るため、p を div（行内は span）にしている。
 
 // ─── データ（features/Projects/model.ts の ProjectListItem と同じ形。値はダミー）───
 
@@ -218,11 +222,14 @@ const UsageMetricCard = ({ metric }: { metric: UsageMetric }) => {
   // model.ts：使用率は floor、残りは 100 - 使用率（0 未満にしない）
   const usedPercent = Math.floor(ratio * 100)
   return (
+    // 実物の flex flex-col gap-2 p-5。GAP-NEW: セルの p-5（20px）は Stack に padding が無く出せない
     <Stack gap="xs">
-      {/* 実物は md の 3 カラムだけラベルと「残り n%」を縦積みにし、lg 以上で横並びに戻す */}
+      {/* 実物は md の 3 カラムだけラベルと「残り n%」を縦積み（gap-y-0.5）にし、lg 以上で横並び（gap-x-2）に戻す。
+          GAP-17: 横並びのときの items-center（縦積みのときは items-start）が alignItems のレスポンシブで出せない。
+          gap-y-0.5（2px）は段階に無く、xxs（4px）にしている */}
       <Stack
         flexDirection={{ xxs: 'row', m: 'column', l: 'row' }}
-        gap="xs"
+        gap={{ xxs: 'xs', m: 'xxs', l: 'xs' }}
         justifyContent="space-between"
       >
         <Typography component="div" size="m" color="medium_emphasis">
@@ -249,9 +256,14 @@ const UsageSummary = () => {
       <Typography component="h2" size="xxl">
         使用量
       </Typography>
+      {/* GAP-NEW: Paper の padding は 4 辺同じ値しか取れない。実物は px-3 py-6 で、見出しの行はさらに px-5、
+          各セルは p-5。ここは既定の l（24px）にし、セルの余白の分を Stack の gap と Grid の spacing で近づけている */}
       <Paper outlined>
-        <Stack gap="m">
+        <Stack gap="l">
+          {/* 実物は flex-wrap items-center justify-between gap-x-3 gap-y-2。
+              GAP-NEW: Stack に折り返し（flex-wrap）が無いので、m 未満は縦積みに切り替えている */}
           <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="s" justifyContent="space-between">
+            {/* 実物は flex-wrap items-center gap-x-3 gap-y-0.5 */}
             <Stack flexDirection="row" gap="s" alignItems="center">
               <Typography component="div" size="l">
                 利用中のプラン：Free
@@ -260,21 +272,26 @@ const UsageSummary = () => {
                 （2026/10/01 ~ 2026/10/31 ご利用分）
               </Typography>
             </Stack>
-            {/* 遷移先は lolipop-user のアカウント画面（課金タブ）で別タブ */}
+            {/* 遷移先は lolipop-user のアカウント画面（課金タブ）で別タブ。実物は launch のアイコンを
+                trailing ではなく children の中に inline-flex gap-1 で並べている */}
             <Stack flexDirection="row">
-              <Button
+              <LinkButton
+                href="#"
                 appearance="outlined"
                 color="neutral"
                 size="s"
-                trailing={<Icon name="launch" size="s" />}
                 onPress={() => navigate('account-settings')}
               >
-                プラン管理
-              </Button>
+                <Stack flexDirection="row" gap="xxs" alignItems="center">
+                  プラン管理
+                  <Icon name="launch" size="s" />
+                </Stack>
+              </LinkButton>
             </Stack>
           </Stack>
-          {/* GAP-NEW: Grid に罫線の指定が無い。実物は md 以上 3 カラム + 縦罫線（divide-x）、md 未満は横罫線 */}
-          <Grid spacing="l">
+          {/* GAP-NEW: Grid に罫線の指定が無い。実物は md 以上 3 カラム + 縦罫線（divide-x）、md 未満は横罫線で、
+              セルどうしの間は罫線の両側の p-5（計 40px）。spacing は xl（32px）にしている */}
+          <Grid spacing="xl">
             {usageMetrics.map((metric) => (
               <GridItem key={metric.label} size={{ xxs: 12, m: 4 }}>
                 <UsageMetricCard metric={metric} />
@@ -306,10 +323,14 @@ const ProjectRow = ({ project }: { project: Project }) => {
     // <Link aria-label="{name} の詳細" className="absolute inset-0"> を敷き、ドメインだけ前面に出している。
     // ここでは行の面は押せず、プロジェクト名をボタンにしている。
     // GAP-NEW: Grid に alignItems が無く、右 2 列を名前ブロックの縦中央にそろえられない
-    <Grid spacing="s">
+    // 実物は grid-cols-[1fr_auto_auto]（右 2 列は w-24）で、gap-y-2、md 以上は gap-x-8 gap-y-0
+    <Grid spacing={{ xxs: 'xs', m: 'xl' }}>
       <GridItem size={{ xxs: 12, m: 8 }}>
+        {/* 実物は名前・ドメインの間に余白が無く、リポジトリは mt-0.5、タグは mt-1。
+            GAP-NEW: 子ごとの余白が無いので一律 xxs（4px）にしている */}
         <Stack gap="xxs">
           <Stack flexDirection="row" gap="xs" alignItems="center">
+            {/* 実物の名前は Typography m bold で、押すのは行全体を覆う stretched link。ここは名前を Button で包む */}
             <Button
               appearance="transparent"
               size="s"
@@ -327,24 +348,20 @@ const ProjectRow = ({ project }: { project: Project }) => {
             />
           </Stack>
           {project.domain ? (
-            // GAP-NEW: 文中のテキストリンクが無い。実物は native a + text-[#0b3893] で公開サイトを別タブで開く
-            <Stack flexDirection="row">
-              <Button
-                appearance="transparent"
-                color="interactive"
-                size="s"
-                trailing={<Icon name="launch" size="s" />}
-              >
-                {project.domain}
-              </Button>
-            </Stack>
+            // 実物は native a + text-sm text-[#0b3893] + launch（s）で公開サイトを別タブで開く。
+            // 文中リンクの GAP は parts.tsx の TextLink に書いている
+            <TextLink href={`https://${project.domain}`} external>
+              {project.domain}
+            </TextLink>
           ) : (
-            <Typography size="s" color="low_emphasis">
+            <Typography component="div" size="s" color="low_emphasis">
               ドメイン未発行
             </Typography>
           )}
           {project.githubRepositoryFullName && (
-            // 接続リポジトリはリンクにしない（前面で押せるものをドメインだけにする）
+            // 接続リポジトリはリンクにしない（前面で押せるものをドメインだけにする）。
+            // 実物は 1 つの Typography xs medium_emphasis（span）の中にアイコンと文字を gap-1.5（6px）で並べる。
+            // GAP-NEW: Typography に flex の並びが無いので Stack で並べ、gap は xxs（4px）にしている
             <Stack flexDirection="row" gap="xxs" alignItems="center">
               <Typography component="span" size="xs" color="medium_emphasis">
                 <Icon name="github" size="s" color="currentColor" aria-hidden />
@@ -355,7 +372,7 @@ const ProjectRow = ({ project }: { project: Project }) => {
             </Stack>
           )}
           {visibleTags.length > 0 && (
-            <Stack flexDirection="row" gap="xs">
+            <Stack flexDirection="row" gap="xs" alignItems="center">
               {visibleTags.map((tag) => (
                 <Sticker key={tag} color="neutral" size="s">
                   {tag}
@@ -376,6 +393,7 @@ const ProjectRow = ({ project }: { project: Project }) => {
         </StatusIndicator>
       </GridItem>
       <GridItem size={{ xxs: 6, m: 2 }}>
+        {/* GAP-17: 実物は md 以上だけ右寄せ（md:text-right）。md 未満は行の右端に置く（justify-between）ので結果は同じ */}
         <Stack alignItems="flex-end">
           <Typography component="div" size="s" color="medium_emphasis">
             {project.lastDeployedAt}
@@ -404,7 +422,7 @@ const ProjectsBody = ({ status, items }: { status: Status; items: Project[] }) =
   if (status === 'error') {
     return (
       <Stack alignItems="center">
-        <Typography size="s" color="low_emphasis">
+        <Typography component="div" size="s" color="low_emphasis">
           プロジェクトの取得に失敗しました。時間をおいて再度お試しください。
         </Typography>
       </Stack>
@@ -412,18 +430,25 @@ const ProjectsBody = ({ status, items }: { status: Status; items: Project[] }) =
   }
   if (items.length === 0) {
     return (
+      // 実物は flex-col items-center gap-5 p-12 text-center。GAP-NEW: gap-5（20px）は段階に無く m（16px）にしている
       <Stack gap="m" alignItems="center">
         <Stack gap="xs" alignItems="center">
-          <Typography size="m" fontWeight="bold">
+          <Typography component="div" size="m" fontWeight="bold">
             まだプロジェクトがありません
           </Typography>
-          <Typography size="s" color="medium_emphasis">
+          <Typography component="div" size="s" color="medium_emphasis">
             プロジェクトを作成し、アプリケーションをデプロイ
           </Typography>
         </Stack>
-        <Button appearance="flat" color="neutral" size="s" onPress={() => navigate('new-project')}>
+        <LinkButton
+          href="#"
+          appearance="flat"
+          color="neutral"
+          size="s"
+          onPress={() => navigate('new-project')}
+        >
           プロジェクトを作成
-        </Button>
+        </LinkButton>
       </Stack>
     )
   }
@@ -431,7 +456,7 @@ const ProjectsBody = ({ status, items }: { status: Status; items: Project[] }) =
     <Stack>
       {/* GAP-NEW: 表示/非表示のレスポンシブ指定が無い。実物は md 未満で列見出しを隠す */}
       <Paper padding="m" elevation={0}>
-        <Grid spacing="s">
+        <Grid spacing={{ xxs: 'xs', m: 'xl' }}>
           <GridItem size={{ xxs: 12, m: 8 }}>
             <Typography component="span" size="xs" color="medium_emphasis">
               プロジェクト名
@@ -558,14 +583,15 @@ const ProjectsContent = ({
           プロジェクト
         </Typography>
         {showCreateButton && (
-          <Button
+          <LinkButton
+            href="#"
             appearance="flat"
             color="neutral"
             size="s"
             onPress={() => navigate('new-project')}
           >
             + 新規作成
-          </Button>
+          </LinkButton>
         )}
       </Stack>
       <Paper outlined padding={status === 'success' && items.length > 0 ? 'none' : 'xxl'}>

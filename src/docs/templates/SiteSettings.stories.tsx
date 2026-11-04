@@ -19,7 +19,7 @@ import { Tab, TabList, Tabs } from '../../Tab'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { DeployNowShell, ProjectDetailLayout, useDeployNowNavigate } from './deployNowShell'
-import { Card } from './parts'
+import { TextLink } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -50,6 +50,9 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
+// 実物の Typography は component 無し（既定の p）が多いが、実物は Tailwind の preflight で p の margin が 0。
+// Storybook には preflight が無く p の既定の margin が出るので、ここでは component="div" にしている。
+
 // 面の余白は Paper の padding で付ける（GAP-1 は解消）。設定カードと一覧の面は既定の l、
 // ダイアログの中のリポジトリ選択の面は m。
 // GAP-NEW: 行ごとに余白をとる部品が無い。一覧の行（実物は px-6 py-4）と列見出し（px-6 py-2）は
@@ -65,22 +68,6 @@ const SectionLoading = () => (
   <Stack alignItems="center">
     <Loader size="m" message="読み込み中" />
   </Stack>
-)
-
-// GAP-NEW: 文中のテキストリンクが無い。実物は native a + text-[#0b3893]。
-// LinkButton の transparent で代えるので、文字の前後に余白が付いて左端がそろわない。
-const ExternalLink = ({ children }: { children: ReactNode }) => (
-  <LinkButton
-    appearance="transparent"
-    color="interactive"
-    size="s"
-    href="#"
-    target="_blank"
-    rel="noopener noreferrer"
-    trailing={<Icon name="launch" size="s" />}
-  >
-    {children}
-  </LinkButton>
 )
 
 // GAP-NEW: TextField のエラー文言スロットが react-aria のネイティブ検証前提で、
@@ -238,7 +225,13 @@ type BuildState = {
   editing?: boolean
 }
 
-/** 実物の ConfigRow（sm 以上で 項目名 w-48 / 値 の横並び）。 */
+/**
+ * 実物の ConfigRow（ProjectBuildConfig）と SettingRow（ProjectGit）。
+ * どちらも flex flex-col gap-1、sm 以上で flex-row gap-4。
+ * GAP-NEW: 項目名の幅の固定（sm:w-48 shrink-0）が無いので、値の左端が行ごとにそろわない。
+ * GAP-17: 実物は sm 以上でだけ items-baseline（ConfigRow）/ items-center（SettingRow）。alignItems がレスポンシブにできないので付けていない。
+ * GAP-NEW: 値の列を伸ばす指定（flex-1）が無い。操作がある行は、項目名と値の組と操作を space-between で両端に分けている。
+ */
 const SettingRow = ({
   label,
   children,
@@ -247,22 +240,27 @@ const SettingRow = ({
   label: string
   children: ReactNode
   action?: ReactNode
-}) => (
-  // GAP-NEW: Grid に alignItems が無く、値と操作を項目名の縦中央にそろえられない
-  <Grid spacing="s" alignContent="center">
-    <GridItem size={{ xxs: 12, s: 3 }}>
+}) => {
+  const row = (
+    <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap={{ xxs: 'xxs', s: 'm' }}>
       <Typography component="div" size="s" color="medium_emphasis">
         {label}
       </Typography>
-    </GridItem>
-    <GridItem size={{ xxs: 12, s: action ? 6 : 9 }}>{children}</GridItem>
-    {action && (
-      <GridItem size={{ xxs: 12, s: 3 }}>
-        <Stack alignItems="flex-end">{action}</Stack>
-      </GridItem>
-    )}
-  </Grid>
-)
+      {children}
+    </Stack>
+  )
+  if (!action) return row
+  return (
+    <Stack
+      flexDirection={{ xxs: 'column', s: 'row' }}
+      gap={{ xxs: 'xxs', s: 'm' }}
+      justifyContent="space-between"
+    >
+      {row}
+      {action}
+    </Stack>
+  )
+}
 
 const BuildConfigForm = ({
   saved,
@@ -361,10 +359,10 @@ const BuildConfigSection = ({ state }: { state: BuildState }) => {
     ['出力ディレクトリ', config.outputDir || '—'],
   ]
   return (
-    <Card outlined elevation={0}>
+    <Paper outlined>
       <Stack gap="m">
         <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
-          <Typography component="h2" size="m" fontWeight="bold">
+          <Typography component="div" size="m" fontWeight="bold">
             ビルド設定
           </Typography>
           {!editing && (
@@ -390,7 +388,7 @@ const BuildConfigSection = ({ state }: { state: BuildState }) => {
                 <Typography
                   component="div"
                   size="s"
-                  color={value === '—' ? 'low_emphasis' : 'high_emphasis'}
+                  color={value === '—' ? 'low_emphasis' : undefined}
                 >
                   {value}
                 </Typography>
@@ -399,7 +397,7 @@ const BuildConfigSection = ({ state }: { state: BuildState }) => {
           </Stack>
         )}
       </Stack>
-    </Card>
+    </Paper>
   )
 }
 
@@ -419,10 +417,10 @@ const GitCard = ({
   onDisconnect: () => void
 }) => {
   return (
-    <Card outlined elevation={0}>
+    <Paper outlined>
       <Stack gap="m">
         <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
-          <Typography component="h2" size="m" fontWeight="bold">
+          <Typography component="div" size="m" fontWeight="bold">
             GitHub リポジトリ
           </Typography>
           {!connection && (
@@ -437,9 +435,13 @@ const GitCard = ({
               [
                 [
                   'リポジトリ',
-                  <Stack key="v" flexDirection="row">
-                    <ExternalLink>{connection.repositoryFullName}</ExternalLink>
-                  </Stack>,
+                  <TextLink
+                    key="v"
+                    href={`https://github.com/${connection.repositoryFullName}`}
+                    external
+                  >
+                    {connection.repositoryFullName}
+                  </TextLink>,
                   <Button
                     key="a"
                     appearance="outlined"
@@ -519,7 +521,7 @@ const GitCard = ({
           </Stack>
         )}
       </Stack>
-    </Card>
+    </Paper>
   )
 }
 
@@ -553,75 +555,83 @@ const ConnectionAddDialog = ({
             <DialogDescription>
               接続するリポジトリを選ぶと、push のたびに自動でデプロイされます。
             </DialogDescription>
-            <Grid spacing="s">
-              <GridItem size={{ xxs: 12, s: 5 }}>
-                <Select aria-label="アカウント" width="full" defaultSelectedKey="1001">
-                  <SelectItem id="1001" textValue="example-inc">
-                    <Stack flexDirection="row" gap="xs" alignItems="center">
-                      <Icon name="github" size="s" />
-                      example-inc
-                      <Typography component="span" size="xs" color="medium_emphasis">
-                        Organization
-                      </Typography>
-                    </Stack>
-                  </SelectItem>
-                  <SelectItem id="install-new-account" textValue="アカウント追加">
-                    <Stack flexDirection="row" gap="xs" alignItems="center">
-                      <Icon name="plus" size="s" />
-                      アカウント追加
-                    </Stack>
-                  </SelectItem>
-                </Select>
-              </GridItem>
-              <GridItem size={{ xxs: 12, s: 7 }}>
-                <TextField
-                  aria-label="リポジトリを検索"
-                  type="search"
-                  placeholder="リポジトリを検索"
-                  width="full"
-                  value={query}
-                  onChange={setQuery}
-                />
-              </GridItem>
-            </Grid>
-            <Paper padding="m" elevation={0} outlined>
-              {matched.length === 0 ? (
+            {/* 実物の GitHubRepositoryPicker（flex flex-col gap-3 sm:flex-row）。
+                GAP-NEW: 幅の割合の指定が無い。実物はアカウント選択が sm:w-2/5、検索が sm:flex-1。
+                ここは width="full" どうしが等分になる */}
+            <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s">
+              <Select aria-label="アカウント" width="full" defaultSelectedKey="1001">
+                <SelectItem id="1001" textValue="example-inc">
+                  <Stack flexDirection="row" gap="xs" alignItems="center">
+                    <Icon name="github" size="s" />
+                    example-inc
+                    <Typography component="span" size="xs" color="medium_emphasis">
+                      Organization
+                    </Typography>
+                  </Stack>
+                </SelectItem>
+                <SelectItem id="install-new-account" textValue="アカウント追加">
+                  <Stack flexDirection="row" gap="xs" alignItems="center">
+                    <Icon name="plus" size="s" />
+                    アカウント追加
+                  </Stack>
+                </SelectItem>
+              </Select>
+              <TextField
+                aria-label="リポジトリを検索"
+                type="search"
+                width="full"
+                value={query}
+                onChange={setQuery}
+                placeholder="リポジトリを検索"
+                autoComplete="off"
+              />
+            </Stack>
+            {matched.length === 0 ? (
+              // 実物は Paper outlined + py-8 text-center。GAP-NEW: 上下だけの余白が無いので padding は xl（32px）を四方に付けている
+              <Paper outlined padding="xl">
                 <Stack alignItems="center">
                   <Typography component="div" size="s" color="low_emphasis">
                     {`「${query}」に一致するリポジトリがありません。`}
                   </Typography>
                 </Stack>
-              ) : (
-                matched.map((r, i) => (
-                  <Stack key={r.id}>
-                    {i > 0 && <Divider />}
-                    <Stack
-                      flexDirection="row"
-                      gap="m"
-                      alignItems="center"
-                      justifyContent="space-between"
-                    >
-                      <Stack flexDirection="row" gap="xs" alignItems="center">
-                        <Typography component="span" size="m" fontWeight="bold">
-                          {r.name}
-                        </Typography>
-                        {r.private && <Icon name="lock" size="s" aria-label="非公開リポジトリ" />}
-                      </Stack>
-                      <Button
-                        size="s"
-                        aria-label={`${r.name} を選択`}
-                        onPress={() => setSelected(`example-inc/${r.name}`)}
+              </Paper>
+            ) : (
+              // 実物は Paper outlined の中の ul.divide-y で、行は px-4 py-3。
+              // GAP-NEW: 行ごとの余白が無いので、面の padding m（16px）と行の間の gap s（12px）+ Divider で近づける
+              <Paper outlined padding="m">
+                <Stack gap="s">
+                  {matched.map((r, i) => (
+                    <Stack key={r.id} gap="s">
+                      {i > 0 && <Divider />}
+                      <Stack
+                        flexDirection="row"
+                        gap="m"
+                        alignItems="center"
+                        justifyContent="space-between"
                       >
-                        選択
-                      </Button>
+                        <Stack flexDirection="row" gap="xs" alignItems="center">
+                          <Typography component="span" size="m" fontWeight="bold">
+                            {r.name}
+                          </Typography>
+                          {r.private && <Icon name="lock" size="s" aria-label="非公開リポジトリ" />}
+                        </Stack>
+                        <Button
+                          size="s"
+                          aria-label={`${r.name} を選択`}
+                          onPress={() => setSelected(`example-inc/${r.name}`)}
+                        >
+                          選択
+                        </Button>
+                      </Stack>
                     </Stack>
-                  </Stack>
-                ))
-              )}
-            </Paper>
+                  ))}
+                </Stack>
+              </Paper>
+            )}
             {/* 実物の GitHubRepositoryPicker の末尾（GitHub 側でアクセスを許可するリポジトリを変える導線） */}
+            {/* GAP-NEW: Stack に折り返し（flex-wrap）が無い */}
             <Stack flexDirection="row" gap="xs" alignItems="center">
-              <Typography component="span" size="s" color="medium_emphasis">
+              <Typography component="div" size="s" color="medium_emphasis">
                 目的のリポジトリがありませんか？
               </Typography>
               <ChangeRepositoryAccessLink />
@@ -629,8 +639,8 @@ const ConnectionAddDialog = ({
           </>
         ) : (
           <>
-            {/* GAP-NEW: Paper に地色の違う面（bg-neutral-100）が無い */}
-            <Paper padding="m" elevation={0} outlined>
+            {/* 実物は rounded-lg bg-neutral-100 p-4 の div。GAP-NEW: Paper に地色の違う面が無いので outlined で代える */}
+            <Paper padding="m" outlined>
               <Stack flexDirection="row" gap="xs" alignItems="center">
                 <Icon name="github" size="s" />
                 <Typography component="div" size="m" fontWeight="bold">
@@ -645,6 +655,8 @@ const ConnectionAddDialog = ({
               width="full"
               value={branch}
               onChange={setBranch}
+              autoComplete="off"
+              spellCheck="false"
             />
             <Stack flexDirection="row">
               <Button
@@ -742,9 +754,9 @@ const TagsCard = ({
   onAdd: () => void
   onDetach: (t: string) => void
 }) => (
-  <Card outlined elevation={0}>
+  <Paper outlined>
     <Stack gap="m">
-      <Typography component="h2" size="m" fontWeight="bold">
+      <Typography component="div" size="m" fontWeight="bold">
         タグ
       </Typography>
       {loadFailed ? (
@@ -778,7 +790,7 @@ const TagsCard = ({
         </Stack>
       )}
     </Stack>
-  </Card>
+  </Paper>
 )
 
 /** 実物の TagAddDialog（w-[472px]）。既存のタグを押すか、新しいタグを入れて「追加」。 */
@@ -906,10 +918,10 @@ const SettingsScreen = ({
             onAdd={() => setDialog({ kind: 'tag' })}
             onDetach={(t) => setTags(tags.filter((x) => x !== t))}
           />
-          <Card outlined elevation={0}>
+          <Paper outlined>
             <Stack flexDirection="row" gap="m" alignItems="center" justifyContent="space-between">
               <Stack gap="xxs">
-                <Typography component="h2" size="m" fontWeight="bold">
+                <Typography component="div" size="m" fontWeight="bold">
                   プロジェクト削除
                 </Typography>
                 <Typography component="div" size="s" color="medium_emphasis">
@@ -925,7 +937,7 @@ const SettingsScreen = ({
                 削除
               </Button>
             </Stack>
-          </Card>
+          </Paper>
         </Stack>
       </ProjectDetailLayout>
 
@@ -1066,8 +1078,10 @@ const EnvVarList = ({
   onEdit: (env: EnvVar) => void
   onDelete: (env: EnvVar) => void
 }) => (
-  // 空の案内は実物の px-6 py-16。面の padding を xxl にして近づける
-  <Paper elevation={0} outlined padding={vars.length === 0 ? 'xxl' : 'l'}>
+  // 実物は Paper outlined overflow-hidden。空の案内は px-6 py-16 なので padding を xxl（48px）にして近づける。
+  // 一覧は列見出しが px-6 py-2、行が px-6 py-4 で、間を区切り線で分ける。GAP-NEW: 行ごとの余白が無いので、
+  // 面の padding l（24px）と行の間の gap m（16px）+ Divider で近づける（列見出しの下も 16px になる）
+  <Paper outlined padding={vars.length === 0 ? 'xxl' : 'l'}>
     {vars.length === 0 ? (
       target === 'preview' ? (
         <EmptyState
@@ -1081,7 +1095,8 @@ const EnvVarList = ({
         />
       )
     ) : (
-      <>
+      <Stack gap="m">
+        {/* GAP-NEW: 実物の列は md 以上で 320px 固定 / 1fr / auto。Grid の 12 分割で近づけている */}
         <Grid spacing="s">
           <GridItem size={{ xxs: 10, m: 4 }}>
             <Typography component="span" size="xs" color="medium_emphasis">
@@ -1095,7 +1110,7 @@ const EnvVarList = ({
           </GridItem>
         </Grid>
         {vars.map((env) => (
-          <Stack key={env.id}>
+          <Stack key={env.id} gap="m">
             <Divider />
             <Grid spacing="s" alignContent="center">
               <GridItem size={{ xxs: 10, m: 4 }}>
@@ -1116,7 +1131,7 @@ const EnvVarList = ({
                       iconOnly
                       aria-label={`${env.key} の操作`}
                     >
-                      <Icon name="ellipsis_horizontal" size="s" aria-hidden="true" />
+                      <Icon name="ellipsis_horizontal" size="s" />
                     </Button>
                     <Menu placement="bottom end">
                       <MenuItem onAction={() => onEdit(env)}>編集</MenuItem>
@@ -1130,7 +1145,7 @@ const EnvVarList = ({
             </Grid>
           </Stack>
         ))}
-      </>
+      </Stack>
     )}
   </Paper>
 )
@@ -1329,6 +1344,8 @@ const EnvVarsScreen = ({
   return (
     <DeployNowShell>
       <ProjectDetailLayout activeTab="env">
+        {/* 実物は wip-ui の Tabs を使わず、role="tablist" の native button（text-sm、選択中は font-bold +
+            下線 2px、タブの間は gap-6）を手組みしている */}
         <Tabs selectedKey={target} onSelectionChange={(k) => setTarget(k as EnvVar['target'])}>
           {/* タブと本文の間は実物の 16px */}
           <Stack gap="m">

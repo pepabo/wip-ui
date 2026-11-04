@@ -19,7 +19,6 @@ import {
 import claudeLogo from './assets/ai-gateway/providers/claude.svg'
 import geminiLogo from './assets/ai-gateway/providers/gemini.svg'
 import openaiLogo from './assets/ai-gateway/providers/openai.svg'
-import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -226,55 +225,64 @@ const UsageChart = ({ series, entries }: { series: Series; entries: Entry[] }) =
         ]
   const peak = Math.max(...dayWeights) / weightSum
   return (
-    <Card padding="m" outlined elevation={0}>
+    // .chartCard（Paper outlined・padding 16px）。GAP: 枠の色は実物では gray[200]（#c4c9d8）。Paper の outlined の色のまま
+    <Paper outlined padding="m">
       <Stack gap="s">
-        <Typography size="xs" color="medium_emphasis" fontWeight="bold" component="div">
-          {series.title}
-        </Typography>
-        {/* GAP-NEW: Money（小数部を小さく薄くする）が無い */}
-        <Typography size="xxl" fontWeight="bold" component="div">
-          {series.format(periodValue)}
-        </Typography>
-        {periodValue === 0 ? (
-          <Stack alignItems="center" justifyContent="center">
-            <Typography size="xs" color="medium_emphasis" component="span">
-              この期間の{series.title}はありません
-            </Typography>
-          </Stack>
-        ) : (
-          <div style={plotStyle} aria-hidden="true">
-            {dayWeights.map((w, di) => (
-              <div key={days[di]} style={columnStyle}>
-                {parts.map((part, pi) =>
-                  part <= 0 ? null : (
-                    <div
-                      // biome-ignore lint/suspicious/noArrayIndexKey: 段の順は固定
-                      key={pi}
-                      style={{
-                        height: ((part / periodValue) * (w / weightSum) * PLOT_HEIGHT) / peak,
-                        background: segmentFills[pi],
-                      }}
-                    />
-                  )
-                )}
+        {/* 見出しと値の間は実物では 2px（.chartTotal の margin-top）。Stack の最小の xxs（4px）で詰める */}
+        <Stack gap="xxs">
+          <Typography size="xs" color="medium_emphasis" fontWeight="bold" component="div">
+            {series.title}
+          </Typography>
+          {/* GAP-NEW: Money（小数部を小さく薄くする）が無い */}
+          <Typography size="xxl" fontWeight="bold" component="div">
+            {series.format(periodValue)}
+          </Typography>
+        </Stack>
+        {/* グラフと目盛りの間は 4px（.chartAxis の margin-top） */}
+        <Stack gap="xxs">
+          {periodValue === 0 ? (
+            // GAP: 実物の .chartEmpty は高さ 96px の中央に置く。Stack に高さの口が無い
+            <Stack alignItems="center" justifyContent="center">
+              <Typography size="xs" color="medium_emphasis" component="span">
+                この期間の{series.title}はありません
+              </Typography>
+            </Stack>
+          ) : (
+            <div style={plotStyle} aria-hidden="true">
+              {dayWeights.map((w, di) => (
+                <div key={days[di]} style={columnStyle}>
+                  {parts.map((part, pi) =>
+                    part <= 0 ? null : (
+                      <div
+                        // biome-ignore lint/suspicious/noArrayIndexKey: 段の順は固定
+                        key={pi}
+                        style={{
+                          height: ((part / periodValue) * (w / weightSum) * PLOT_HEIGHT) / peak,
+                          background: segmentFills[pi],
+                        }}
+                      />
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={axisStyle}>
+            {days.map((d) => (
+              <div key={d} style={tickStyle}>
+                <Typography size="xxs" color="medium_emphasis" component="span">
+                  {d}
+                </Typography>
               </div>
             ))}
           </div>
-        )}
-        <div style={axisStyle}>
-          {days.map((d) => (
-            <div key={d} style={tickStyle}>
-              <Typography size="xxs" color="medium_emphasis" component="span">
-                {d}
-              </Typography>
-            </div>
-          ))}
-        </div>
+        </Stack>
         {/* Breakdown：上位 3 件の名前と値。期間の値が 0 のときは出さない。
             3 件に満たないときも 3 行ぶんの高さを取る（空の行を置く） */}
         {periodValue > 0 && (
           <>
             <Divider />
+            {/* 行の間は実物では 6px（.modelList の gap）。Stack の xs（8px） */}
             <Stack gap="xs">
               {Array.from({ length: SHOWN_ENTRIES }, (_, i) => top[i]).map((e, i) =>
                 e === undefined ? (
@@ -283,7 +291,13 @@ const UsageChart = ({ series, entries }: { series: Series; entries: Entry[] }) =
                     {'\u00a0'}
                   </Typography>
                 ) : (
-                  <Stack key={e.key} flexDirection="row" justifyContent="space-between" gap="s">
+                  <Stack
+                    key={e.key}
+                    flexDirection="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    gap="s"
+                  >
                     {/* GAP-NEW: 説明の InfoTip が無い */}
                     <Stack flexDirection="row" gap="xs" alignItems="center">
                       {/* GAP-NEW: 画像の枠（Image）が無い。実物は object-fit: contain で縮めず収める */}
@@ -302,11 +316,12 @@ const UsageChart = ({ series, entries }: { series: Series; entries: Entry[] }) =
           </>
         )}
       </Stack>
-    </Card>
+    </Paper>
   )
 }
 
-// GAP-NEW: SegmentedControl が無い（shared/ui/SegmentedControl）。選択中を flat、ほかを outlined にして並べる
+// GAP-NEW: SegmentedControl が無い（shared/ui/SegmentedControl）。実物は白い地に gray[200] の枠のトラックの中に、
+// 16px・gray[600] の項目を並べ、選択中は gray[100] の地と太字。ここでは選択中を neutral の outlined、ほかを neutral の transparent にして並べる
 const Segmented = <T extends string>({
   label,
   options,
@@ -323,7 +338,8 @@ const Segmented = <T extends string>({
       <Button
         key={o.id}
         size="s"
-        appearance={o.id === value ? 'flat' : 'outlined'}
+        color="neutral"
+        appearance={o.id === value ? 'outlined' : 'transparent'}
         aria-label={`${label}: ${o.label}`}
         onPress={() => onChange(o.id)}
       >
@@ -349,7 +365,7 @@ const RetryCallout = ({ message }: { message: string }) => (
 
 /** h2 の見出しと右のコントロール（sectionHead） */
 const SectionHead = ({ title, action }: { title: string; action?: ReactNode }) => (
-  <Stack flexDirection="row" gap="m" alignItems="center" justifyContent="space-between">
+  <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
     <Typography component="h2" size="xl" fontWeight="bold">
       {title}
     </Typography>
@@ -389,7 +405,8 @@ const DailyChartsSection = ({
       />
       <Grid spacing="m">
         {series.map((s) => (
-          <GridItem key={s.key} size={{ xxs: 12, l: 4 }}>
+          // chartGrid: 600px 未満は 1 列、600px 以上は 2 列、900px 以上は 3 列
+          <GridItem key={s.key} size={{ xxs: 12, s: 6, m: 4 }}>
             <UsageChart series={s} entries={entries} />
           </GridItem>
         ))}
@@ -399,14 +416,14 @@ const DailyChartsSection = ({
 }
 
 // GAP-NEW: Table のセルに 2 段目の補足（DataTableText tone="secondary"）を置く型が無く、
-// 数値の右寄せ（align="end"）も無い。Stack で縦に積み、右寄せにしている。列見出しは左寄せのまま
+// 数値の右寄せ（align="end"）も無い。Stack で縦に積み、右寄せにしている。列見出しは左寄せのまま。
+// 1 段目は DataTableText の既定（16px）、2 段目は tone="secondary"（14px・行の高さ 20px）。
+// GAP: secondary の色は実物では gray[700]（#3d455b）。Typography の medium_emphasis で写している
 const Lines = ({ primary, secondary = [] }: { primary: string; secondary?: string[] }) => (
   <Stack gap="xxs" alignItems="flex-end">
-    <Typography size="s" component="span">
-      {primary}
-    </Typography>
+    <Typography component="span">{primary}</Typography>
     {secondary.map((line) => (
-      <Typography key={line} size="xs" color="medium_emphasis" component="span">
+      <Typography key={line} size="s" density="dense" color="medium_emphasis" component="span">
         {line}
       </Typography>
     ))}
@@ -464,7 +481,7 @@ const SHOWN_PROJECTS = 10
 
 // 実装の DataTable は角丸の枠と横スクロールを持つ
 const TableFrame = ({ children }: { children: ReactNode }) => (
-  <Paper padding="none" elevation={0} outlined>
+  <Paper padding="none" outlined>
     {children}
   </Paper>
 )
@@ -658,9 +675,9 @@ const KeyBreakdownSection = ({
           >
             {sorted.map((e) => (
               <Row key={e.key} id={e.key} isDisabled={e.disabled}>
-                {/* 実物はキー名を太字（styles.keyName）で出す */}
+                {/* 実物はキー名を太字（styles.keyName）で出す。大きさは DataTableText の既定（16px） */}
                 <Cell>
-                  <Typography size="s" fontWeight="bold" component="span">
+                  <Typography fontWeight="bold" component="span">
                     {e.label}
                   </Typography>
                 </Cell>

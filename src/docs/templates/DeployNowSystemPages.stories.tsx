@@ -34,7 +34,8 @@ const MaintenanceScreen = () => {
       <Typography size="s" color="low_emphasis">
         現在メンテナンスを実施しています。ご不便をおかけしますが、しばらく時間をおいてから再度アクセスしてください。
       </Typography>
-      {/* 実物は Tailwind の黒地の a。フルリロードでプロジェクト一覧へ入り直す */}
+      {/* 実物は Tailwind の黒地の a（h-10・w-full・text-sm font-medium）。フルリロードでプロジェクト一覧へ入り直す。
+          GAP: 高さ 40px と文字 14px を同時に合わせる Button の size が無い（DeployNowAuth と同じ）。size m にしている */}
       <LinkButton
         href="#"
         appearance="flat"
