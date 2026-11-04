@@ -631,21 +631,24 @@ const PaymentTabPanels = ({
       defaultSelectedKey={tab}
       onSelectionChange={(key) => navigate(key === 'history' ? 'payment-history' : 'payment')}
     >
-      {/* 実物の aria-label は 'basic tabs example' */}
-      <TabList aria-label="支払い">
-        <Tab id="detail">詳細</Tab>
-        <Tab id="history">履歴</Tab>
-      </TabList>
-      <TabPanel id="detail">
-        <Stack gap="l">
-          <RecentPaymentsPaper state={state} dialogs={dialogs} />
-          {/* 特典アカウント（isBenefitAccount）では出ない */}
-          <PaymentMethodsPaper state={state} dialogs={dialogs} />
-        </Stack>
-      </TabPanel>
-      <TabPanel id="history">
-        <PaymentHistoryPaper dialogs={dialogs} />
-      </TabPanel>
+      {/* Tabs と各タブの中身の間は Stack spacing 2（16px） */}
+      <Stack gap="m">
+        {/* 実物の aria-label は 'basic tabs example' */}
+        <TabList aria-label="支払い">
+          <Tab id="detail">詳細</Tab>
+          <Tab id="history">履歴</Tab>
+        </TabList>
+        <TabPanel id="detail">
+          <Stack gap="l">
+            <RecentPaymentsPaper state={state} dialogs={dialogs} />
+            {/* 特典アカウント（isBenefitAccount）では出ない */}
+            <PaymentMethodsPaper state={state} dialogs={dialogs} />
+          </Stack>
+        </TabPanel>
+        <TabPanel id="history">
+          <PaymentHistoryPaper dialogs={dialogs} />
+        </TabPanel>
+      </Stack>
     </Tabs>
   )
 }

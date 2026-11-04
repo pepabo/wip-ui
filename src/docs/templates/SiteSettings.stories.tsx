@@ -52,10 +52,8 @@ type Story = StoryObj<typeof meta>
 // ダイアログの中のリポジトリ選択の面は m。
 // GAP-NEW: 行ごとに余白をとる部品が無い。一覧の行（実物は px-6 py-4）と列見出し（px-6 py-2）は
 //          面の余白の内側に並ぶので、区切り線が面の端まで届かない。
-// GAP-NEW: 余白をとる部品が無い。空の案内と読み込み中（実物は px-6 py-16 / py-16）の広い上下の余白。
-//          inline style を当てない方針のため未対応。
-// GAP-NEW: TabPanel と本文のあいだの間隔（実物は 16px）を付ける prop が無く、
-//          タブの下線に本文が接する。inline style を当てない方針のため未対応。
+// GAP-NEW: 余白をとる部品が無い。面を持たない読み込み中（実物は py-16）の広い上下の余白。
+//          Stack の gap は要素の間にしか付かず、Paper は白い面になるので付けられない。
 
 // GAP-NEW: Button の isPending に見た目が無い（押せなくなるだけ）。実物の wip-ui も同じなので、
 // 処理中が分かるよう leading に Loader を入れている。
@@ -1066,7 +1064,8 @@ const EnvVarList = ({
   onEdit: (env: EnvVar) => void
   onDelete: (env: EnvVar) => void
 }) => (
-  <Paper elevation={0} outlined>
+  // 空の案内は実物の px-6 py-16。面の padding を xxl にして近づける
+  <Paper elevation={0} outlined padding={vars.length === 0 ? 'xxl' : 'l'}>
     {vars.length === 0 ? (
       target === 'preview' ? (
         <EmptyState
@@ -1329,68 +1328,71 @@ const EnvVarsScreen = ({
     <DeployNowShell>
       <ProjectDetailLayout activeTab="env">
         <Tabs selectedKey={target} onSelectionChange={(k) => setTarget(k as EnvVar['target'])}>
-          <TabList aria-label="環境変数の環境">
-            <Tab id="production">本番</Tab>
-            <Tab id="preview">プレビュー</Tab>
-          </TabList>
-          {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
-          {(['production', 'preview'] as const).map((t) => (
-            <TabPanel key={t} id={t}>
-              <Stack gap="m">
-                <Stack alignItems="flex-end">
-                  <Button
-                    appearance="flat"
-                    color="neutral"
-                    size="s"
-                    onPress={() => setDialog({ kind: 'form', editing: null })}
-                  >
-                    + 環境変数を追加
-                  </Button>
+          {/* タブと本文の間は実物の 16px */}
+          <Stack gap="m">
+            <TabList aria-label="環境変数の環境">
+              <Tab id="production">本番</Tab>
+              <Tab id="preview">プレビュー</Tab>
+            </TabList>
+            {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
+            {(['production', 'preview'] as const).map((t) => (
+              <TabPanel key={t} id={t}>
+                <Stack gap="m">
+                  <Stack alignItems="flex-end">
+                    <Button
+                      appearance="flat"
+                      color="neutral"
+                      size="s"
+                      onPress={() => setDialog({ kind: 'form', editing: null })}
+                    >
+                      + 環境変数を追加
+                    </Button>
+                  </Stack>
+                  {!hasAiGatewayKey && (
+                    <Callout
+                      color="neutral"
+                      appearance="flat"
+                      action={
+                        <LinkButton
+                          href="https://lolipop.jp/ai/gateway/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          appearance="outlined"
+                          size="s"
+                          trailing={<Icon name="launch" size="s" />}
+                        >
+                          APIキーを発行
+                        </LinkButton>
+                      }
+                    >
+                      <Stack gap="xxs">
+                        <Typography component="div" size="s" fontWeight="bold">
+                          アプリにAIを組み込むには
+                        </Typography>
+                        <Typography component="div" size="xs" color="medium_emphasis">
+                          ロリポップ！AIゲートウェイは、Claude・GPT・Gemini
+                          などのAIモデルをひとつのAPIキーで呼び出せるサービスです。
+                          <br />
+                          {/* GAP-20: 実物はキー名を font-mono の code チップで出している */}
+                          発行したキーを{' '}
+                          <Typography component="span" size="xs" fontWeight="bold">
+                            {AI_GATEWAY_ENV_KEY}
+                          </Typography>{' '}
+                          として追加すると、アプリから使えます。
+                        </Typography>
+                      </Stack>
+                    </Callout>
+                  )}
+                  <EnvVarList
+                    vars={vars.filter((e) => e.target === t)}
+                    target={t}
+                    onEdit={(env) => setDialog({ kind: 'form', editing: env })}
+                    onDelete={(env) => setDialog({ kind: 'delete', env })}
+                  />
                 </Stack>
-                {!hasAiGatewayKey && (
-                  <Callout
-                    color="neutral"
-                    appearance="flat"
-                    action={
-                      <LinkButton
-                        href="https://lolipop.jp/ai/gateway/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        appearance="outlined"
-                        size="s"
-                        trailing={<Icon name="launch" size="s" />}
-                      >
-                        APIキーを発行
-                      </LinkButton>
-                    }
-                  >
-                    <Stack gap="xxs">
-                      <Typography component="div" size="s" fontWeight="bold">
-                        アプリにAIを組み込むには
-                      </Typography>
-                      <Typography component="div" size="xs" color="medium_emphasis">
-                        ロリポップ！AIゲートウェイは、Claude・GPT・Gemini
-                        などのAIモデルをひとつのAPIキーで呼び出せるサービスです。
-                        <br />
-                        {/* GAP-20: 実物はキー名を font-mono の code チップで出している */}
-                        発行したキーを{' '}
-                        <Typography component="span" size="xs" fontWeight="bold">
-                          {AI_GATEWAY_ENV_KEY}
-                        </Typography>{' '}
-                        として追加すると、アプリから使えます。
-                      </Typography>
-                    </Stack>
-                  </Callout>
-                )}
-                <EnvVarList
-                  vars={vars.filter((e) => e.target === t)}
-                  target={t}
-                  onEdit={(env) => setDialog({ kind: 'form', editing: env })}
-                  onDelete={(env) => setDialog({ kind: 'delete', env })}
-                />
-              </Stack>
-            </TabPanel>
-          ))}
+              </TabPanel>
+            ))}
+          </Stack>
         </Tabs>
       </ProjectDetailLayout>
 

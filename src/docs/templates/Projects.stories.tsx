@@ -389,7 +389,7 @@ type Status = 'pending' | 'error' | 'success'
 // 一覧の面は padding="none" にして区切り線を面の端まで通し、列見出しと行は padding="m" の入れ子の Paper で余白を付ける
 // （Deploys の一覧と同じ組み方）。
 // GAP-NEW: Paper の padding は上下左右で同じ値しか取れない。実物は列見出しが px-6 py-3、行が px-6 py-3.5 で、
-// ここは 4 辺とも m（16px）になり左右が 8px 狭い。読み込み中・取得失敗（py-16）、空（p-12）の広い余白も付けられない。
+// ここは 4 辺とも m（16px）になり左右が 8px 狭い。読み込み中・取得失敗（py-16）、空（p-12）は面の padding を xxl にする。
 const ProjectsBody = ({ status, items }: { status: Status; items: Project[] }) => {
   const navigate = useDeployNowNavigate()
   if (status === 'pending') {
@@ -566,7 +566,7 @@ const ProjectsContent = ({
           </Button>
         )}
       </Stack>
-      <Paper outlined padding={status === 'success' && items.length > 0 ? 'none' : 'l'}>
+      <Paper outlined padding={status === 'success' && items.length > 0 ? 'none' : 'xxl'}>
         <ProjectsBody status={status} items={items} />
       </Paper>
       {showPager && <Pager />}

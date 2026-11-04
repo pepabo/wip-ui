@@ -121,14 +121,19 @@ const ExternalIdpButtons = ({ disabled }: { disabled: boolean }) => {
   )
 }
 
-/** MUI の <Divider><Typography variant='s'>または</Typography></Divider>。線と文字を並べる */
+/**
+ * MUI の <Divider><Typography variant='s'>または</Typography></Divider>。線と文字を並べる。
+ * 文字は縮まない GridItem（flex-shrink: 0）に入れて 1 行のまま保ち、左右の線が残りの幅に伸びる
+ */
 const OrDivider = () => (
   <Stack flexDirection="row" gap="s" alignItems="center">
-    <Divider flexItem />
-    <Typography size="s" component="span">
-      または
-    </Typography>
-    <Divider flexItem />
+    <Divider />
+    <GridItem>
+      <Typography size="s" component="span">
+        または
+      </Typography>
+    </GridItem>
+    <Divider />
   </Stack>
 )
 

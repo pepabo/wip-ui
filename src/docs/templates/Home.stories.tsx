@@ -68,9 +68,6 @@ const Meter = ({ ratio }: { ratio: number }) => (
   </Typography>
 )
 
-// GAP-NEW: TabPanel に本文との間隔（実物は Grid の mt={2}・16px）が無い。inline style を当てない方針のため未対応で、
-// タブの下線に本文が接する。
-
 // ─── データ：ゲームサーバー（形は apollo の API レスポンスに合わせ、値はダミー）───
 
 // 表示名は backend/entity/game.go の GameDisplayNames
@@ -750,29 +747,32 @@ const HomeContents = ({
   return (
     <>
       <Tabs defaultSelectedKey={defaultTab}>
-        {/* 実物の aria-label は 'basic tabs example' のまま。ここでは内容に合わせる */}
-        <TabList aria-label="ホーム">
-          <Tab id="servers">
-            <Stack flexDirection="row" gap="xs" alignItems="center">
-              {/* GAP-NEW: DnsOutlined（ラックのサーバー）に当たるアイコンが無いので node で代用 */}
-              <Icon name="node" size="m" />
-              サーバー
-            </Stack>
-          </Tab>
-          <Tab id="myBackups">
-            <Stack flexDirection="row" gap="xs" alignItems="center">
-              <Icon name="person" size="m" />
-              マイバックアップ
-            </Stack>
-          </Tab>
-        </TabList>
-        {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
-        <TabPanel id="servers">
-          <ServerCardsList items={items} onRename={setRenaming} />
-        </TabPanel>
-        <TabPanel id="myBackups">
-          <MyBackupPaper items={backups} />
-        </TabPanel>
+        {/* タブと本文の間は実物の Grid mt={2}（16px） */}
+        <Stack gap="m">
+          {/* 実物の aria-label は 'basic tabs example' のまま。ここでは内容に合わせる */}
+          <TabList aria-label="ホーム">
+            <Tab id="servers">
+              <Stack flexDirection="row" gap="xs" alignItems="center">
+                {/* GAP-NEW: DnsOutlined（ラックのサーバー）に当たるアイコンが無いので node で代用 */}
+                <Icon name="node" size="m" />
+                サーバー
+              </Stack>
+            </Tab>
+            <Tab id="myBackups">
+              <Stack flexDirection="row" gap="xs" alignItems="center">
+                <Icon name="person" size="m" />
+                マイバックアップ
+              </Stack>
+            </Tab>
+          </TabList>
+          {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
+          <TabPanel id="servers">
+            <ServerCardsList items={items} onRename={setRenaming} />
+          </TabPanel>
+          <TabPanel id="myBackups">
+            <MyBackupPaper items={backups} />
+          </TabPanel>
+        </Stack>
       </Tabs>
       {/* key で開くたびに入力欄を現在の名前に戻す */}
       <RenameDialog

@@ -47,8 +47,8 @@ type Story = StoryObj<typeof meta>
 // 行・列見出し・段階の行はそれぞれ padding="m" の入れ子の Paper で余白を付ける。ビルドログの面も m。
 // GAP-NEW: Paper の padding は上下左右で同じ値しか取れない。実物の行は px-6 py-4（列見出しは px-6 py-2、
 //          段階の行は pl-6 pr-5 min-h-[52px]）で、ここは 4 辺とも m（16px）になり左右が 8px 狭い。
-// GAP-NEW: 余白をとる部品が無い。読み込み中・取得失敗の案内（実物は px-6 py-16）の余白。
-//          inline style を当てない方針のため未対応。
+// GAP-NEW: 余白をとる部品が無い。面を持たない読み込み中・取得失敗の案内（実物は px-6 py-16）の上下の余白。
+//          Stack の gap は要素の間にしか付かず、Paper は白い面になるので付けられない。
 
 // GAP-NEW: 行全体をリンクにする一覧（stretched link / GridList）が無い。
 // 実物は行ごと next/link で包み hover で bg-neutral-50 にしている。Paper に role="link" を付けて代える。
@@ -388,7 +388,8 @@ const DeployList = ({
         </LinkButton>
       </Stack>
       {project.deploys.length === 0 ? (
-        <Paper elevation={0} outlined>
+        // 実物は px-6 py-16。面の padding を xxl にして近づける
+        <Paper elevation={0} outlined padding="xxl">
           <Stack gap="xxs" alignItems="center">
             <Typography component="div" size="m" fontWeight="bold">
               デプロイはまだありません

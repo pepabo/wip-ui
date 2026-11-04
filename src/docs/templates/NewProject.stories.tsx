@@ -48,13 +48,13 @@ const DEPLOY_PROMPT =
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// 面の余白は Paper の padding で付ける（GAP-1 は解消）。カードと CenteredNotice は既定の l、
+// 面の余白は Paper の padding で付ける（GAP-1 は解消）。カードは既定の l、CenteredNotice（実物は px-6 py-16）は xxl、
 // 面の中に置く値とコピーの面・ファイル一覧の面・インポート元の面（実物は p-4）とコード表示面は m、
 // ドロップ領域（実物は px-8 py-16）は xxl。
 // GAP-NEW: 行ごとに余白をとる部品が無い。一覧の行（実物は px-4 py-3 のリポジトリ・px-3 py-2 のファイル）は
 //          面の余白の内側に並ぶので、区切り線が面の端まで届かない。
-// GAP-NEW: 余白をとる部品が無い。読み込み中・取得失敗の案内（実物は px-6 py-16）の広い上下の余白。
-//          inline style を当てない方針のため未対応。
+// GAP-NEW: 余白をとる部品が無い。面を持たない読み込み中・取得失敗の案内（実物は px-6 py-16）の広い上下の余白。
+//          Stack の gap は要素の間にしか付かず、Paper は白い面になるので付けられない。
 
 // GAP-NEW: 文中のテキストリンクが無い。実物は native a / button + text-sky-700（または #0b3893）。
 // LinkButton の transparent で代えるので、文字の前後に余白が付く。
@@ -81,7 +81,7 @@ const CenteredMessage = ({ message }: { message: string }) => (
 
 /** 実物の CenteredNotice（Paper outlined + px-6 py-16 + 中央寄せ）。 */
 const CenteredNotice = ({ message, children }: { message: string; children?: ReactNode }) => (
-  <Paper elevation={0} outlined>
+  <Paper elevation={0} outlined padding="xxl">
     <Stack gap="m" alignItems="center">
       <Typography component="div" size="s" color="low_emphasis">
         {message}
@@ -596,26 +596,34 @@ const RepositoryPicker = ({
         </Paper>
       ) : (
         <Paper elevation={0} outlined>
-          {visible.map((r, i) => (
-            <Stack key={r.id}>
-              {i > 0 && <Divider />}
-              <Stack flexDirection="row" gap="m" alignItems="center" justifyContent="space-between">
-                <Stack flexDirection="row" gap="xs" alignItems="center">
-                  <Typography component="span" size="m" fontWeight="bold">
-                    {r.name}
-                  </Typography>
-                  {r.private && <Icon name="lock" size="s" aria-label="非公開リポジトリ" />}
-                </Stack>
-                <Button
-                  size="s"
-                  aria-label={`${r.name} をインポート`}
-                  onPress={() => onSelect(r, account)}
+          {/* 行の上下は実物の py-3（12px） */}
+          <Stack gap="s">
+            {visible.map((r, i) => (
+              <Stack key={r.id} gap="s">
+                {i > 0 && <Divider />}
+                <Stack
+                  flexDirection="row"
+                  gap="m"
+                  alignItems="center"
+                  justifyContent="space-between"
                 >
-                  インポート
-                </Button>
+                  <Stack flexDirection="row" gap="xs" alignItems="center">
+                    <Typography component="span" size="m" fontWeight="bold">
+                      {r.name}
+                    </Typography>
+                    {r.private && <Icon name="lock" size="s" aria-label="非公開リポジトリ" />}
+                  </Stack>
+                  <Button
+                    size="s"
+                    aria-label={`${r.name} をインポート`}
+                    onPress={() => onSelect(r, account)}
+                  >
+                    インポート
+                  </Button>
+                </Stack>
               </Stack>
-            </Stack>
-          ))}
+            ))}
+          </Stack>
         </Paper>
       )}
       <Stack flexDirection="row" gap="xs" alignItems="center">

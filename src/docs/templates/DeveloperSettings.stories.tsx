@@ -41,8 +41,8 @@ type Story = StoryObj<typeof meta>
 // ─── GAP の回避策（inline style はここに集める） ───
 
 // 節の面（実物は px-6 py-4）の余白は Paper の既定の padding（l）で付く（GAP-1 は解消）。
-// GAP-NEW: 余白をとる部品が無い。面の中の読み込み中・取得失敗・空（実物は px-6 py-16）と、
-//          未連携の案内（px-6 py-10）の広い上下の余白。inline style を当てない方針のため未対応。
+// 面の中の読み込み中・取得失敗・空（実物は px-6 py-16）と未連携の案内（px-6 py-10）の広い上下の余白は、
+// 入れ子の Paper の padding（xl・m）を面の padding（l）に足して近づける。
 // セッションの行（実物は py-3）の上下は、一覧の Stack の gap で付けている。
 
 const DOT_COLOR: Record<StickerColor, TypographyColor> = {
@@ -67,17 +67,21 @@ const StatusIndicator = ({ color, children }: { color: StickerColor; children: R
 )
 
 const LoadingBody = () => (
-  <Stack alignItems="center">
-    <Loader size="m" message="読み込み中" />
-  </Stack>
+  <Paper elevation={0} padding="xl">
+    <Stack alignItems="center">
+      <Loader size="m" message="読み込み中" />
+    </Stack>
+  </Paper>
 )
 
 const CenteredMessage = ({ message }: { message: string }) => (
-  <Stack alignItems="center">
-    <Typography component="div" size="s" color="low_emphasis">
-      {message}
-    </Typography>
-  </Stack>
+  <Paper elevation={0} padding="xl">
+    <Stack alignItems="center">
+      <Typography component="div" size="s" color="low_emphasis">
+        {message}
+      </Typography>
+    </Stack>
+  </Paper>
 )
 
 // GAP-NEW: 箇条書き（ul / li）の部品が無い。実物は ul.list-disc の中に Typography s。
@@ -143,20 +147,22 @@ const GitHubConnectionBody = ({
   }
   if (authorization === null) {
     return (
-      <Stack gap="s" alignItems="center">
-        <Stack gap="xxs" alignItems="center">
-          <Typography component="div" size="m" fontWeight="bold">
-            連携している GitHub アカウントはありません。
-          </Typography>
-          <Typography component="div" size="s" color="medium_emphasis">
-            GitHub と接続すると、リポジトリからプロジェクトを作成できます。
-          </Typography>
+      <Paper elevation={0} padding="m">
+        <Stack gap="s" alignItems="center">
+          <Stack gap="xxs" alignItems="center">
+            <Typography component="div" size="m" fontWeight="bold">
+              連携している GitHub アカウントはありません。
+            </Typography>
+            <Typography component="div" size="s" color="medium_emphasis">
+              GitHub と接続すると、リポジトリからプロジェクトを作成できます。
+            </Typography>
+          </Stack>
+          {/* 実物は OAuth の往復のあと /projects/new/github（GitHub リポジトリをインポート）に戻る */}
+          <LinkButton href="#" onPress={() => navigate('new-project-github')}>
+            GitHub と接続
+          </LinkButton>
         </Stack>
-        {/* 実物は OAuth の往復のあと /projects/new/github（GitHub リポジトリをインポート）に戻る */}
-        <LinkButton href="#" onPress={() => navigate('new-project-github')}>
-          GitHub と接続
-        </LinkButton>
-      </Stack>
+      </Paper>
     )
   }
   return (

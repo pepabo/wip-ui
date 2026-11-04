@@ -45,8 +45,6 @@ type Story = StoryObj<typeof meta>
 // 面の余白は Paper の padding で付ける（GAP-1 は解消）。ドメインのカード（実物は px-6 py-4）は既定の l、
 // 中に置く DNS レコードのコピー欄（実物は px-3 py-2）は m。
 // GAP-NEW: 行ごとに余白をとる部品が無い。カードの行と詳細欄は面の余白の内側に並ぶので、区切り線が面の端まで届かない。
-// GAP-NEW: TabPanel と本文のあいだの間隔（実物は mb-3 = 12px）を付ける prop が無く、
-//          タブの下線に本文が接する。inline style を当てない方針のため未対応。
 
 // ─── データ（実物の DomainView と同じ形。値はダミー） ───
 
@@ -417,72 +415,78 @@ const DomainCard = ({
   const progress = <DomainProgress domain={domain} />
   return (
     <Paper elevation={0} outlined>
-      <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
-        <Typography component="span" size="s">
-          {domain.hostname}
-        </Typography>
-        <Stack flexDirection="row" gap="xs" alignItems="center">
-          {IN_PROGRESS.includes(domain.status) && <Loader size="s" />}
-          <Sticker color={st.color} size="s">
-            {st.label}
-          </Sticker>
-          {domain.kind === 'custom' && domain.status !== '削除中' && (
-            <MenuTrigger>
-              <Button
-                appearance="transparent"
-                color="neutral"
-                size="s"
-                iconOnly
-                aria-label={`${domain.hostname} の操作`}
-              >
-                <Icon name="ellipsis_horizontal" size="s" aria-hidden="true" />
-              </Button>
-              <Menu placement="bottom end">
-                <MenuItem color="negative" onAction={onDelete}>
-                  削除
-                </MenuItem>
-              </Menu>
-            </MenuTrigger>
-          )}
-        </Stack>
-      </Stack>
-      {hasDetail && (
-        <>
-          <Divider />
-          {/* GAP-NEW: Paper に地色の違う面が無い。実物の詳細欄は bg-neutral-50 */}
-          <Stack gap="s">
-            {showMethodTabs ? (
-              // 実物は wip-ui の Tabs を使わず role="tablist" の native button で手組みしている
-              // （TabPanel が export されていない・下線色と文字サイズを変えられないため）
-              <Tabs
-                selectedKey={domain.verificationMethod}
-                onSelectionChange={(k) => onChangeMethod(k as VerificationMethod)}
-              >
-                <TabList aria-label="検証方法">
-                  {METHOD_TABS.map((t) => (
-                    <Tab key={t.key} id={t.key}>
-                      <Stack flexDirection="row" gap="xs" alignItems="center">
-                        <span>{t.label}</span>
-                        <Typography component="span" size="xs" color="medium_emphasis">
-                          {t.description}
-                        </Typography>
-                      </Stack>
-                    </Tab>
-                  ))}
-                </TabList>
-                {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
-                {METHOD_TABS.map((t) => (
-                  <TabPanel key={t.key} id={t.key}>
-                    {progress}
-                  </TabPanel>
-                ))}
-              </Tabs>
-            ) : (
-              progress
+      {/* 行と詳細欄の上下は実物の py-4（16px） */}
+      <Stack gap="m">
+        <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
+          <Typography component="span" size="s">
+            {domain.hostname}
+          </Typography>
+          <Stack flexDirection="row" gap="xs" alignItems="center">
+            {IN_PROGRESS.includes(domain.status) && <Loader size="s" />}
+            <Sticker color={st.color} size="s">
+              {st.label}
+            </Sticker>
+            {domain.kind === 'custom' && domain.status !== '削除中' && (
+              <MenuTrigger>
+                <Button
+                  appearance="transparent"
+                  color="neutral"
+                  size="s"
+                  iconOnly
+                  aria-label={`${domain.hostname} の操作`}
+                >
+                  <Icon name="ellipsis_horizontal" size="s" aria-hidden="true" />
+                </Button>
+                <Menu placement="bottom end">
+                  <MenuItem color="negative" onAction={onDelete}>
+                    削除
+                  </MenuItem>
+                </Menu>
+              </MenuTrigger>
             )}
           </Stack>
-        </>
-      )}
+        </Stack>
+        {hasDetail && (
+          <>
+            <Divider />
+            {/* GAP-NEW: Paper に地色の違う面が無い。実物の詳細欄は bg-neutral-50 */}
+            <Stack gap="s">
+              {showMethodTabs ? (
+                // 実物は wip-ui の Tabs を使わず role="tablist" の native button で手組みしている
+                // （TabPanel が export されていない・下線色と文字サイズを変えられないため）
+                <Tabs
+                  selectedKey={domain.verificationMethod}
+                  onSelectionChange={(k) => onChangeMethod(k as VerificationMethod)}
+                >
+                  {/* タブと本文の間は実物の mb-3（12px） */}
+                  <Stack gap="s">
+                    <TabList aria-label="検証方法">
+                      {METHOD_TABS.map((t) => (
+                        <Tab key={t.key} id={t.key}>
+                          <Stack flexDirection="row" gap="xs" alignItems="center">
+                            <span>{t.label}</span>
+                            <Typography component="span" size="xs" color="medium_emphasis">
+                              {t.description}
+                            </Typography>
+                          </Stack>
+                        </Tab>
+                      ))}
+                    </TabList>
+                    {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
+                    {METHOD_TABS.map((t) => (
+                      <TabPanel key={t.key} id={t.key}>
+                        {progress}
+                      </TabPanel>
+                    ))}
+                  </Stack>
+                </Tabs>
+              ) : (
+                progress
+              )}
+            </Stack>
+          </>
+        )}
+      </Stack>
     </Paper>
   )
 }
@@ -624,7 +628,7 @@ const DomainsScreen = ({
 // 実物の features/Project/index.tsx がプロジェクトを取得している間と、取得に失敗したとき。
 // タブ（ドメイン）より上で止まるので、パンくずも出ない。
 // GAP-NEW: 余白をとる部品が無い。実物の読み込み中は py-16、失敗は px-6 py-16 の中央寄せ。
-//        inline style を当てない方針のため未対応。
+//        Stack の gap は要素の間にしか付かず、Paper は白い面になるので付けられない。
 
 const ProjectLoadingAndError = () => (
   <Stack gap="xxl">
