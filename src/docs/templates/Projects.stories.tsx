@@ -9,8 +9,8 @@ import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
 import contestBanner from './assets/deploy-now/contest-banner.webp'
+import { DeployNowShell, useDeployNowNavigate } from './deployNowShell'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -24,10 +24,11 @@ import type { TypographyColor } from '../../Typography'
  *   「+ 新規作成」・一覧（Paper）・ページ送り（components/Pager）
  * 見出しは実物のまま。「使用量」が h2、その下の「プロジェクト」が h1 で、パンくずは無い。
  * デプロイナウの使用量は実アプリではこの画面にしか無いので、Usage（AI ゲートウェイの使用状況）には置かない。
+ * 枠は DeployNowShell（(private)/layout.tsx）。本文は実物の ProjectsView と同じく Stack の gap m で積む。
  */
 
 const meta = {
-  title: 'Templates/Projects',
+  title: 'Templates/DeployNow/Projects',
   parameters: {
     layout: 'fullscreen',
   },
@@ -239,58 +240,63 @@ const UsageMetricCard = ({ metric }: { metric: UsageMetric }) => {
 }
 
 /** 使用量は取得できたときだけ出る（読み込み中・失敗・契約なしはカードごと出さない） */
-const UsageSummary = () => (
-  <Stack gap="s">
-    <Typography component="h2" size="xxl">
-      使用量
-    </Typography>
-    <Paper outlined>
-      <Stack gap="m">
-        <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="s" justifyContent="space-between">
-          <Stack flexDirection="row" gap="s" alignItems="center">
-            <Typography component="div" size="l">
-              利用中のプラン：Free
-            </Typography>
-            <Typography component="div" size="s" color="medium_emphasis">
-              （2026/10/01 ~ 2026/10/31 ご利用分）
-            </Typography>
-          </Stack>
-          {/* 遷移先は lolipop-user のアカウント画面（課金タブ）で別タブ */}
-          <Stack flexDirection="row">
-            <Button
-              appearance="outlined"
-              color="neutral"
-              size="s"
-              trailing={<Icon name="launch" size="s" />}
-            >
-              プラン管理
-            </Button>
-          </Stack>
-        </Stack>
-        {/* GAP-NEW: Grid に罫線の指定が無い。実物は md 以上 3 カラム + 縦罫線（divide-x）、md 未満は横罫線 */}
-        <Grid spacing="l">
-          {usageMetrics.map((metric) => (
-            <GridItem key={metric.label} size={{ xxs: 12, m: 4 }}>
-              <UsageMetricCard metric={metric} />
-            </GridItem>
-          ))}
-        </Grid>
-      </Stack>
-    </Paper>
-    {/* GAP-17: 実物は md 以上で右寄せ（md:text-right）。alignItems がレスポンシブにできないので常に右寄せ */}
-    <Stack alignItems="flex-end">
-      <Typography component="div" size="xs" color="medium_emphasis">
-        ※上限に達すると、すべてのプロジェクトが一時停止されます。
+const UsageSummary = () => {
+  const navigate = useDeployNowNavigate()
+  return (
+    <Stack gap="s">
+      <Typography component="h2" size="xxl">
+        使用量
       </Typography>
+      <Paper outlined>
+        <Stack gap="m">
+          <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="s" justifyContent="space-between">
+            <Stack flexDirection="row" gap="s" alignItems="center">
+              <Typography component="div" size="l">
+                利用中のプラン：Free
+              </Typography>
+              <Typography component="div" size="s" color="medium_emphasis">
+                （2026/10/01 ~ 2026/10/31 ご利用分）
+              </Typography>
+            </Stack>
+            {/* 遷移先は lolipop-user のアカウント画面（課金タブ）で別タブ */}
+            <Stack flexDirection="row">
+              <Button
+                appearance="outlined"
+                color="neutral"
+                size="s"
+                trailing={<Icon name="launch" size="s" />}
+                onPress={() => navigate('account-settings')}
+              >
+                プラン管理
+              </Button>
+            </Stack>
+          </Stack>
+          {/* GAP-NEW: Grid に罫線の指定が無い。実物は md 以上 3 カラム + 縦罫線（divide-x）、md 未満は横罫線 */}
+          <Grid spacing="l">
+            {usageMetrics.map((metric) => (
+              <GridItem key={metric.label} size={{ xxs: 12, m: 4 }}>
+                <UsageMetricCard metric={metric} />
+              </GridItem>
+            ))}
+          </Grid>
+        </Stack>
+      </Paper>
+      {/* GAP-17: 実物は md 以上で右寄せ（md:text-right）。alignItems がレスポンシブにできないので常に右寄せ */}
+      <Stack alignItems="flex-end">
+        <Typography component="div" size="xs" color="medium_emphasis">
+          ※上限に達すると、すべてのプロジェクトが一時停止されます。
+        </Typography>
+      </Stack>
     </Stack>
-  </Stack>
-)
+  )
+}
 
 // ─── 一覧（features/Projects/view.tsx）───
 
 const MAX_VISIBLE_TAGS = 3
 
 const ProjectRow = ({ project }: { project: Project }) => {
+  const navigate = useDeployNowNavigate()
   const visibleTags = project.tags.slice(0, MAX_VISIBLE_TAGS)
   const hiddenTagCount = project.tags.length - visibleTags.length
   return (
@@ -302,7 +308,12 @@ const ProjectRow = ({ project }: { project: Project }) => {
       <GridItem size={{ xxs: 12, m: 8 }}>
         <Stack gap="xxs">
           <Stack flexDirection="row" gap="xs" alignItems="center">
-            <Button appearance="transparent" size="s" aria-label={`${project.name} の詳細`}>
+            <Button
+              appearance="transparent"
+              size="s"
+              aria-label={`${project.name} の詳細`}
+              onPress={() => navigate('project-deploys')}
+            >
               <Typography size="m" fontWeight="bold" component="span">
                 {project.name}
               </Typography>
@@ -380,6 +391,7 @@ type Status = 'pending' | 'error' | 'success'
 // GAP-NEW: Paper の padding は上下左右で同じ値しか取れない。実物は列見出しが px-6 py-3、行が px-6 py-3.5 で、
 // ここは 4 辺とも m（16px）になり左右が 8px 狭い。読み込み中・取得失敗（py-16）、空（p-12）の広い余白も付けられない。
 const ProjectsBody = ({ status, items }: { status: Status; items: Project[] }) => {
+  const navigate = useDeployNowNavigate()
   if (status === 'pending') {
     return (
       <Stack alignItems="center">
@@ -407,7 +419,7 @@ const ProjectsBody = ({ status, items }: { status: Status; items: Project[] }) =
             プロジェクトを作成し、アプリケーションをデプロイ
           </Typography>
         </Stack>
-        <Button appearance="flat" color="neutral" size="s">
+        <Button appearance="flat" color="neutral" size="s" onPress={() => navigate('new-project')}>
           プロジェクトを作成
         </Button>
       </Stack>
@@ -514,13 +526,28 @@ const ProjectsScreen = ({
   status?: Status
   items?: Project[]
   contestNotice?: boolean
+}) => (
+  <DeployNowShell>
+    <ProjectsContent status={status} items={items} contestNotice={contestNotice} />
+  </DeployNowShell>
+)
+
+const ProjectsContent = ({
+  status,
+  items,
+  contestNotice,
+}: {
+  status: Status
+  items: Project[]
+  contestNotice: boolean
 }) => {
+  const navigate = useDeployNowNavigate()
   // 0 件のときは empty state の「プロジェクトを作成」だけを導線にする（同じ遷移先のボタンを 2 つ並べない）
   const showCreateButton = !(status === 'success' && items.length === 0)
   // ページ送りは成功していて、2 ページ目以降があるときだけ（ダミーは 1 ページ目の先がある）
   const showPager = status === 'success' && items.length > 0
   return (
-    <AppShell active="projects">
+    <Stack gap="m">
       {contestNotice && <ContestNotice />}
       {/* 使用量は一覧とは別の取得。ここでは一覧が成功したときだけ取得できた体にしている */}
       {status === 'success' && <UsageSummary />}
@@ -529,7 +556,12 @@ const ProjectsScreen = ({
           プロジェクト
         </Typography>
         {showCreateButton && (
-          <Button appearance="flat" color="neutral" size="s">
+          <Button
+            appearance="flat"
+            color="neutral"
+            size="s"
+            onPress={() => navigate('new-project')}
+          >
             + 新規作成
           </Button>
         )}
@@ -538,7 +570,7 @@ const ProjectsScreen = ({
         <ProjectsBody status={status} items={items} />
       </Paper>
       {showPager && <Pager />}
-    </AppShell>
+    </Stack>
   )
 }
 

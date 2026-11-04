@@ -1,8 +1,6 @@
 import { useState } from 'react'
 
-import { AppBar, AppBarLeading, AppBarTrailing } from '../../AppBar'
 import { Button, LinkButton } from '../../Button'
-import { Container } from '../../Container'
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
@@ -13,8 +11,7 @@ import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
-import deployNowLogo from './assets/deploy-now/logo.svg'
+import { DeployNowShell, DeployNowStartShell, useDeployNowNavigate } from './deployNowShell'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -22,7 +19,7 @@ import type { ReactNode } from 'react'
 
 /**
  * デプロイナウ（hosting-deploy-now/frontend）の新規作成まわりを、ホスティング管理画面の中に写したもの。
- * プロジェクトの作成（/projects/new 系）はサイドナビの「プロジェクト」、既存プロジェクトへのデプロイは「デプロイ」に置く。
+ * 枠は DeployNowShell（/start だけ DeployNowStartShell）。どの画面にもタブやパンくずは無い。
  * - プロジェクトを作成（/projects/new）: features/NewUploadProject（DeployMethodCards・DeployGuide・
  *   NewUploadProjectForm・SelectedFilesCard・PublicUrlField・AdvancedSettingsFields）
  * - GitHub リポジトリをインポート（/projects/new/github）: features/NewGitHubProject と
@@ -34,7 +31,7 @@ import type { ReactNode } from 'react'
  */
 
 const meta = {
-  title: 'Templates/NewProject',
+  title: 'Templates/DeployNow/NewProject',
   parameters: {
     layout: 'fullscreen',
   },
@@ -61,8 +58,8 @@ const DEPLOY_PROMPT =
 
 // GAP-NEW: 文中のテキストリンクが無い。実物は native a / button + text-sky-700（または #0b3893）。
 // LinkButton の transparent で代えるので、文字の前後に余白が付く。
-const TextLink = ({ children }: { children: ReactNode }) => (
-  <LinkButton appearance="transparent" color="interactive" size="s">
+const TextLink = ({ children, onPress }: { children: ReactNode; onPress?: () => void }) => (
+  <LinkButton appearance="transparent" color="interactive" size="s" onPress={onPress}>
     {children}
   </LinkButton>
 )
@@ -151,7 +148,7 @@ const CopyBox = ({ value }: { value: string }) => {
 
 // GAP-NEW: ファイルのドロップゾーン（DropZone / FileTrigger）が無い。
 // 実物は破線枠 + bg-neutral-100 の領域と、文中リンク風の「ファイル」「フォルダ」ボタン。
-const DropArea = () => (
+const DropArea = ({ onSelect }: { onSelect?: () => void }) => (
   <Paper padding="xxl" elevation={0} outlined>
     <Stack gap="xs" alignItems="center">
       <Typography component="div" size="m">
@@ -161,11 +158,11 @@ const DropArea = () => (
         <Typography component="span" size="s" color="medium_emphasis">
           または
         </Typography>
-        <TextLink>ファイル</TextLink>
+        <TextLink onPress={onSelect}>ファイル</TextLink>
         <Typography component="span" size="s" color="medium_emphasis">
           か
         </Typography>
-        <TextLink>フォルダ</TextLink>
+        <TextLink onPress={onSelect}>フォルダ</TextLink>
         <Typography component="span" size="s" color="medium_emphasis">
           を選択
         </Typography>
@@ -254,14 +251,27 @@ const frameworks = [
 const SUGGESTED_DOMAIN = 'portfolio-site'
 const DETECTED_FRAMEWORK = 'static'
 
-const UploadProjectScreen = ({ hasSelection = false }: { hasSelection?: boolean }) => {
+const UploadProjectScreen = ({
+  hasSelection: initialSelection = false,
+}: {
+  hasSelection?: boolean
+}) => (
+  <DeployNowShell>
+    <UploadProjectContent initialSelection={initialSelection} />
+  </DeployNowShell>
+)
+
+const UploadProjectContent = ({ initialSelection }: { initialSelection: boolean }) => {
+  const navigate = useDeployNowNavigate()
+  // ファイルかフォルダを選ぶとフォームに切り替わり、キャンセルで方法の選択に戻る（URL は変わらない）
+  const [hasSelection, setHasSelection] = useState(initialSelection)
   const [domain, setDomain] = useState(hasSelection ? SUGGESTED_DOMAIN : '')
   const [frameworkId, setFrameworkId] = useState(DETECTED_FRAMEWORK)
   const [advanced, setAdvanced] = useState(false)
   const framework = frameworks.find((f) => f.id === frameworkId)
 
   return (
-    <AppShell active="projects">
+    <Stack gap="l">
       <PageTitle
         title="プロジェクトを作成"
         description="プロジェクトを作成してデプロイする方法を選んでください。"
@@ -356,10 +366,22 @@ const UploadProjectScreen = ({ hasSelection = false }: { hasSelection?: boolean 
               </Stack>
             )}
             <Stack flexDirection="row" gap="xs" justifyContent="flex-end">
-              <Button appearance="outlined" color="neutral" size="s">
+              <Button
+                appearance="outlined"
+                color="neutral"
+                size="s"
+                onPress={() => setHasSelection(false)}
+              >
                 キャンセル
               </Button>
-              <Button appearance="flat" color="neutral" size="s" isDisabled={domain.trim() === ''}>
+              {/* 実物は作成とアップロードが済むと、そのデプロイの詳細へ移る */}
+              <Button
+                appearance="flat"
+                color="neutral"
+                size="s"
+                isDisabled={domain.trim() === ''}
+                onPress={() => navigate('deploy-detail')}
+              >
                 デプロイ
               </Button>
             </Stack>
@@ -388,7 +410,9 @@ const UploadProjectScreen = ({ hasSelection = false }: { hasSelection?: boolean 
               </Stack>
               <Stack flexDirection="row">
                 {/* 実物は OAuth の往復のあと /projects/new/github に戻る（GitHubImport ストーリー） */}
-                <LinkButton href="#">GitHub と接続</LinkButton>
+                <LinkButton href="#" onPress={() => navigate('new-project-github')}>
+                  GitHub と接続
+                </LinkButton>
               </Stack>
             </Stack>
           </Card>
@@ -409,43 +433,45 @@ const UploadProjectScreen = ({ hasSelection = false }: { hasSelection?: boolean 
               <Typography component="div" size="m" fontWeight="bold">
                 フォルダやファイルをアップロードしてデプロイ
               </Typography>
-              <DropArea />
+              <DropArea onSelect={() => setHasSelection(true)} />
             </Stack>
           </Card>
         </>
       )}
-    </AppShell>
+    </Stack>
   )
 }
 
 // ─── 新しいバージョンをデプロイ（features/NewProjectDeployment） ───
 
 const ProjectDeploymentScreen = () => (
-  <AppShell active="deploys">
-    <PageTitle
-      title="新しいバージョンをデプロイ"
-      description="CLI、またはフォルダのアップロードで「portfolio」の新しいバージョンをデプロイできます。"
-    />
-    <Card outlined elevation={0}>
-      <Stack gap="m">
-        <Typography component="div" size="m" fontWeight="bold">
-          CLI でデプロイ
-        </Typography>
-        <Typography component="p" size="s" color="medium_emphasis">
-          アプリのフォルダで次のコマンドを実行すると、このプロジェクトにデプロイされます。
-        </Typography>
-        <CopyBox value="lolipop deploy --project 01JQ8Z5M3K7XW2N4V6B9C0D1EF" />
-      </Stack>
-    </Card>
-    <Card outlined elevation={0}>
-      <Stack gap="m">
-        <Typography component="div" size="m" fontWeight="bold">
-          フォルダやファイルをアップロードしてデプロイ
-        </Typography>
-        <DropArea />
-      </Stack>
-    </Card>
-  </AppShell>
+  <DeployNowShell>
+    <Stack gap="l">
+      <PageTitle
+        title="新しいバージョンをデプロイ"
+        description="CLI、またはフォルダのアップロードで「portfolio」の新しいバージョンをデプロイできます。"
+      />
+      <Card outlined elevation={0}>
+        <Stack gap="m">
+          <Typography component="div" size="m" fontWeight="bold">
+            CLI でデプロイ
+          </Typography>
+          <Typography component="p" size="s" color="medium_emphasis">
+            アプリのフォルダで次のコマンドを実行すると、このプロジェクトにデプロイされます。
+          </Typography>
+          <CopyBox value="lolipop deploy --project 01JQ8Z5M3K7XW2N4V6B9C0D1EF" />
+        </Stack>
+      </Card>
+      <Card outlined elevation={0}>
+        <Stack gap="m">
+          <Typography component="div" size="m" fontWeight="bold">
+            フォルダやファイルをアップロードしてデプロイ
+          </Typography>
+          <DropArea />
+        </Stack>
+      </Card>
+    </Stack>
+  </DeployNowShell>
 )
 
 // ─── GitHub リポジトリをインポート（features/GitHubRepositoryPicker） ───
@@ -474,7 +500,14 @@ const repositoriesByAccount: Record<string, Repository[]> = {
 const MAX_VISIBLE_REPOSITORIES = 10
 const INSTALL_ACCOUNT_KEY = 'install-new-account'
 
-const RepositoryPicker = ({ accountsEmpty = false }: { accountsEmpty?: boolean }) => {
+const RepositoryPicker = ({
+  accountsEmpty = false,
+  onSelect,
+}: {
+  accountsEmpty?: boolean
+  onSelect: (repository: Repository, account: GitHubAccount) => void
+}) => {
+  const navigate = useDeployNowNavigate()
   const [installationId, setInstallationId] = useState(githubAccounts[0].installationId)
   const [query, setQuery] = useState('')
   const account =
@@ -483,7 +516,9 @@ const RepositoryPicker = ({ accountsEmpty = false }: { accountsEmpty?: boolean }
   if (accountsEmpty) {
     return (
       <CenteredNotice message="デプロイできるリポジトリがまだありません。GitHub でデプロイしたいリポジトリへのアクセスを許可してください。">
-        <LinkButton href="#">リポジトリを追加</LinkButton>
+        <LinkButton href="#" onPress={() => navigate('github-installation')}>
+          リポジトリを追加
+        </LinkButton>
       </CenteredNotice>
     )
   }
@@ -502,7 +537,11 @@ const RepositoryPicker = ({ accountsEmpty = false }: { accountsEmpty?: boolean }
             selectedKey={installationId}
             onSelectionChange={(key) => {
               // 実物は「アカウント追加」で GitHub の install 画面へフルページ遷移する
-              if (key === INSTALL_ACCOUNT_KEY || key === null) return
+              if (key === INSTALL_ACCOUNT_KEY) {
+                navigate('github-installation')
+                return
+              }
+              if (key === null) return
               setInstallationId(String(key))
               setQuery('')
             }}
@@ -567,7 +606,11 @@ const RepositoryPicker = ({ accountsEmpty = false }: { accountsEmpty?: boolean }
                   </Typography>
                   {r.private && <Icon name="lock" size="s" aria-label="非公開リポジトリ" />}
                 </Stack>
-                <Button size="s" aria-label={`${r.name} をインポート`}>
+                <Button
+                  size="s"
+                  aria-label={`${r.name} をインポート`}
+                  onPress={() => onSelect(r, account)}
+                >
                   インポート
                 </Button>
               </Stack>
@@ -579,7 +622,12 @@ const RepositoryPicker = ({ accountsEmpty = false }: { accountsEmpty?: boolean }
         <Typography component="div" size="s" color="medium_emphasis">
           目的のリポジトリがありませんか？
         </Typography>
-        <LinkButton href="#" appearance="transparent" size="s">
+        <LinkButton
+          href="#"
+          appearance="transparent"
+          size="s"
+          onPress={() => navigate('github-installation')}
+        >
           リポジトリの選択を変更
         </LinkButton>
       </Stack>
@@ -591,9 +639,12 @@ const RepositoryPicker = ({ accountsEmpty = false }: { accountsEmpty?: boolean }
 
 const NewProjectSection = ({
   repository,
+  onBack,
 }: {
   repository: { fullName: string; name: string; defaultBranch: string }
+  onBack: () => void
 }) => {
+  const navigate = useDeployNowNavigate()
   // 実物はリポジトリを選んだ直後、フレームワークを未選択（EMPTY_FORM の frameworkId: ''）にする
   const [frameworkId, setFrameworkId] = useState('')
   const [advanced, setAdvanced] = useState(false)
@@ -693,12 +744,13 @@ const NewProjectSection = ({
               />
             </Stack>
           )}
+          {/* 実物は作成に成功すると、そのプロジェクトの詳細（デプロイのタブ）へ移る */}
           <Stack flexDirection="row">
-            <Button>デプロイ</Button>
+            <Button onPress={() => navigate('project-deploys')}>デプロイ</Button>
           </Stack>
         </Stack>
         <Stack flexDirection="row">
-          <Button appearance="transparent" color="neutral" size="s">
+          <Button appearance="transparent" color="neutral" size="s" onPress={onBack}>
             別のリポジトリを選ぶ
           </Button>
         </Stack>
@@ -717,16 +769,31 @@ const portfolioRepository = {
   defaultBranch: 'main',
 }
 
-const GitHubImportScreen = ({
+type SelectedRepository = { fullName: string; name: string; defaultBranch: string }
+
+const GitHubImportScreen = (props: {
+  authorization?: AuthorizationState
+  accountsEmpty?: boolean
+  repository?: SelectedRepository | null
+}) => (
+  <DeployNowShell>
+    <GitHubImportContent {...props} />
+  </DeployNowShell>
+)
+
+const GitHubImportContent = ({
   authorization = 'connected',
   accountsEmpty,
-  repository = null,
+  repository: initialRepository = null,
 }: {
   authorization?: AuthorizationState
   accountsEmpty?: boolean
-  repository?: { fullName: string; name: string; defaultBranch: string } | null
-}) => (
-  <AppShell active="projects">
+  repository?: SelectedRepository | null
+}) => {
+  const navigate = useDeployNowNavigate()
+  // 「インポート」でフォームに切り替わり、「別のリポジトリを選ぶ」で一覧に戻る（URL は変わらない）
+  const [repository, setRepository] = useState(initialRepository)
+  return (
     <Stack gap="m">
       <Typography size="xl" fontWeight="bold" component="h1">
         {repository === null ? 'GitHub リポジトリをインポート' : '新しいプロジェクト'}
@@ -737,90 +804,76 @@ const GitHubImportScreen = ({
         <CenteredNotice message="GitHub 連携の状態の取得に失敗しました。時間をおいて再度お試しください。" />
       ) : authorization === 'not-connected' ? (
         <CenteredNotice message="GitHub と接続すると、リポジトリを選ぶだけでデプロイできます。">
-          <LinkButton href="#">GitHub と接続</LinkButton>
+          <LinkButton href="#" onPress={() => navigate('new-project-github')}>
+            GitHub と接続
+          </LinkButton>
         </CenteredNotice>
       ) : repository === null ? (
-        <RepositoryPicker accountsEmpty={accountsEmpty} />
+        <RepositoryPicker
+          accountsEmpty={accountsEmpty}
+          onSelect={(r, account) =>
+            setRepository({
+              fullName: `${account.login}/${r.name}`,
+              name: r.name,
+              defaultBranch: r.defaultBranch,
+            })
+          }
+        />
       ) : (
-        <NewProjectSection repository={repository} />
+        <NewProjectSection repository={repository} onBack={() => setRepository(null)} />
       )}
     </Stack>
-  </AppShell>
-)
+  )
+}
 
 // ─── ログイン前のお試し（features/NewProjectTrial + start/layout.tsx） ───
 
-/**
- * /start の chrome。ログイン後の AppBar の右側を「ドキュメント / ログイン / 無料ではじめる」に差し替えたもの。
- * サイドナビは持たない。実物の本文は最大 1000px。
- */
-const TrialShell = ({ children }: { children: ReactNode }) => (
-  <Stack gap="l">
-    <AppBar appearance="white" position="relative">
-      <AppBarLeading>
-        {/* GAP-NEW: 画像の枠（Image）が無い。実物は h-7 w-auto（md 以上 h-12）に縮めて出す */}
-        <a href="/start">
-          <img src={deployNowLogo} alt="ロリポップ！デプロイナウ" width={390} height={54} />
-        </a>
-      </AppBarLeading>
-      <AppBarTrailing>
-        {/* GAP-NEW: 表示/非表示のレスポンシブ指定が無い。実物は sm 未満で「ドキュメント」「ログイン」を隠す */}
-        <Stack flexDirection="row" gap="xxs" alignItems="center">
-          <LinkButton
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-            appearance="transparent"
-            size="s"
-            trailing={<Icon name="launch" size="s" />}
-          >
-            ドキュメント
-          </LinkButton>
-          <LinkButton href="#" appearance="transparent" size="s">
-            ログイン
-          </LinkButton>
-          <LinkButton href="#" appearance="flat" color="neutral" size="s">
-            無料ではじめる
-          </LinkButton>
-        </Stack>
-      </AppBarTrailing>
-    </AppBar>
-    <Container size="m" component="main">
-      <Stack gap="l">{children}</Stack>
-    </Container>
-  </Stack>
+const SignupPromptDialog = ({ onClose }: { onClose: () => void }) => {
+  const navigate = useDeployNowNavigate()
+  return (
+    <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+      {/* GAP-NEW: Dialog に幅の指定が無い。実物は w-[472px] に固定している */}
+      <DialogHeader>
+        <DialogTitle>無料登録してデプロイ</DialogTitle>
+      </DialogHeader>
+      <Stack gap="xs">
+        <Typography component="p" size="s">
+          デプロイには無料の会員登録が必要です。登録後、フォルダをドロップするだけで公開できます。
+        </Typography>
+        <Typography component="p" size="xs" color="medium_emphasis">
+          ファイルはまだアップロードされていません。登録後にもう一度ドロップしてください。
+        </Typography>
+      </Stack>
+      <DialogFooter>
+        <Button appearance="outlined" color="neutral" size="s" onPress={onClose}>
+          閉じる
+        </Button>
+        <LinkButton
+          href="#"
+          appearance="flat"
+          color="neutral"
+          size="s"
+          onPress={() => navigate('signup')}
+        >
+          無料ではじめる
+        </LinkButton>
+      </DialogFooter>
+    </Dialog>
+  )
+}
+
+const TrialScreen = ({ dropped = false }: { dropped?: boolean }) => (
+  <DeployNowStartShell>
+    <TrialContent dropped={dropped} />
+  </DeployNowStartShell>
 )
 
-const SignupPromptDialog = ({ onClose }: { onClose: () => void }) => (
-  <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
-    {/* GAP-NEW: Dialog に幅の指定が無い。実物は w-[472px] に固定している */}
-    <DialogHeader>
-      <DialogTitle>無料登録してデプロイ</DialogTitle>
-    </DialogHeader>
-    <Stack gap="xs">
-      <Typography component="p" size="s">
-        デプロイには無料の会員登録が必要です。登録後、フォルダをドロップするだけで公開できます。
-      </Typography>
-      <Typography component="p" size="xs" color="medium_emphasis">
-        ファイルはまだアップロードされていません。登録後にもう一度ドロップしてください。
-      </Typography>
-    </Stack>
-    <DialogFooter>
-      <Button appearance="outlined" color="neutral" size="s" onPress={onClose}>
-        閉じる
-      </Button>
-      <LinkButton href="#" appearance="flat" color="neutral" size="s">
-        無料ではじめる
-      </LinkButton>
-    </DialogFooter>
-  </Dialog>
-)
-
-const TrialScreen = ({ dropped = false }: { dropped?: boolean }) => {
+const TrialContent = ({ dropped }: { dropped: boolean }) => {
+  const navigate = useDeployNowNavigate()
   const [dropAttempted] = useState(dropped)
   const [dialogOpen, setDialogOpen] = useState(dropped)
   return (
-    <TrialShell>
+    <Stack gap="l">
       {dialogOpen && <SignupPromptDialog onClose={() => setDialogOpen(false)} />}
       <PageTitle
         title="プロジェクトを作成"
@@ -858,10 +911,22 @@ const TrialScreen = ({ dropped = false }: { dropped?: boolean }) => {
                 </Typography>
               </Stack>
               <Stack flexDirection="row" gap="xs" alignItems="center">
-                <LinkButton href="#" appearance="flat" color="neutral" size="s">
+                <LinkButton
+                  href="#"
+                  appearance="flat"
+                  color="neutral"
+                  size="s"
+                  onPress={() => navigate('signup')}
+                >
                   無料ではじめる
                 </LinkButton>
-                <LinkButton href="#" appearance="outlined" color="neutral" size="s">
+                <LinkButton
+                  href="#"
+                  appearance="outlined"
+                  color="neutral"
+                  size="s"
+                  onPress={() => navigate('login')}
+                >
                   ログイン
                 </LinkButton>
               </Stack>
@@ -869,7 +934,7 @@ const TrialScreen = ({ dropped = false }: { dropped?: boolean }) => {
           </Paper>
         </Stack>
       </Card>
-    </TrialShell>
+    </Stack>
   )
 }
 
@@ -914,54 +979,56 @@ lolipop deploy
 const CliSkillScreen = () => {
   const [copied, setCopied] = useState(false)
   return (
-    <AppShell active="deploys">
-      <Stack gap="xs">
-        {/* 実物は Typography の既定（p）で見出しになっていない。ページの見出しなので h1 にしている */}
-        <Typography component="h1" size="xl" fontWeight="bold">
-          lolipop CLI スキル
-        </Typography>
-        <Typography component="div" size="s" color="medium_emphasis">
-          お使いのコーディングエージェント (Claude / Codex / Cursor) の SKILL.md
-          にこの内容を貼り付けると、lolipop CLI でのデプロイ手順を渡せます。
-        </Typography>
-      </Stack>
-      <Stack flexDirection="row" gap="s" alignItems="center">
-        <Button
-          appearance="flat"
-          color="interactive"
-          size="s"
-          onPress={() => {
-            setCopied(true)
-            setTimeout(() => setCopied(false), 2000)
-          }}
-        >
-          コピー
-        </Button>
-        {copied && (
-          <Typography component="span" size="s" color="positive">
-            コピーしました
+    <DeployNowShell>
+      <Stack gap="l">
+        <Stack gap="xs">
+          {/* 実物は Typography の既定（p）で見出しになっていない。ページの見出しなので h1 にしている */}
+          <Typography component="h1" size="xl" fontWeight="bold">
+            lolipop CLI スキル
           </Typography>
-        )}
-      </Stack>
-      {/* GAP-20: 等幅フォントが無い。実物は pre + font-mono + whitespace-pre-wrap。
+          <Typography component="div" size="s" color="medium_emphasis">
+            お使いのコーディングエージェント (Claude / Codex / Cursor) の SKILL.md
+            にこの内容を貼り付けると、lolipop CLI でのデプロイ手順を渡せます。
+          </Typography>
+        </Stack>
+        <Stack flexDirection="row" gap="s" alignItems="center">
+          <Button
+            appearance="flat"
+            color="interactive"
+            size="s"
+            onPress={() => {
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
+            }}
+          >
+            コピー
+          </Button>
+          {copied && (
+            <Typography component="span" size="s" color="positive">
+              コピーしました
+            </Typography>
+          )}
+        </Stack>
+        {/* GAP-20: 等幅フォントが無い。実物は pre + font-mono + whitespace-pre-wrap。
           GAP-NEW: 高さを決めてスクロールさせる面が無い。実物は max-h-[60vh] overflow-auto。
           GAP-NEW: Paper に地色の違う面（bg-neutral-50）が無い */}
-      <Paper padding="m" elevation={0} outlined>
-        <Stack>
-          {SKILL_MARKDOWN.split('\n').map((line, i) => (
-            <Typography
-              component="div"
-              // biome-ignore lint/suspicious/noArrayIndexKey: 同じ行（空行や ```）が繰り返し出るため行番号を key にする
-              key={i}
-              size="s"
-              density="dense"
-            >
-              {line || ' '}
-            </Typography>
-          ))}
-        </Stack>
-      </Paper>
-    </AppShell>
+        <Paper padding="m" elevation={0} outlined>
+          <Stack>
+            {SKILL_MARKDOWN.split('\n').map((line, i) => (
+              <Typography
+                component="div"
+                // biome-ignore lint/suspicious/noArrayIndexKey: 同じ行（空行や ```）が繰り返し出るため行番号を key にする
+                key={i}
+                size="s"
+                density="dense"
+              >
+                {line || ' '}
+              </Typography>
+            ))}
+          </Stack>
+        </Paper>
+      </Stack>
+    </DeployNowShell>
   )
 }
 
@@ -1004,15 +1071,15 @@ export const ProjectDeployment: Story = {
 export const ProjectDeploymentLoadingAndError: Story = {
   render: () => (
     <Stack gap="xxl">
-      <AppShell active="deploys">
+      <DeployNowShell>
         <LoadingBody />
-      </AppShell>
-      <AppShell active="deploys">
+      </DeployNowShell>
+      <DeployNowShell>
         <CenteredMessage message="プロジェクトが見つかりません。" />
-      </AppShell>
-      <AppShell active="deploys">
+      </DeployNowShell>
+      <DeployNowShell>
         <CenteredMessage message="プロジェクトの取得に失敗しました。時間をおいて再度お試しください。" />
-      </AppShell>
+      </DeployNowShell>
     </Stack>
   ),
 }
@@ -1107,12 +1174,12 @@ export const CliSkill: Story = {
 export const CliSkillLoadingAndError: Story = {
   render: () => (
     <Stack gap="xxl">
-      <AppShell active="deploys">
+      <DeployNowShell>
         <LoadingBody />
-      </AppShell>
-      <AppShell active="deploys">
+      </DeployNowShell>
+      <DeployNowShell>
         <CenteredMessage message="skill の取得に失敗しました。時間をおいて再度お試しください。" />
-      </AppShell>
+      </DeployNowShell>
     </Stack>
   ),
 }

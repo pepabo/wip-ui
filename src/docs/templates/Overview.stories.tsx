@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
 import { Checkbox } from '../../Checkbox'
+import { Container } from '../../Container'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
@@ -15,7 +16,7 @@ import { Sticker } from '../../Sticker'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
+import { GamersServerShell, ServerPageLayout } from './gamersShell'
 import {
   CalloutBody,
   ConfigRow,
@@ -23,13 +24,13 @@ import {
   gameImages,
   isServerPreparing,
   PaperTitle,
-  ServerDetailHeader,
   server,
 } from './gameServer'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
+import type { PaperProps } from '../../Paper'
 import type { ServerStatus } from './gameServer'
 
 /**
@@ -37,9 +38,11 @@ import type { ServerStatus } from './gameServer'
  * 並びは ServerDetailTab のまま: ステータス → 詳細情報 → 契約中のゲーム・プラン
  * → ポート開放 → 定期スケジュール → サーバーの初期化。準備中は Alert とサーバーの再起動だけになる。
  * 実アプリにはコンソール・ログの画面は無いので作っていない。
+ * 枠は gamersShell.tsx: servers/[id]/layout.tsx（ServerListHeader・Sidebar の「サーバー」）と
+ * (server)/layout.tsx（ServerDetailHeader）、ServerDetailTabPanels の「詳細」タブ。
  */
 const meta = {
-  title: 'Templates/Overview',
+  title: 'Templates/Gamers/Overview',
   parameters: {
     layout: 'fullscreen',
   },
@@ -182,6 +185,9 @@ const schedulesInitial: Schedule[] = [
 
 // ─── 部品 ───
 
+/** 各 Paper の余白。実物は p: { xs: 3, md: 6 }（24px / 48px） */
+const paperPadding: PaperProps['padding'] = { xxs: 'l', m: 'xxl' }
+
 // GAP-18: 進捗バー / メーターが無い。Typography で色を継承させ、currentColor で塗っている。
 // 高さ・角丸・トラックの不透明度はトークンに出典が無い暫定値。
 const meterTrackStyle = { height: 8, borderRadius: 4, opacity: 0.15, background: 'currentColor' }
@@ -222,10 +228,11 @@ const ServerStatusPaper = ({ status }: { status: ServerStatus }) => {
     },
   ]
   return (
-    <Card>
-      <Stack gap="l">
+    // 見出しと 3 項目の間は Stack spacing 4（32px）。実物は 3 項目の間に縦の Divider を引く
+    <Card padding={paperPadding}>
+      <Stack gap="xl">
         <PaperTitle>ステータス</PaperTitle>
-        <Grid spacing="l">
+        <Grid spacing="xl">
           {items.map((m) => (
             <GridItem key={m.label} size={{ xxs: 12, l: 4 }}>
               <Stack gap="s">
@@ -269,8 +276,9 @@ const ServerDetailPaper = ({
   status: ServerStatus
   onSshKey: () => void
 }) => (
-  <Card>
-    <Stack gap="l">
+  // 見出しの下、項目の間（Divider の上下）はどちらも Stack spacing 4（32px）
+  <Card padding={paperPadding}>
+    <Stack gap="xl">
       <PaperTitle>詳細情報</PaperTitle>
       <Stack
         flexDirection={{ xxs: 'column', m: 'row' }}
@@ -324,43 +332,48 @@ const CurrentSticker = () => (
 )
 
 /**
- * SubscriptionInPlaceModal の GameItem / PlanItem / 期間の 1 枠。
- * GAP-3: 選択できるカードが無いので、Paper の outlined の有無と Button で組んでいる。
+ * SubscriptionInPlaceModal の GameItem / PlanItem / 期間の 1 枠。実物は ToggleButton で、枠全体を押して選ぶ。
+ * 選んだ枠はグラデーションの枠線、期間は上位プランを選んでいる間は押せず薄くなる（opacity 0.4）。
+ * 選択できる枠が wip-ui に無いので、素の button の見た目を消して Paper を載せ、選んだ枠を outlined にしている
  */
 const SelectableRow = ({
   selected,
   isDisabled,
   onPress,
   children,
-  label,
 }: {
   selected: boolean
   isDisabled?: boolean
   onPress: () => void
   children: ReactNode
-  label: string
 }) => (
-  <Paper padding="m" elevation={0} outlined={selected}>
-    <Stack
-      flexDirection={{ xxs: 'column', m: 'row' }}
-      gap="s"
-      justifyContent="space-between"
-      alignItems="center"
-    >
+  <button
+    type="button"
+    aria-pressed={selected}
+    disabled={isDisabled}
+    onClick={onPress}
+    style={{
+      ...selectableButtonStyle,
+      cursor: isDisabled ? 'default' : 'pointer',
+      opacity: isDisabled && !selected ? 0.4 : 1,
+    }}
+  >
+    <Paper padding="m" elevation={0} outlined={selected}>
       {children}
-      <Button
-        appearance={selected ? 'flat' : 'outlined'}
-        color={selected ? 'interactive' : 'neutral'}
-        size="s"
-        isDisabled={isDisabled}
-        aria-label={label}
-        onPress={onPress}
-      >
-        {selected ? '選択中' : '選択'}
-      </Button>
-    </Stack>
-  </Paper>
+    </Paper>
+  </button>
 )
+
+const selectableButtonStyle = {
+  display: 'block',
+  width: '100%',
+  padding: 0,
+  border: 0,
+  background: 'none',
+  font: 'inherit',
+  color: 'inherit',
+  textAlign: 'left',
+} as const
 
 const PlanItemBody = ({
   spec,
@@ -450,8 +463,9 @@ const ContractPaper = ({
   }
 
   return (
-    <Card>
-      <Stack gap="l">
+    // Alert・見出し・中身の間は Stack spacing 4（32px）
+    <Card padding={paperPadding}>
+      <Stack gap="xl">
         {cancelDialog && (
           <Callout
             color="informative"
@@ -492,12 +506,7 @@ const ContractPaper = ({
               {open ? (
                 <Stack gap="xs">
                   {games.map((g) => (
-                    <SelectableRow
-                      key={g}
-                      selected={g === game}
-                      label={`${g}を選択`}
-                      onPress={() => setGame(g)}
-                    >
+                    <SelectableRow key={g} selected={g === game} onPress={() => setGame(g)}>
                       <Stack flexDirection="row" gap="s" alignItems="center">
                         <img src={gameImages[g]} alt={g} width={70} height={70} />
                         <Typography fontWeight="bold" component="span">
@@ -538,7 +547,6 @@ const ContractPaper = ({
                       <SelectableRow
                         key={p.memory}
                         selected={p.memory === memory}
-                        label={`${p.memory}GBを選択`}
                         onPress={() => {
                           setMemory(p.memory)
                           // スペックを変えると期間は契約中の期間に戻る（hooks の handleToggleGameSpec）
@@ -588,7 +596,6 @@ const ContractPaper = ({
                           selected={d.months === months}
                           // 上位プランを選んでいる間は期間を変えられない
                           isDisabled={changeStatus === 'higher'}
-                          label={`${d.months}ヶ月を選択`}
                           onPress={() => setMonths(d.months)}
                         >
                           <Stack flexDirection="row" gap="xs" alignItems="center">
@@ -664,10 +671,24 @@ const ContractPaper = ({
 }
 
 /** (server)/_components/ServerFirewallRulesPaper */
-const ServerFirewallRulesPaper = () => {
+// 開閉する見出しの行。開閉する面が wip-ui に無いので、素の button の見た目を消して Paper を載せている
+const disclosureButtonStyle = {
+  display: 'block',
+  width: '100%',
+  padding: 0,
+  border: 0,
+  background: 'none',
+  font: 'inherit',
+  color: 'inherit',
+  textAlign: 'left',
+  cursor: 'pointer',
+} as const
+
+const ServerFirewallRulesPaper = ({ defaultOpen = false }: { defaultOpen?: boolean }) => {
   const [port, setPort] = useState('')
+  const [rulesOpen, setRulesOpen] = useState(defaultOpen)
   return (
-    <Card>
+    <Card padding={paperPadding}>
       <Stack gap="l">
         <PaperTitle>ポート開放</PaperTitle>
         <Stack flexDirection={{ xxs: 'column', l: 'row' }} gap="m" alignItems="flex-end">
@@ -690,43 +711,60 @@ const ServerFirewallRulesPaper = () => {
             開放
           </Button>
         </Stack>
-        {/* GAP-NEW: Accordion / Disclosure が無い。実アプリは「開放済ポート　N個」の見出しを押すと表が開く。ここでは開いた状態で固定 */}
-        <Paper padding="m" elevation={0} outlined>
-          <Stack gap="m">
-            <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="xl">
-              <Typography component="span">開放済ポート</Typography>
-              <Typography color="medium_emphasis" component="span">
-                {firewallRules.length}個
-              </Typography>
-            </Stack>
-            <Table aria-label="開放済ポート">
-              <TableHeader>
-                <Column isRowHeader allowsSorting>
-                  プロトコル
-                </Column>
-                <Column allowsSorting>ポート番号</Column>
-                <Column aria-label="操作"> </Column>
-              </TableHeader>
-              <TableBody>
-                {firewallRules.map((r) => (
-                  <Row key={`${r.protocol}-${r.port}`} id={`${r.protocol}-${r.port}`}>
-                    <Cell>{r.protocol}</Cell>
-                    <Cell>{r.port}</Cell>
-                    <Cell>
-                      <Button
-                        appearance="outlined"
-                        color="negative"
-                        size="s"
-                        leading={<Icon name="garbage_can" size="s" />}
-                      >
-                        閉鎖
-                      </Button>
-                    </Cell>
-                  </Row>
-                ))}
-              </TableBody>
-            </Table>
-          </Stack>
+        {/* 実物は MUI の Accordion（閉じた状態で始まる）。見出し「開放済ポート　N個」の行全体を押すと表が開く。
+            開閉する面が wip-ui に無いので、見出しの行だけ素の button にしている */}
+        <Paper padding="none" elevation={rulesOpen ? 0 : 1} outlined={rulesOpen}>
+          <button
+            type="button"
+            aria-expanded={rulesOpen}
+            onClick={() => setRulesOpen((v) => !v)}
+            style={disclosureButtonStyle}
+          >
+            {/* 実物は padding 24px 32px */}
+            <Paper padding="l" elevation={0}>
+              <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
+                {/* 実物の 2 つの間は md 以上で 175px */}
+                <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap={{ xxs: 's', m: 'xxxl' }}>
+                  <Typography component="span">開放済ポート</Typography>
+                  <Typography color="medium_emphasis" component="span">
+                    {firewallRules.length}個
+                  </Typography>
+                </Stack>
+                <Icon name={rulesOpen ? 'chevron_up' : 'chevron_down'} size="m" />
+              </Stack>
+            </Paper>
+          </button>
+          {rulesOpen && (
+            <Paper padding="m" elevation={0}>
+              <Table aria-label="開放済ポート">
+                <TableHeader>
+                  <Column isRowHeader allowsSorting>
+                    プロトコル
+                  </Column>
+                  <Column allowsSorting>ポート番号</Column>
+                  <Column aria-label="操作"> </Column>
+                </TableHeader>
+                <TableBody>
+                  {firewallRules.map((r) => (
+                    <Row key={`${r.protocol}-${r.port}`} id={`${r.protocol}-${r.port}`}>
+                      <Cell>{r.protocol}</Cell>
+                      <Cell>{r.port}</Cell>
+                      <Cell>
+                        <Button
+                          appearance="outlined"
+                          color="negative"
+                          size="s"
+                          leading={<Icon name="garbage_can" size="s" />}
+                        >
+                          閉鎖
+                        </Button>
+                      </Cell>
+                    </Row>
+                  ))}
+                </TableBody>
+              </Table>
+            </Paper>
+          )}
         </Paper>
       </Stack>
     </Card>
@@ -748,7 +786,7 @@ const ServerSchedulePaper = ({
   onDelete: (s: Schedule) => void
 }) => {
   return (
-    <Card>
+    <Card padding={paperPadding}>
       <Stack gap="l">
         <PaperTitle
           action={
@@ -817,167 +855,174 @@ const toggle = (list: number[], value: number) =>
 
 /**
  * ServerSchedulePaper/components/ScheduleFormDialog。追加と編集で同じフォーム（見出しはどちらも「定期スケジュール」）。
- * GAP-NEW: 全画面の Dialog が無い。実アプリは fullScreen の Dialog（幅 900px）なので、
- * Mods と同じく AppShell の中身を置き換えている。
- * 保存・変更を破棄のバーは変更が入るまで出ない。実アプリは画面下に固定（GAP-NEW: 下端に固定する部品が無いのでフォームの直下）
+ * 実物は fullScreen の Dialog で、ヘッダー・サイドバーごと画面全体を覆い、中身は最大幅 900px で中央に置く。
+ * 全画面の Dialog が無いので、枠を出さずに Container（m）だけで描いている。
+ * 保存・変更を破棄のバーは変更が入るまで出ない。実物は画面下に固定（ここではフォームの直下）
  */
 const ScheduleForm = ({ initial, onBack }: { initial: ScheduleValue; onBack: () => void }) => {
   const [value, setValue] = useState(initial)
   const set = (patch: Partial<ScheduleValue>) => setValue((prev) => ({ ...prev, ...patch }))
   const dirty = JSON.stringify(value) !== JSON.stringify(initial)
   return (
-    <Stack gap="l">
-      <Stack flexDirection="row">
-        <Button
-          appearance="outlined"
-          leading={<Icon name="arrow_left" size="s" />}
-          onPress={onBack}
-        >
-          戻る
-        </Button>
-      </Stack>
-      <Typography size="xxxl" fontWeight="bold" component="h1">
-        定期スケジュール
-      </Typography>
-      <Card>
-        <Stack gap="xl">
-          <TextField
-            label="名前"
-            width="full"
-            value={value.name}
-            onChange={(name) => set({ name })}
-          />
-          <Select
-            label="アクション"
-            width="full"
-            selectedKey={value.action}
-            onSelectionChange={(k) => set({ action: k as ScheduleAction })}
+    <Container size="m">
+      {/* 実物は Stack spacing 3、px { xs: 2, md: 6 }、py { xs: 3, md: 6 } */}
+      <Stack gap="l">
+        <Stack flexDirection="row">
+          <Button
+            appearance="outlined"
+            leading={<Icon name="arrow_left" size="s" />}
+            onPress={onBack}
           >
-            {actionOptions.map((a) => (
-              <SelectItem key={a} id={a}>
-                {a}
-              </SelectItem>
-            ))}
-          </Select>
-          <Select
-            label="頻度"
-            width="full"
-            selectedKey={value.recurrenceType}
-            onSelectionChange={(k) => set({ recurrenceType: k as RecurrenceType })}
-          >
-            {recurrenceOptions.map((o) => (
-              <SelectItem key={o.id} id={o.id}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </Select>
-          {value.recurrenceType === 'weekly' && (
-            // GAP-NEW: ToggleButtonGroup が無い。実アプリは 7 つの曜日を横いっぱいのトグルで並べる。Checkbox で代用
-            // GAP-7: CheckboxGroup にもラベルが無いので Typography で見出しを描いている
-            <Stack gap="s">
-              <Typography size="s" fontWeight="bold" component="span">
-                曜日
-              </Typography>
-              <Stack flexDirection="row" gap="m">
-                {weekdayOptions.map((label, i) => (
-                  <Checkbox
-                    key={label}
-                    isSelected={value.weekdays.includes(i)}
-                    onChange={() => set({ weekdays: toggle(value.weekdays, i) })}
-                  >
-                    {label}
-                  </Checkbox>
-                ))}
-              </Stack>
-            </Stack>
-          )}
-          {value.recurrenceType === 'monthly' && (
-            // GAP-NEW: 複数選択の Select が無い。実アプリは Select を開くと 1〜31 日が 7 列に並び、
-            // 選んだ日がチップで入る。Checkbox を並べて代用（GAP-NEW: Grid の columns={7} が効かず 12 列で折り返す）
-            <Stack gap="s">
-              <Typography size="s" fontWeight="bold" component="span">
-                日
-              </Typography>
-              <Grid columns={7} spacing="xs">
-                {daysOfMonth.map((d) => (
-                  <GridItem key={d} size={1}>
+            戻る
+          </Button>
+        </Stack>
+        <Typography size="xxxl" fontWeight="bold" component="h1">
+          定期スケジュール
+        </Typography>
+        {/* 実物は px { xs: 4, md: 6 }、py { xs: 4, md: 6 } */}
+        <Card padding={{ xxs: 'xl', m: 'xxl' }}>
+          <Stack gap="xl">
+            <TextField
+              label="名前"
+              width="full"
+              value={value.name}
+              onChange={(name) => set({ name })}
+            />
+            <Select
+              label="アクション"
+              width="full"
+              selectedKey={value.action}
+              onSelectionChange={(k) => set({ action: k as ScheduleAction })}
+            >
+              {actionOptions.map((a) => (
+                <SelectItem key={a} id={a}>
+                  {a}
+                </SelectItem>
+              ))}
+            </Select>
+            <Select
+              label="頻度"
+              width="full"
+              selectedKey={value.recurrenceType}
+              onSelectionChange={(k) => set({ recurrenceType: k as RecurrenceType })}
+            >
+              {recurrenceOptions.map((o) => (
+                <SelectItem key={o.id} id={o.id}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </Select>
+            {value.recurrenceType === 'weekly' && (
+              // GAP-NEW: ToggleButtonGroup が無い。実アプリは 7 つの曜日を横いっぱいのトグルで並べる。Checkbox で代用
+              // GAP-7: CheckboxGroup にもラベルが無いので Typography で見出しを描いている
+              <Stack gap="s">
+                <Typography size="s" fontWeight="bold" component="span">
+                  曜日
+                </Typography>
+                <Stack flexDirection="row" gap="m">
+                  {weekdayOptions.map((label, i) => (
                     <Checkbox
-                      isSelected={value.days.includes(d)}
-                      onChange={() => set({ days: toggle(value.days, d).sort((a, b) => a - b) })}
+                      key={label}
+                      isSelected={value.weekdays.includes(i)}
+                      onChange={() => set({ weekdays: toggle(value.weekdays, i) })}
                     >
-                      {String(d)}
+                      {label}
                     </Checkbox>
-                  </GridItem>
-                ))}
-              </Grid>
-            </Stack>
-          )}
-          {/* GAP-NEW: TimePicker が無い。実アプリは時・分を縦に並べたスクロールの列から選ぶ。type="time" の TextField で代用。24 時間表記はブラウザの言語設定任せ */}
-          <Stack gap="s">
-            <Typography size="s" fontWeight="bold" component="span">
-              時刻
-            </Typography>
-            {value.times.map((t, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: 時刻は重複しうるので位置で持つ（実アプリも key={i}）
-              <Stack key={i} flexDirection="row" gap="xs" alignItems="center">
-                <TextField
-                  aria-label={`${i + 1}つめの時刻`}
-                  type="time"
-                  value={t}
-                  onChange={(next) =>
-                    set({ times: value.times.map((x, j) => (j === i ? next : x)) })
-                  }
-                />
+                  ))}
+                </Stack>
+              </Stack>
+            )}
+            {value.recurrenceType === 'monthly' && (
+              // GAP-NEW: 複数選択の Select が無い。実アプリは Select を開くと 1〜31 日が 7 列に並び、
+              // 選んだ日がチップで入る。Checkbox を並べて代用（GAP-NEW: Grid の columns={7} が効かず 12 列で折り返す）
+              <Stack gap="s">
+                <Typography size="s" fontWeight="bold" component="span">
+                  日
+                </Typography>
+                <Grid columns={7} spacing="xs">
+                  {daysOfMonth.map((d) => (
+                    <GridItem key={d} size={1}>
+                      <Checkbox
+                        isSelected={value.days.includes(d)}
+                        onChange={() => set({ days: toggle(value.days, d).sort((a, b) => a - b) })}
+                      >
+                        {String(d)}
+                      </Checkbox>
+                    </GridItem>
+                  ))}
+                </Grid>
+              </Stack>
+            )}
+            {/* GAP-NEW: TimePicker が無い。実アプリは時・分を縦に並べたスクロールの列から選ぶ。type="time" の TextField で代用。24 時間表記はブラウザの言語設定任せ */}
+            <Stack gap="s">
+              <Typography size="s" fontWeight="bold" component="span">
+                時刻
+              </Typography>
+              {value.times.map((t, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: 時刻は重複しうるので位置で持つ（実アプリも key={i}）
+                <Stack key={i} flexDirection="row" gap="xs" alignItems="center">
+                  <TextField
+                    aria-label={`${i + 1}つめの時刻`}
+                    type="time"
+                    value={t}
+                    onChange={(next) =>
+                      set({ times: value.times.map((x, j) => (j === i ? next : x)) })
+                    }
+                  />
+                  <Button
+                    appearance="transparent"
+                    size="s"
+                    iconOnly
+                    aria-label={`${i + 1}つめの時刻を削除`}
+                    // 時刻は必ず 1 つ要るので、最後の 1 件は消させない
+                    isDisabled={value.times.length <= 1}
+                    onPress={() => set({ times: value.times.filter((_, j) => j !== i) })}
+                  >
+                    <Icon name="cross" size="m" />
+                  </Button>
+                </Stack>
+              ))}
+              <Stack flexDirection="row">
                 <Button
                   appearance="transparent"
-                  size="s"
-                  iconOnly
-                  aria-label={`${i + 1}つめの時刻を削除`}
-                  // 時刻は必ず 1 つ要るので、最後の 1 件は消させない
-                  isDisabled={value.times.length <= 1}
-                  onPress={() => set({ times: value.times.filter((_, j) => j !== i) })}
+                  leading={<Icon name="plus" size="s" />}
+                  // 一覧の「追加」と文言が同じで役割が違うので、読み上げでは区別する
+                  aria-label="時刻を追加"
+                  onPress={() => set({ times: [...value.times, '00:00'] })}
                 >
-                  <Icon name="cross" size="m" />
+                  追加
                 </Button>
               </Stack>
-            ))}
-            <Stack flexDirection="row">
-              <Button
-                appearance="transparent"
-                leading={<Icon name="plus" size="s" />}
-                // 一覧の「追加」と文言が同じで役割が違うので、読み上げでは区別する
-                aria-label="時刻を追加"
-                onPress={() => set({ times: [...value.times, '00:00'] })}
-              >
-                追加
-              </Button>
+            </Stack>
+            <Stack gap="s">
+              <Typography size="s" fontWeight="bold" component="span">
+                スケジュールを実行
+              </Typography>
+              <Checkbox isSelected={value.enabled} onChange={(enabled) => set({ enabled })}>
+                有効
+              </Checkbox>
             </Stack>
           </Stack>
-          <Stack gap="s">
-            <Typography size="s" fontWeight="bold" component="span">
-              スケジュールを実行
-            </Typography>
-            <Checkbox isSelected={value.enabled} onChange={(enabled) => set({ enabled })}>
-              有効
-            </Checkbox>
+        </Card>
+        {dirty && (
+          <Stack flexDirection="row" gap="s" justifyContent="center">
+            <Button color="interactive" size="l" onPress={onBack}>
+              保存
+            </Button>
+            <Button appearance="outlined" size="l" onPress={() => setValue(initial)}>
+              変更を破棄
+            </Button>
           </Stack>
-        </Stack>
-      </Card>
-      {dirty && (
-        <Stack flexDirection="row" gap="s" justifyContent="center">
-          <Button color="interactive" size="l" onPress={onBack}>
-            保存
-          </Button>
-          <Button appearance="outlined" size="l" onPress={() => setValue(initial)}>
-            変更を破棄
-          </Button>
-        </Stack>
-      )}
-    </Stack>
+        )}
+      </Stack>
+    </Container>
   )
 }
 
-/** 見出し・説明と右のボタン 1 つの Paper（RestartServerPaper / RecreateServerPaper） */
+/**
+ * 見出し・説明と右のボタン 1 つの Paper（RestartServerPaper / RecreateServerPaper）。
+ * 実物は elevation 0、px { xs: 4, md: 6 }・py 4（左右 32px / 48px、上下 32px）。ここでは上下も左右と同じ
+ */
 const ActionPaper = ({
   title,
   children,
@@ -987,14 +1032,15 @@ const ActionPaper = ({
   children: ReactNode
   action: ReactNode
 }) => (
-  <Card>
+  <Card elevation={0} padding={{ xxs: 'xl', m: 'xxl' }}>
     <Stack
       flexDirection={{ xxs: 'column', s: 'row' }}
       gap="m"
       justifyContent="space-between"
       alignItems="center"
     >
-      <Stack gap="s">
+      {/* 説明は見出しの下 mt 2（16px） */}
+      <Stack gap="m">
         <Typography size="xxl" fontWeight="bold" component="h2">
           {title}
         </Typography>
@@ -1035,79 +1081,84 @@ const OverviewScreen = ({
   const close = () => setDialog(null)
 
   if (form) {
+    // 全画面の Dialog が画面全体を覆うので、ヘッダー・サイドバーは見えない
     return (
-      <AppShell active="overview">
-        <ScheduleForm
-          initial={form.mode === 'edit' ? form.schedule : emptySchedule}
-          onBack={() => setForm(null)}
-        />
-      </AppShell>
+      <ScheduleForm
+        initial={form.mode === 'edit' ? form.schedule : emptySchedule}
+        onBack={() => setForm(null)}
+      />
     )
   }
 
   return (
-    <AppShell active="overview">
-      <ServerDetailHeader status={status} tab="詳細" />
-
-      {status === 'RESTORING' ? (
-        // page.tsx。復元中はタブの中身ごと置き換わる。
-        // GAP-NEW: Callout のアイコンを差し替えられない。実アプリはアイコンの位置に CircularProgress
-        <Callout color="informative">
-          <CalloutBody title="バックアップからデータを復元しています">
-            復元が完了するまで、サーバーの操作は一時的にご利用いただけません。
-            <br />
-            完了までしばらくお待ちください。
-          </CalloutBody>
-        </Callout>
-      ) : isServerPreparing(status) ? (
-        <>
-          {/* ServerDetailTab の準備中。GAP-NEW: Callout のアイコンを CircularProgress に差し替えられない */}
+    <GamersServerShell active="server">
+      <ServerPageLayout status={status} tab="detail">
+        {status === 'RESTORING' ? (
+          // page.tsx。復元中はタブの中身ごと置き換わる。
+          // GAP-NEW: Callout のアイコンを差し替えられない。実アプリはアイコンの位置に CircularProgress
           <Callout color="informative">
-            <CalloutBody title="準備中です">
-              準備が完了するまでサーバーを利用することができません
+            <CalloutBody title="バックアップからデータを復元しています">
+              復元が完了するまで、サーバーの操作は一時的にご利用いただけません。
+              <br />
+              完了までしばらくお待ちください。
             </CalloutBody>
           </Callout>
-          {/* RestartServerPaper。押すと RestartServerDialog（閉じられない進行表示）が開く */}
-          <ActionPaper
-            title="サーバーの再起動"
-            action={
-              <Button appearance="outlined" color="interactive">
-                再起動
-              </Button>
-            }
-          >
-            現在のゲームを停止し、サーバーを再起動します。
-          </ActionPaper>
-        </>
-      ) : (
-        <>
-          <ServerStatusPaper status={status} />
-          <ServerDetailPaper status={status} onSshKey={() => setDialog('sshKey')} />
-          <ContractPaper initialOpen={contractOpen} cancelDialog={contractCancelDialog} />
-          <ServerFirewallRulesPaper />
-          <ServerSchedulePaper
-            schedules={schedules}
-            onAdd={() => setForm({ mode: 'new' })}
-            onEdit={(s) => setForm({ mode: 'edit', schedule: s })}
-            onDelete={(s) => {
-              setScheduleTarget(s)
-              setDialog('deleteSchedule')
-            }}
-          />
-          <ActionPaper
-            title="サーバーの初期化"
-            action={
-              <Button appearance="outlined" color="negative" onPress={() => setDialog('recreate')}>
-                初期化
-              </Button>
-            }
-          >
-            サーバーの再作成を行い、すべてのサーバーデータを初期化します。
-            <br />
-            現在のサーバーデータは削除されるため、バックアップをしてから初期化を行ってください。
-          </ActionPaper>
-        </>
-      )}
+        ) : isServerPreparing(status) ? (
+          <>
+            {/* ServerDetailTab の準備中。GAP-NEW: Callout のアイコンを CircularProgress に差し替えられない */}
+            <Callout color="informative">
+              <CalloutBody title="準備中です">
+                準備が完了するまでサーバーを利用することができません
+              </CalloutBody>
+            </Callout>
+            {/* RestartServerPaper。押すと RestartServerDialog（閉じられない進行表示）が開く */}
+            <ActionPaper
+              title="サーバーの再起動"
+              action={
+                <Button appearance="outlined" color="interactive">
+                  再起動
+                </Button>
+              }
+            >
+              現在のゲームを停止し、サーバーを再起動します。
+            </ActionPaper>
+          </>
+        ) : (
+          <>
+            <ServerStatusPaper status={status} />
+            <ServerDetailPaper status={status} onSshKey={() => setDialog('sshKey')} />
+            <ContractPaper initialOpen={contractOpen} cancelDialog={contractCancelDialog} />
+            <ServerFirewallRulesPaper />
+            <ServerSchedulePaper
+              schedules={schedules}
+              onAdd={() => setForm({ mode: 'new' })}
+              onEdit={(s) => setForm({ mode: 'edit', schedule: s })}
+              onDelete={(s) => {
+                setScheduleTarget(s)
+                setDialog('deleteSchedule')
+              }}
+            />
+            <ActionPaper
+              title="サーバーの初期化"
+              action={
+                // 停止処理中は押せない（実物は aria-disabled）
+                <Button
+                  appearance="outlined"
+                  color="negative"
+                  isDisabled={status === 'STOPPING'}
+                  onPress={() => setDialog('recreate')}
+                >
+                  初期化
+                </Button>
+              }
+            >
+              サーバーの再作成を行い、すべてのサーバーデータを初期化します。
+              <br />
+              現在のサーバーデータは削除されるため、バックアップをしてから初期化を行ってください。
+            </ActionPaper>
+          </>
+        )}
+      </ServerPageLayout>
 
       {/* (server)/_components/RecreateServerDialog の確認 */}
       <Dialog isOpen={dialog === 'recreate'} isDismissable={false}>
@@ -1167,7 +1218,7 @@ const OverviewScreen = ({
           </Button>
         </DialogFooter>
       </Dialog>
-    </AppShell>
+    </GamersServerShell>
   )
 }
 

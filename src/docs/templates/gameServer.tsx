@@ -1,7 +1,6 @@
 import { Button } from '../../Button'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
-import { Menu, MenuDivider, MenuItem, MenuTrigger } from '../../Menu'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Typography } from '../../Typography'
@@ -26,17 +25,7 @@ import type { TypographyColor } from '../../Typography'
  * ゲームサーバー（ゲーマーズ = apollo/frontend）の画面で共通の部品。
  * サーバー詳細・ゲーム設定・MOD 管理・ファイル管理・バックアップの 5 テンプレートが使う。
  * 実アプリでは servers/[id]/(server)/layout.tsx が ServerDetailHeader を (server) 配下の全ページ
- * （詳細の 4 タブと backup/page.tsx）の上に置いている。ここではタブの代わりに AppShell のサイドナビで切り替える。
- *
- * タブの表示条件（ServerDetailTabPanels）。AppShell のサイドナビは常に全項目を出すので、ここでは再現していない:
- * - ゲーム設定: 契約が ACTIVE でゲームが判明しているときだけ（設定画面の無いゲームは出ない）
- * - MOD: Minecraft (Java版) で、サーバーの種類が VANILLA / 未指定でなく、状態が UNKNOWN でないときだけ
- * - ファイル管理: メンテナンス中（isMaintenanceFileManager）は出ない
- * - バックアップ・支払いはタブではなく servers/[id]/layout.tsx のサイドバーの項目
- * 共通化の候補: AppShell のナビ項目に「出さない」を渡す口があれば、この条件をそのまま写せる。
- *
- * 共通化の候補: parts.tsx に寄せるなら、ServerStatusView・ConfigRow・CalloutBody は
- * ゲーム以外の画面でも使える形になっている。
+ * （詳細の 4 タブと backup/page.tsx）の上に置いている。枠とタブは gamersShell.tsx の ServerPageLayout。
  *
  * ダイアログの処理中・完了の段はテンプレートに入れていない。実アプリの完了は CheckCircle 80px ＋ 1 行
  * （GAP-NEW: アイコンの最大が l で 80px に届かない）、処理中は Alert variant='outlined' severity='warning'
@@ -250,44 +239,8 @@ const ServerSwitch = ({ status }: { status: ServerStatus }) => {
   )
 }
 
-/** ServerListMenu に並ぶ契約中のサーバー（ゲーマーズの画面に合わせたダミー） */
-const serverList = [
-  { id: server.id, name: server.name },
-  { id: 'sv-7b21d0a4', name: 'パル島' },
-  { id: 'sv-c05e9f13', name: '週末7dtd' },
-]
-
-/**
- * servers/[id]/_components/ServerListMenu。サーバー名＋UnfoldMore のボタンで Menu を開き、
- * 契約中のサーバー・区切り線・「ホーム」を並べる。実アプリは AppBar の左端にある。
- * AppShell の AppBar は編集できないので、ヘッダーの上に置いている（共通化の候補: AppShell に AppBar 左端の差し込み口）。
- * 同じ AppBar の VESPY（AI アシスタント）とサイドバーのオンボーディングバナーは告知・広告の性格が強いので省いた
- */
-const ServerListMenu = () => (
-  <MenuTrigger>
-    {/* GAP-NEW: UnfoldMore（上下の山）に当たるアイコンが無いので chevron_down で代用 */}
-    {/* 実物は size='medium' */}
-    <Button appearance="outlined" trailing={<Icon name="chevron_down" size="s" />}>
-      {server.name}
-    </Button>
-    <Menu>
-      {serverList.map((s) => (
-        <MenuItem key={s.id} id={s.id}>
-          {s.name}
-        </MenuItem>
-      ))}
-      <MenuDivider />
-      <MenuItem id="home">ホーム</MenuItem>
-    </Menu>
-  </MenuTrigger>
-)
-
-/** サイドナビの現在地。表示には使わない（実アプリにパンくずや現在タブ名の表示は無い） */
-type ServerDetailTab = '詳細' | 'ゲーム設定' | 'MOD' | 'ファイル管理' | 'バックアップ'
-
 type ServerDetailHeaderProps = {
   status: ServerStatus
-  tab: ServerDetailTab
   /** ゲームの表示名（GameDisplayNames）。省略すると server.game */
   game?: string
 }
@@ -297,25 +250,20 @@ type ServerDetailHeaderProps = {
  * 準備中・復元中はステータスと起動ボタンを出さない
  */
 export const ServerDetailHeader = ({ status, game = server.game }: ServerDetailHeaderProps) => (
-  <Stack gap="m">
-    <Stack flexDirection="row">
-      <ServerListMenu />
-    </Stack>
-    <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="l" justifyContent="space-between">
-      {/* 実物は Stack gap={2}（16px） */}
-      <Stack gap="m">
-        <Typography size="xxxl" fontWeight="bold" component="h1">
-          {server.name}
-        </Typography>
-        <Stack flexDirection="row" gap="m" alignItems="center">
-          {!isServerPreparing(status) && <ServerStatusView status={status} />}
-          {/* components/Sticker の spec='game-title' */}
-          <Sticker color="informative" size="s">
-            {game}
-          </Sticker>
-        </Stack>
+  <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="l" justifyContent="space-between">
+    {/* 実物は Stack gap={2}（16px） */}
+    <Stack gap="m">
+      <Typography size="xxxl" fontWeight="bold" component="h1">
+        {server.name}
+      </Typography>
+      <Stack flexDirection="row" gap="m" alignItems="center">
+        {!isServerPreparing(status) && <ServerStatusView status={status} />}
+        {/* components/Sticker の spec='game-title' */}
+        <Sticker color="informative" size="s">
+          {game}
+        </Sticker>
       </Stack>
-      {!isServerPreparing(status) && <ServerSwitch status={status} />}
     </Stack>
+    {!isServerPreparing(status) && <ServerSwitch status={status} />}
   </Stack>
 )

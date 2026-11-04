@@ -1,6 +1,5 @@
 import { useState } from 'react'
 
-import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
 import { Button, LinkButton } from '../../Button'
 import { Callout } from '../../Callout'
 import { Checkbox } from '../../Checkbox'
@@ -17,7 +16,7 @@ import { Switch } from '../../Switch'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
+import { AiGatewayShell, PageContainer, PageHeader } from './aiGatewayShell'
 import claudeLogo from './assets/ai-gateway/providers/claude.svg'
 import geminiLogo from './assets/ai-gateway/providers/gemini.svg'
 import openaiLogo from './assets/ai-gateway/providers/openai.svg'
@@ -29,7 +28,9 @@ import type { IconName } from '../../Icon'
 import type { StickerColor } from '../../Sticker'
 
 /**
- * AI ゲートウェイ（octane/admin-ui）のプロジェクト配下「APIキー」を、ホスティング管理画面の中に置いたもの。
+ * AI ゲートウェイ（octane/admin-ui）のプロジェクト配下「APIキー」。顧客コンソールの枠（aiGatewayShell）の中に置く。
+ * - ページ: app/accounts/[accountId]/projects/[projectId]/keys/page.tsx（PageContainer の中に AccountKeys）と keys/[keyId]/**
+ * - パンくず: 一覧は usePageTitle('APIキー')、詳細と下位ページは KeySettingsShell の breadcrumbs
  * - 一覧: features/CustomerConsole/AccountKeys（index.tsx・KeyTable.tsx・messages.tsx）
  * - 発行フォーム: AccountKeys/KeyFormDialog.tsx・form.ts
  * - 確認: shared/ui/ConfirmDialog
@@ -39,11 +40,13 @@ import type { StickerColor } from '../../Sticker'
  */
 
 const meta = {
-  title: 'Templates/ApiKeys',
+  title: 'Templates/AiGateway/ApiKeys',
   parameters: {
     layout: 'fullscreen',
   },
   tags: ['!manifest'],
+  // 画面の部品は Templates/AiGateway/App から使うために export している。ストーリーとしては数えない
+  excludeStories: /Screen$|^productionUsage$/,
 } satisfies Meta
 
 export default meta
@@ -235,8 +238,8 @@ const TwoLine = ({ primary, secondary }: { primary: ReactNode; secondary?: strin
 )
 
 // GAP-NEW: 文中のテキストリンク（Link）が無い。LinkButton の transparent で代えるので、文字の前後に余白が付く
-const TextLink = ({ children }: { children: ReactNode }) => (
-  <LinkButton appearance="transparent" color="interactive" size="s">
+const TextLink = ({ children, onPress }: { children: ReactNode; onPress?: () => void }) => (
+  <LinkButton appearance="transparent" color="interactive" size="s" href="#" onPress={onPress}>
     {children}
   </LinkButton>
 )
@@ -357,7 +360,17 @@ const BarChart = ({ values }: { values: number[] }) => {
 
 type ListView = 'success' | 'error' | 'empty'
 
-const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey) => void }) => {
+const KeyList = ({
+  view,
+  onConfirm,
+  onIssue,
+  onNavigate,
+}: {
+  view: ListView
+  onConfirm: (action: ConfirmAction) => void
+  onIssue: () => void
+  onNavigate?: (to: string) => void
+}) => {
   const [query, setQuery] = useState('')
   const [ruleFilter, setRuleFilter] = useState('all')
   const [selected, setSelected] = useState<string[]>([])
@@ -374,12 +387,8 @@ const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey
   const loaded = view !== 'error'
   return (
     <>
-      <KeyPageHeader
-        breadcrumbs={[
-          { label: 'ホーム', link: true },
-          { label: project, link: true },
-          { label: 'APIキー' },
-        ]}
+      {/* AccountKeys は自分で PageHeader を持つ（パンくずは TopBar） */}
+      <PageHeader
         title="APIキー"
         description="このプロジェクトで利用するAPIキーを発行・管理します"
       />
@@ -414,11 +423,15 @@ const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey
           </Stack>
           <Stack flexDirection="row" gap="s" alignItems="center">
             {selectedKeys.length > 0 ? (
-              <Button color="negative" leading={<Glyph name="garbage_can" />}>
+              <Button
+                color="negative"
+                leading={<Glyph name="garbage_can" />}
+                onPress={() => onConfirm({ name: 'deleteSelected', keys: selectedKeys })}
+              >
                 選択した{selectedKeys.length}件を削除する
               </Button>
             ) : null}
-            <Button color="interactive" leading={<Glyph name="plus" />}>
+            <Button color="neutral" leading={<Glyph name="plus" />} onPress={onIssue}>
               APIキーを発行する
             </Button>
           </Stack>
@@ -441,7 +454,8 @@ const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey
             onSelectionChange={(sel) =>
               setSelected(sel === 'all' ? visible.map((k) => k.id) : [...sel].map(String))
             }
-            onRowAction={() => {}}
+            // 行を押すとキーの詳細へ（KeyTable の onRowAction → onOpen）
+            onRowAction={() => onNavigate?.('key-detail')}
           >
             <TableHeader>
               <Column aria-label="選択">
@@ -529,24 +543,36 @@ const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey
                           <Glyph name="ellipsis_vertical" />
                         </Button>
                         <Menu placement="bottom end">
-                          <MenuItem leading={<Glyph name="launch" />}>詳細を開く</MenuItem>
+                          <MenuItem
+                            leading={<Glyph name="launch" />}
+                            onAction={() => onNavigate?.('key-detail')}
+                          >
+                            詳細を開く
+                          </MenuItem>
+                          {/* 無効にするは確認を挟む。有効にするは確認なしでその場で戻す（Snackbar「APIキーを有効にしました」） */}
                           {k.blocked ? (
                             <MenuItem leading={<Glyph name="check_on_circle" />}>
                               有効にする
                             </MenuItem>
                           ) : (
-                            <MenuItem leading={<Glyph name="cross_on_circle" />}>
+                            <MenuItem
+                              leading={<Glyph name="cross_on_circle" />}
+                              onAction={() => onConfirm({ name: 'block', key: k })}
+                            >
                               無効にする
                             </MenuItem>
                           )}
                           {/* GAP-NEW: RenewIcon が無い。arrow_right_left で代用 */}
-                          <MenuItem leading={<Glyph name="arrow_right_left" />}>
+                          <MenuItem
+                            leading={<Glyph name="arrow_right_left" />}
+                            onAction={() => onConfirm({ name: 'rotate', key: k })}
+                          >
                             再生成する
                           </MenuItem>
                           <MenuItem
                             color="negative"
                             leading={<Glyph name="garbage_can" />}
-                            onAction={() => onDelete(k)}
+                            onAction={() => onConfirm({ name: 'delete', key: k })}
                           >
                             削除する
                           </MenuItem>
@@ -578,83 +604,34 @@ const subDescription: Record<KeySub, string> = {
   guardrails: 'このAPIキーからモデルへ送る前のリクエストに対する検査を決めます',
 }
 
-type Crumb = { label: string; link?: boolean }
-
 /**
- * shared/ui/PageHeader（xl の見出しと xs の説明）。back があれば、タイトルの左に iconOnly の戻るボタンだけを置く。
- * parts の PageHeader は見出しが xxl で戻る口を持たないので、ここで組み直している（共通化の候補）。
- * パンくずは実物では TopBar に出る（usePageTitle の breadcrumbs）。AppShell に口が無いのでここに置く。
+ * KeyDetail/KeySettingsShell。shared/ui/PageHeader に、詳細なら一覧へ、下位ページなら詳細へ戻るボタンを付ける。
+ * パンくず（APIキー / キー名 / 下位ページ）は TopBar に出す（ApiKeysScreen が AiGatewayShell に渡す）
  */
-const KeyPageHeader = ({
-  breadcrumbs,
-  title,
-  description,
-  back,
-  actions,
-}: {
-  breadcrumbs: Crumb[]
-  title: string
-  description: string
-  back?: string
-  actions?: ReactNode
-}) => (
-  <Stack gap="s">
-    <Breadcrumbs>
-      {breadcrumbs.map((item) => (
-        <Breadcrumb key={item.label} href={item.link ? '#' : undefined}>
-          {item.label}
-        </Breadcrumb>
-      ))}
-    </Breadcrumbs>
-    <Stack gap="xxs">
-      <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
-        <Stack flexDirection="row" gap="xs" alignItems="center">
-          {back && (
-            <Button appearance="transparent" color="neutral" size="s" iconOnly aria-label={back}>
-              <Glyph name="chevron_left" />
-            </Button>
-          )}
-          <Typography size="xl" fontWeight="bold" component="h1">
-            {title}
-          </Typography>
-        </Stack>
-        {actions}
-      </Stack>
-      <Typography size="xs" color="medium_emphasis">
-        {description}
-      </Typography>
-    </Stack>
-  </Stack>
-)
-
 const KeyShell = ({
   apiKey,
   sub,
   actions,
+  onNavigate,
   children,
 }: {
   apiKey: ApiKey
   sub?: KeySub
   actions?: ReactNode
+  onNavigate?: (to: string) => void
   children: ReactNode
 }) => {
   const { alias } = apiKey
-  const trail: Crumb[] = sub
-    ? [{ label: alias, link: true }, { label: subTitle[sub] }]
-    : [{ label: alias }]
-  const crumbs: Crumb[] = [
-    { label: 'ホーム', link: true },
-    { label: project, link: true },
-    { label: 'APIキー', link: true },
-    ...trail,
-  ]
   return (
     <>
-      <KeyPageHeader
-        breadcrumbs={crumbs}
+      <PageHeader
         title={sub ? subTitle[sub] : alias}
         description={sub ? subDescription[sub] : 'このAPIキーの設定です'}
-        back={sub ? `${alias}の詳細へ戻る` : 'APIキーの一覧へ戻る'}
+        back={
+          sub
+            ? { label: `${alias}の詳細へ戻る`, onPress: () => onNavigate?.('key-detail') }
+            : { label: 'APIキーの一覧へ戻る', onPress: () => onNavigate?.('keys') }
+        }
         actions={actions}
       />
       <Stack gap="l">{children}</Stack>
@@ -664,7 +641,13 @@ const KeyShell = ({
 
 // ─── 詳細（features/CustomerConsole/KeyDetail/index.tsx）───
 
-const KeyDetail = ({ apiKey }: { apiKey: ApiKey }) => {
+const KeyDetail = ({
+  apiKey,
+  onNavigate,
+}: {
+  apiKey: ApiKey
+  onNavigate?: (to: string) => void
+}) => {
   const [alias, setAlias] = useState(apiKey.alias)
   const status = keyStatus(apiKey)
   const rule = ruleName(apiKey.ruleId)
@@ -720,7 +703,7 @@ const KeyDetail = ({ apiKey }: { apiKey: ApiKey }) => {
           <SettingRow label="適用中のルール">
             {rule ? (
               // 実装はルールの詳細（/rules/:ruleId）へ移る
-              <TextLink>{rule}</TextLink>
+              <TextLink onPress={() => onNavigate?.('rule-detail')}>{rule}</TextLink>
             ) : (
               <Typography size="s" color="medium_emphasis" component="div">
                 なし
@@ -776,6 +759,7 @@ const KeyDetail = ({ apiKey }: { apiKey: ApiKey }) => {
               color="neutral"
               width="full"
               trailing={<Glyph name="chevron_right" />}
+              onPress={() => onNavigate?.(`key-${sub}`)}
             >
               {subTitle[sub]}
             </Button>
@@ -1244,7 +1228,7 @@ const IssueKeyDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         <Button appearance="transparent" color="neutral" onPress={onClose}>
           キャンセル
         </Button>
-        <Button color="interactive" onPress={onClose}>
+        <Button color="neutral" onPress={onClose}>
           発行する
         </Button>
       </DialogFooter>
@@ -1252,32 +1236,87 @@ const IssueKeyDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   )
 }
 
-// ─── 削除の確認（shared/ui/ConfirmDialog。文言は AccountKeys/messages.tsx の delete）───
+// ─── 確認（shared/ui/ConfirmDialog。文言は AccountKeys/messages.tsx の confirmTitle・confirmDescription・confirmLabel）───
 
 // GAP-NEW: Dialog に幅の prop が無い（ConfirmDialog は 400px）。inline style を当てない方針のため未対応で、中身の幅で縮む
 
-const ConfirmDeleteDialog = ({
-  apiKey,
+type ConfirmAction =
+  | { name: 'block' | 'rotate' | 'delete'; key: ApiKey }
+  | { name: 'deleteSelected'; keys: ApiKey[] }
+
+const confirmTitle = (action: ConfirmAction) =>
+  action.name === 'block'
+    ? 'APIキーを無効にしますか？'
+    : action.name === 'rotate'
+      ? 'APIキーを再生成しますか？'
+      : action.name === 'deleteSelected'
+        ? `${action.keys.length}件のAPIキーを削除しますか？`
+        : 'APIキーを削除しますか？'
+
+const confirmLabel = (action: ConfirmAction) =>
+  action.name === 'block'
+    ? 'このAPIキーを無効にする'
+    : action.name === 'rotate'
+      ? 'このAPIキーを再生成する'
+      : action.name === 'deleteSelected'
+        ? `${action.keys.length}件を削除する`
+        : 'このAPIキーを削除する'
+
+const confirmDescription = (action: ConfirmAction) => {
+  if (action.name === 'deleteSelected') {
+    const names = action.keys.map((k) => k.alias)
+    const shown = names.slice(0, 5)
+    const rest = names.length - shown.length
+    return (
+      <>
+        選択した {action.keys.length} 件のAPIキーを削除します。
+        これらのキーを使用しているアプリは接続できなくなります。 この操作は取り消せません。
+        <br />
+        {/* countByDestination。紐付け先ごとの件数 */}
+        <strong>
+          {project} {action.keys.length}件
+        </strong>
+        <br />
+        {shown.join('、')}
+        {rest > 0 && ` ほか${rest}件`}
+      </>
+    )
+  }
+  const alias = <strong>{action.key.alias}</strong>
+  if (action.name === 'block') {
+    return <>{alias} を無効にします。 このキーを使用しているアプリは接続できなくなります。</>
+  }
+  if (action.name === 'rotate') {
+    return <>{alias} を再生成します。 現在のキーはすぐに利用できなくなります。</>
+  }
+  return <>{alias} を削除します。 この操作は取り消せません。</>
+}
+
+/** ConfirmDialog は destructive で開くので、確定のボタンはどれも negative */
+const ConfirmActionDialog = ({
+  action,
   onClose,
 }: {
-  apiKey: ApiKey | null
+  action: ConfirmAction | null
   onClose: () => void
 }) => (
-  <Dialog isOpen={apiKey !== null} role="alertdialog" onOpenChange={(open) => !open && onClose()}>
-    <DialogHeader>
-      <DialogTitle>APIキーを削除しますか？</DialogTitle>
-    </DialogHeader>
-    <DialogDescription>
-      <strong>{apiKey?.alias}</strong> を削除します。 この操作は取り消せません。
-    </DialogDescription>
-    <DialogFooter>
-      <Button appearance="transparent" color="neutral" onPress={onClose}>
-        キャンセル
-      </Button>
-      <Button color="negative" onPress={onClose}>
-        このAPIキーを削除する
-      </Button>
-    </DialogFooter>
+  <Dialog isOpen={action !== null} role="alertdialog" onOpenChange={(open) => !open && onClose()}>
+    {action && (
+      <>
+        <DialogHeader>
+          <DialogTitle>{confirmTitle(action)}</DialogTitle>
+        </DialogHeader>
+        <DialogDescription>{confirmDescription(action)}</DialogDescription>
+        <DialogFooter>
+          <Button appearance="transparent" color="neutral" onPress={onClose}>
+            キャンセル
+          </Button>
+          <Button color="negative" onPress={onClose}>
+            {confirmLabel(action)}
+          </Button>
+        </DialogFooter>
+      </>
+    )}
   </Dialog>
 )
 
@@ -1285,76 +1324,109 @@ const ConfirmDeleteDialog = ({
 
 type Page = 'list' | 'detail' | KeySub
 
-const ApiKeysScreen = ({
+export const ApiKeysScreen = ({
   view = 'success',
   page = 'list',
   initialIssue = false,
   initialConfirm = null,
+  onNavigate,
 }: {
   view?: ListView
   page?: Page
   /** 発行フォームを開いた状態で始める */
   initialIssue?: boolean
-  /** 削除の確認を開いた状態で始めるキー */
-  initialConfirm?: ApiKey | null
+  /** 確認を開いた状態で始める操作 */
+  initialConfirm?: ConfirmAction | null
+  /** サイドナビ・パンくず・画面の中の移動。行き先の名前は下の表と aiGatewayShell.tsx の冒頭 */
+  onNavigate?: (to: string) => void
 }) => {
   const [issuing, setIssuing] = useState(initialIssue)
   const [confirm, setConfirm] = useState(initialConfirm)
   // 詳細と下位ページは本番用キーを開く
   const openKey = initialKeys[0]
+  const sub = page === 'list' || page === 'detail' ? undefined : page
   return (
-    <AppShell active="apikeys">
-      {page === 'list' ? (
-        <KeyList view={view} onDelete={setConfirm} />
-      ) : (
-        <KeyShell
-          apiKey={openKey}
-          sub={page === 'detail' ? undefined : page}
-          actions={
-            page === 'detail' && (
-              // KeyDetail の操作メニューは「無効にする / 有効にする」と「削除する」だけ（再生成は一覧から）
-              <MenuTrigger>
-                <Button
-                  appearance="transparent"
-                  color="neutral"
-                  size="s"
-                  iconOnly
-                  aria-label="このAPIキーの操作メニュー"
-                >
-                  <Glyph name="ellipsis_vertical" />
-                </Button>
-                <Menu placement="bottom end">
-                  {openKey.blocked ? (
-                    <MenuItem leading={<Glyph name="check_on_circle" />}>有効にする</MenuItem>
-                  ) : (
-                    <MenuItem leading={<Glyph name="cross_on_circle" />}>無効にする</MenuItem>
-                  )}
-                  <MenuItem
-                    color="negative"
-                    leading={<Glyph name="garbage_can" />}
-                    onAction={() => setConfirm(openKey)}
+    <AiGatewayShell
+      project={project}
+      current="keys"
+      // 一覧は usePageTitle('APIキー')。詳細は「APIキー / キー名」、下位ページは「APIキー / キー名 / 下位ページ」
+      breadcrumbs={
+        page === 'list'
+          ? []
+          : sub
+            ? [
+                { label: 'APIキー', to: 'keys' },
+                { label: openKey.alias, to: 'key-detail' },
+              ]
+            : [{ label: 'APIキー', to: 'keys' }]
+      }
+      title={page === 'list' ? 'APIキー' : sub ? subTitle[sub] : openKey.alias}
+      onNavigate={onNavigate}
+    >
+      <PageContainer>
+        {page === 'list' ? (
+          <KeyList
+            view={view}
+            onConfirm={setConfirm}
+            onIssue={() => setIssuing(true)}
+            onNavigate={onNavigate}
+          />
+        ) : (
+          <KeyShell
+            apiKey={openKey}
+            sub={sub}
+            onNavigate={onNavigate}
+            actions={
+              page === 'detail' && (
+                // KeyDetail の操作メニューは「無効にする / 有効にする」と「削除する」だけ（再生成は一覧から）
+                <MenuTrigger>
+                  <Button
+                    appearance="transparent"
+                    color="neutral"
+                    size="s"
+                    iconOnly
+                    aria-label="このAPIキーの操作メニュー"
                   >
-                    削除する
-                  </MenuItem>
-                </Menu>
-              </MenuTrigger>
-            )
-          }
-        >
-          {page === 'limits' ? (
-            <LimitSettings apiKey={openKey} />
-          ) : page === 'models' ? (
-            <ModelSettings apiKey={openKey} />
-          ) : page === 'guardrails' ? (
-            <GuardrailSettings apiKey={openKey} />
-          ) : (
-            <KeyDetail apiKey={openKey} />
-          )}
-        </KeyShell>
-      )}
+                    <Glyph name="ellipsis_vertical" />
+                  </Button>
+                  <Menu placement="bottom end">
+                    {openKey.blocked ? (
+                      <MenuItem leading={<Glyph name="check_on_circle" />}>有効にする</MenuItem>
+                    ) : (
+                      <MenuItem
+                        leading={<Glyph name="cross_on_circle" />}
+                        onAction={() => setConfirm({ name: 'block', key: openKey })}
+                      >
+                        無効にする
+                      </MenuItem>
+                    )}
+                    <MenuItem
+                      color="negative"
+                      leading={<Glyph name="garbage_can" />}
+                      onAction={() => setConfirm({ name: 'delete', key: openKey })}
+                    >
+                      削除する
+                    </MenuItem>
+                  </Menu>
+                </MenuTrigger>
+              )
+            }
+          >
+            {page === 'limits' ? (
+              <LimitSettings apiKey={openKey} />
+            ) : page === 'models' ? (
+              <ModelSettings apiKey={openKey} />
+            ) : page === 'guardrails' ? (
+              <GuardrailSettings apiKey={openKey} />
+            ) : (
+              <KeyDetail apiKey={openKey} onNavigate={onNavigate} />
+            )}
+          </KeyShell>
+        )}
+      </PageContainer>
       <IssueKeyDialog isOpen={issuing} onClose={() => setIssuing(false)} />
-      <ConfirmDeleteDialog apiKey={confirm} onClose={() => setConfirm(null)} />
-    </AppShell>
+      <ConfirmActionDialog action={confirm} onClose={() => setConfirm(null)} />
+    </AiGatewayShell>
   )
 }
 
@@ -1406,7 +1478,7 @@ export const IssueDialog: Story = {
  * @summary 削除する確認
  */
 export const ConfirmDelete: Story = {
-  render: () => <ApiKeysScreen initialConfirm={initialKeys[1]} />,
+  render: () => <ApiKeysScreen initialConfirm={{ name: 'delete', key: initialKeys[1] }} />,
 }
 
 // ─── ストーリー：詳細 ───

@@ -10,16 +10,15 @@ import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
+import { AiGatewayShell, PageContainer, PageHeader } from './aiGatewayShell'
 import claudeLogo from './assets/ai-gateway/providers/claude.svg'
 import geminiLogo from './assets/ai-gateway/providers/gemini.svg'
 import openaiLogo from './assets/ai-gateway/providers/openai.svg'
-import { Card, PageHeader } from './parts'
+import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 import type { SortDescriptor } from 'react-aria-components'
-import type { TypographyColor } from '../../Typography'
 
 /**
  * 使用状況。AI ゲートウェイの実画面を写している。
@@ -32,11 +31,13 @@ import type { TypographyColor } from '../../Typography'
  */
 
 const meta = {
-  title: 'Templates/Usage',
+  title: 'Templates/AiGateway/Usage',
   parameters: {
     layout: 'fullscreen',
   },
   tags: ['!manifest'],
+  // 画面の部品は Templates/AiGateway/App から使うために export している。ストーリーとしては数えない
+  excludeStories: /Screen$|^productionUsage$/,
 } satisfies Meta
 
 export default meta
@@ -53,7 +54,8 @@ type ViewState = 'success' | 'empty' | 'error'
 
 // ─── AI ゲートウェイ：データ（形は shared/lib/usageDashboard の UsageTotals。値はダミー）───
 
-const days = ['10/24', '10/25', '10/26', '10/27', '10/28', '10/29', '10/30']
+/** 7日の期間の各日（usagePeriodBuckets）。軸の目盛りは bucketLabel のとおり日だけで、月の 1 日だけ「月/日」 */
+const days = ['29', '30', '31', '11/1', '2', '3', '4']
 /** 日ごとの重み。期間の合計を日に割り振るのに使う */
 const dayWeights = [0.8, 0.7, 1.4, 1.6, 1.3, 1.2, 1.1]
 const weightSum = dayWeights.reduce((a, w) => a + w, 0)
@@ -142,10 +144,15 @@ const keyEntries: (Entry & { disabled?: boolean })[] = [
   { key: '__unnamed__', label: 'キー未特定', totals: scale(0.01), disabled: true },
 ]
 
+/** Templates/AiGateway/App でプロジェクトの使用状況を開くときの production */
+export const productionUsage = projectEntries[0]
+
 const zeroTotals: Totals = scale(0)
 
 const count = (n: number) => Math.round(n).toLocaleString('ja-JP')
-const jpy = (n: number) => `¥${Math.round(n).toLocaleString('ja-JP')}`
+/** formatUsageJpy（Intl の ja-JP・JPY。¥1 以上は整数） */
+const jpy = (n: number) =>
+  new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(Math.round(n))
 const charge = (t: Totals) => jpy(t.text + t.image)
 const normalInput = (t: Totals) => t.input - t.cacheRead - t.cacheCreation
 const hitRate = (t: Totals) =>
@@ -172,15 +179,23 @@ const series: Series[] = [
 /** 棒を積む上位の数（shownEntries）。残りは「その他」として 1 段にまとめる */
 const SHOWN_ENTRIES = 3
 
-// GAP-NEW: グラフの系列に使うカテゴリ色のトークンが無い。実装は styles.module.css に 4 段ぶんの色を持つ。
-// ここでは Typography の色を 4 つ流用している
-const segmentTones: TypographyColor[] = ['informative', 'positive', 'notice', 'low_emphasis']
+// GAP-NEW: グラフの系列に使うカテゴリ色のトークンが無い。実装の styles.module.css の 4 段ぶんの色
+// （barCacheNormal・barCacheRead・barCacheCreation・barCacheOutput）を、グラフの部品の中だけで生の値で持つ
+const segmentFills = [
+  '#0f78c6', // lolipopColors.blue[600]
+  '#3da7f9', // lolipopColors.blue[400]
+  '#00835f', // lolipopColors.green[600]
+  '#6ec0a1', // lolipopColors.green[300]
+]
 
 // GAP-19: グラフの primitive が無い。日ごとの列に段を積み上げた div を置いている。
-// 実装の UsageCharts は SVG のパス・ホバーのポップオーバー（ChartPopover）を持つ
+// 実装の UsageCharts は SVG のパス（棒 28px・間 12px を幅いっぱいに伸ばす）・ホバーのポップオーバー（ChartPopover）を持つ
 const PLOT_HEIGHT = 96
-const plotStyle = { display: 'flex', alignItems: 'flex-end', gap: 6, height: PLOT_HEIGHT }
-const columnStyle = { flex: 1, display: 'flex', flexDirection: 'column-reverse' as const, gap: 1 }
+const plotStyle = { display: 'flex', alignItems: 'flex-end', gap: '4.3%', height: PLOT_HEIGHT }
+const columnStyle = { flex: 1, display: 'flex', flexDirection: 'column-reverse' as const }
+// chartAxis：日ごとに等分した列の中央に目盛り（11px・gray[600]）
+const axisStyle = { display: 'flex' }
+const tickStyle = { flex: 1, textAlign: 'center' as const }
 
 const UsageChart = ({ series, entries }: { series: Series; entries: Entry[] }) => {
   const ranked = [...entries].sort((a, b) => series.valueOf(b.totals) - series.valueOf(a.totals))
@@ -225,53 +240,57 @@ const UsageChart = ({ series, entries }: { series: Series; entries: Entry[] }) =
               <div key={days[di]} style={columnStyle}>
                 {parts.map((part, pi) =>
                   part <= 0 ? null : (
-                    <Typography
+                    <div
                       // biome-ignore lint/suspicious/noArrayIndexKey: 段の順は固定
                       key={pi}
-                      component="div"
-                      color={segmentTones[pi]}
-                    >
-                      <div
-                        style={{
-                          height: ((part / periodValue) * (w / weightSum) * PLOT_HEIGHT) / peak,
-                          borderRadius: 2,
-                          background: 'currentColor',
-                        }}
-                      />
-                    </Typography>
+                      style={{
+                        height: ((part / periodValue) * (w / weightSum) * PLOT_HEIGHT) / peak,
+                        background: segmentFills[pi],
+                      }}
+                    />
                   )
                 )}
               </div>
             ))}
           </div>
         )}
-        <Stack flexDirection="row" justifyContent="space-between">
+        <div style={axisStyle}>
           {days.map((d) => (
-            <Typography key={d} size="xxs" color="low_emphasis" component="span">
-              {d}
-            </Typography>
+            <div key={d} style={tickStyle}>
+              <Typography size="xxs" color="medium_emphasis" component="span">
+                {d}
+              </Typography>
+            </div>
           ))}
-        </Stack>
-        {/* Breakdown：上位 3 件の名前と値。期間の値が 0 のときは出さない */}
+        </div>
+        {/* Breakdown：上位 3 件の名前と値。期間の値が 0 のときは出さない。
+            3 件に満たないときも 3 行ぶんの高さを取る（空の行を置く） */}
         {periodValue > 0 && (
           <>
             <Divider />
-            <Stack gap="xxs">
-              {top.map((e) => (
-                <Stack key={e.key} flexDirection="row" justifyContent="space-between" gap="s">
-                  {/* GAP-NEW: 説明の InfoTip が無い */}
-                  <Stack flexDirection="row" gap="xs" alignItems="center">
-                    {/* GAP-NEW: 画像の枠（Image）が無い。実物は object-fit: contain で縮めず収める */}
-                    {e.logo && <img src={e.logo} alt="" width={16} height={16} />}
-                    <Typography size="xs" component="span">
-                      {e.label}
+            <Stack gap="xs">
+              {Array.from({ length: SHOWN_ENTRIES }, (_, i) => top[i]).map((e, i) =>
+                e === undefined ? (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: 空の行は位置で決まる
+                  <Typography key={`blank-${i}`} size="xs" component="span" aria-hidden="true">
+                    {'\u00a0'}
+                  </Typography>
+                ) : (
+                  <Stack key={e.key} flexDirection="row" justifyContent="space-between" gap="s">
+                    {/* GAP-NEW: 説明の InfoTip が無い */}
+                    <Stack flexDirection="row" gap="xs" alignItems="center">
+                      {/* GAP-NEW: 画像の枠（Image）が無い。実物は object-fit: contain で縮めず収める */}
+                      {e.logo && <img src={e.logo} alt="" width={16} height={16} />}
+                      <Typography size="xs" component="span">
+                        {e.label}
+                      </Typography>
+                    </Stack>
+                    <Typography size="xs" fontWeight="bold" component="span">
+                      {series.format(series.valueOf(e.totals))}
                     </Typography>
                   </Stack>
-                  <Typography size="xs" fontWeight="bold" component="span">
-                    {series.format(series.valueOf(e.totals))}
-                  </Typography>
-                </Stack>
-              ))}
+                )
+              )}
             </Stack>
           </>
         )}
@@ -343,7 +362,8 @@ const DailyChartsSection = ({
   const [axis, setAxis] = useState<'model' | 'project'>('model')
   const entries = axis === 'project' && projectBreakdown ? projectBreakdown : modelBreakdown
   return (
-    <Stack gap="m">
+    // .section（gap 12px）。カードの間は chartGrid の 16px
+    <Stack gap="s">
       <SectionHead
         title="使用状況の推移"
         action={
@@ -456,7 +476,7 @@ const ProjectBreakdownSection = ({
   const shown = expanded ? sorted : sorted.slice(0, SHOWN_PROJECTS)
   const hidden = sorted.length - shown.length
   return (
-    <Stack gap="m">
+    <Stack gap="s">
       <SectionHead title="プロジェクト別内訳" />
       <TableFrame>
         {/* GAP-NEW: 並べ替えの印（sortable の矢印）と先頭列の固定が無い。並べ替え自体は効く */}
@@ -550,18 +570,21 @@ const ProjectBreakdownSection = ({
             ))}
           </TableBody>
         </Table>
-        {/* DataTable の footer */}
+        {/* DataTable の footer：罫線の下、左寄せ。GAP: 実物の footer の padding 2px 8px は無い */}
         {(hidden > 0 || expanded) && (
-          <Stack alignItems="center">
-            <Button
-              appearance="transparent"
-              color="neutral"
-              size="s"
-              onPress={() => setExpanded(!expanded)}
-            >
-              {expanded ? `上位${SHOWN_PROJECTS}件だけ表示する` : `残り${hidden}件を表示する`}
-            </Button>
-          </Stack>
+          <>
+            <Divider />
+            <Stack alignItems="flex-start">
+              <Button
+                appearance="transparent"
+                color="neutral"
+                size="s"
+                onPress={() => setExpanded(!expanded)}
+              >
+                {expanded ? `上位${SHOWN_PROJECTS}件だけ表示する` : `残り${hidden}件を表示する`}
+              </Button>
+            </Stack>
+          </>
         )}
       </TableFrame>
     </Stack>
@@ -569,19 +592,26 @@ const ProjectBreakdownSection = ({
 }
 
 /** features/ProjectUsage の KeyBreakdownSection */
-const KeyBreakdownSection = ({ entries }: { entries: typeof keyEntries }) => {
+const KeyBreakdownSection = ({
+  entries,
+  onOpenKey,
+}: {
+  entries: typeof keyEntries
+  onOpenKey: () => void
+}) => {
   const [sort, setSort] = useState<SortDescriptor>({ column: 'charge', direction: 'descending' })
   const sorted = sortEntries(entries, sort)
   return (
-    <Stack gap="m">
+    <Stack gap="s">
       <SectionHead title="APIキー別内訳" />
       <TableFrame>
-        {/* GAP-NEW: 並べ替えの印と先頭列の固定（stickyFirstColumn）が無い。行を押すと API キーの詳細に移る */}
+        {/* GAP-NEW: 並べ替えの印と先頭列の固定（stickyFirstColumn）が無い。
+            行を押すと API キーの詳細に移る（押せない行は isDisabled で除かれる） */}
         <Table
           aria-label="APIキー別内訳"
           sortDescriptor={sort}
           onSortChange={setSort}
-          onRowAction={() => {}}
+          onRowAction={onOpenKey}
         >
           <TableHeader>
             <Column id="name" isRowHeader allowsSorting>
@@ -612,11 +642,21 @@ const KeyBreakdownSection = ({ entries }: { entries: typeof keyEntries }) => {
               利用額
             </Column>
           </TableHeader>
-          <TableBody>
+          <TableBody
+            renderEmptyState={() => (
+              <Typography size="s" fontWeight="bold" component="h3">
+                この期間に使われたAPIキーはありません
+              </Typography>
+            )}
+          >
             {sorted.map((e) => (
               <Row key={e.key} id={e.key} isDisabled={e.disabled}>
-                {/* GAP-20: 実物はキー名を等幅（styles.keyName）で出す */}
-                <Cell>{e.label}</Cell>
+                {/* 実物はキー名を太字（styles.keyName）で出す */}
+                <Cell>
+                  <Typography size="s" fontWeight="bold" component="span">
+                    {e.label}
+                  </Typography>
+                </Cell>
                 <Cell>
                   <Lines primary={count(e.totals.requests)} />
                 </Cell>
@@ -710,9 +750,8 @@ const AccountUsage = ({
   const projects = empty ? [] : projectEntries
   const models = empty ? [] : modelEntries
   return (
-    <>
+    <PageContainer>
       <PageHeader
-        breadcrumbs={[{ label: 'ホーム', href: '#' }, { label: '使用状況' }]}
         title="使用状況"
         description="組織全体の利用の推移とプロジェクト別の内訳を確認します"
         actions={
@@ -742,12 +781,12 @@ const AccountUsage = ({
       ) : (
         <RetryCallout message="使用状況を読み込めませんでした。" />
       )}
-    </>
+    </PageContainer>
   )
 }
 
 /** features/ProjectUsage。期間はあるが、CSV と「モデル別 / プロジェクト別」は無い */
-const ProjectUsage = ({ project }: { project: Entry }) => {
+const ProjectUsage = ({ project, onOpenKey }: { project: Entry; onOpenKey: () => void }) => {
   // モデル別の割合は組織と同じにして、プロジェクトの量に縮める
   const projectShare = project.totals.requests / orgTotals.requests
   const models = modelEntries.map((m) => ({
@@ -755,42 +794,54 @@ const ProjectUsage = ({ project }: { project: Entry }) => {
     totals: scale(projectShare * (m.totals.requests / orgTotals.requests)),
   }))
   return (
-    <>
+    <PageContainer>
       <PageHeader
-        breadcrumbs={[
-          { label: 'ホーム', href: '#' },
-          { label: '使用状況', href: '#' },
-          { label: project.label },
-        ]}
         title="使用状況"
         description="このプロジェクトの利用の推移とAPIキー別の内訳を確認します"
         actions={<UsagePeriodFilter />}
       />
       <DailyChartsSection modelBreakdown={models} />
-      <KeyBreakdownSection entries={keyEntries} />
-    </>
+      <KeyBreakdownSection entries={keyEntries} onOpenKey={onOpenKey} />
+    </PageContainer>
   )
 }
 
 // ─── 画面 ───
 
-const UsageScreen = ({
+/**
+ * 画面の移り先（onNavigate の名前）:
+ * - 組織の内訳の行 → 'project-usage'（AccountUsage の onOpenProject：/projects/[id]/usage）。
+ *   onNavigate が無い（このファイルのストーリーを単体で開いた）ときは、この画面の中でプロジェクトの使用状況に切り替える
+ * - プロジェクトの APIキー別内訳の行 → 'key-detail'（ProjectUsage の onOpenKey：/keys/[keyId]）
+ * - 枠（サイドナビ・パンくず・切り替えメニュー）は aiGatewayShell の名前のまま
+ */
+export const UsageScreen = ({
   view = 'success',
   initialProject,
+  onNavigate,
 }: {
   view?: ViewState
   /** プロジェクトの使用状況から始める */
   initialProject?: Entry
+  onNavigate?: (to: string) => void
 }) => {
   const [project, setProject] = useState<Entry | undefined>(initialProject)
-  return (
-    <AppShell active="usage">
-      {project ? (
-        <ProjectUsage project={project} />
-      ) : (
-        <AccountUsage view={view} onOpenProject={setProject} />
-      )}
-    </AppShell>
+  return project ? (
+    <AiGatewayShell
+      project={project.label}
+      current="project-usage"
+      title="使用状況"
+      onNavigate={onNavigate}
+    >
+      <ProjectUsage project={project} onOpenKey={() => onNavigate?.('key-detail')} />
+    </AiGatewayShell>
+  ) : (
+    <AiGatewayShell current="usage" title="使用状況" onNavigate={onNavigate}>
+      <AccountUsage
+        view={view}
+        onOpenProject={(entry) => (onNavigate ? onNavigate('project-usage') : setProject(entry))}
+      />
+    </AiGatewayShell>
   )
 }
 

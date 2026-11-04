@@ -6,8 +6,8 @@ import { Grid, GridItem } from '../../Grid'
 import { Loader } from '../../Loader'
 import { Stack } from '../../Stack'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
 import paypayLogo from './assets/gamers/paypay.svg'
+import { GamersPageContainer, GamersShell, useGamersNavigate } from './gamersShell'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -18,12 +18,12 @@ import type { ReactNode } from 'react'
  * 元：apollo/frontend/src/app/(application)/(private)/servers/(no_sidebar)/[id]/billing
  * （client.tsx・hooks.ts・model.ts・_components/Message・_components/PaymentInfoPaper）と
  * components/OrderDetailDialog（ダイアログではなく右カラムの面）・components/InSubmitDialog。
- * 実物はサイドバーの無いレイアウト（(no_sidebar)）なので nav={false} にしている。
+ * 実物はサイドバーの無いレイアウト（(no_sidebar)）で、(private)/layout.tsx の GlobalHeader の下に client.tsx の Container（mt 3）が来る。
  * 「購入する」を押すと PayPay へ移るので、このテンプレートでは購入中の表示までを扱う。
  */
 
 const meta = {
-  title: 'Templates/Renewal',
+  title: 'Templates/Gamers/Renewal',
   parameters: {
     layout: 'fullscreen',
   },
@@ -35,7 +35,7 @@ type Story = StoryObj<typeof meta>
 
 // ─── データ ───
 
-// 契約中のプラン。Templates/Billing の契約（8GB・1ヶ月）と同じ
+// 契約中のプラン。Templates/Gamers/Payment の契約（8GB・1ヶ月）と同じ
 const order = {
   game: 'Minecraft (Java版)',
   memory: '8GB',
@@ -52,35 +52,41 @@ const order = {
 const Pending = () => <Loader size="s" />
 
 /** _components/PaymentInfoPaper ＋ PaymentMethodCard */
-const PaymentInfo = ({ loading }: { loading: boolean }) => (
-  <Card>
-    <Stack gap="xl">
-      <Typography size="xxl" fontWeight="bold" component="h1">
-        支払い方法
-      </Typography>
-      {/* GAP-NEW: Stack の alignItems にブレークポイントごとの値を渡せない。実物は縦並び（xs）のとき左揃え */}
-      <Stack
-        flexDirection={{ xxs: 'column', s: 'row' }}
-        gap="s"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        {loading ? (
-          <Pending />
-        ) : (
-          <Stack flexDirection="row" gap="m" alignItems="center">
-            <img src={paypayLogo} alt="PayPay" width={48} height={48} />
-            <Typography size="s" component="p">
-              PayPay
-            </Typography>
-          </Stack>
-        )}
-        {/* 支払いの画面へ移り、支払い方法の変更のダイアログを開く（payment?payment_method_change_dialog=true） */}
-        <Button appearance="outlined">変更</Button>
+const PaymentInfo = ({ loading }: { loading: boolean }) => {
+  const navigate = useGamersNavigate()
+  return (
+    // 実物の Paper は pt 6・pb 8・px 4
+    <Card padding="xl">
+      <Stack gap="xl">
+        <Typography size="xxl" fontWeight="bold" component="h2">
+          支払い方法
+        </Typography>
+        {/* GAP-NEW: Stack の alignItems にブレークポイントごとの値を渡せない。実物は縦並び（xs）のとき左揃え */}
+        <Stack
+          flexDirection={{ xxs: 'column', s: 'row' }}
+          gap="s"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          {loading ? (
+            <Pending />
+          ) : (
+            <Stack flexDirection="row" gap="m" alignItems="center">
+              <img src={paypayLogo} alt="PayPay" width={48} height={48} />
+              <Typography size="s" component="p">
+                PayPay
+              </Typography>
+            </Stack>
+          )}
+          {/* 支払いの画面へ移り、支払い方法の変更のダイアログを開く（payment?payment_method_change_dialog=true） */}
+          <Button appearance="outlined" onPress={() => navigate('payment-method-change')}>
+            変更
+          </Button>
+        </Stack>
       </Stack>
-    </Stack>
-  </Card>
-)
+    </Card>
+  )
+}
 
 const OrderRow = ({ title, value, help }: { title: string; value?: string; help?: string }) => (
   <Stack flexDirection="row" justifyContent="space-between" alignItems="flex-start" gap="m">
@@ -111,37 +117,49 @@ const OrderRow = ({ title, value, help }: { title: string; value?: string; help?
  * 購入を始められなかったときなどは、ページの上に _components/Message（Alert の AlertTitle ＋本文）を出す
  * （GAP-NEW: Callout にタイトルの枠が無い）。
  */
-const OrderDetail = ({ loading }: { loading: boolean }) => (
-  <Card>
-    <Stack gap="l">
-      <Typography size="xxl" fontWeight="bold" component="h2">
-        注文内容
-      </Typography>
-      <Stack gap="xs">
-        <OrderRow title="ゲーム" value={loading ? undefined : order.game} />
-        <OrderRow title="容量" value={loading ? undefined : order.memory} />
-        <OrderRow title="期間" value={loading ? undefined : order.period} help={order.range} />
-        <OrderRow title="月額" value={loading ? undefined : order.monthly} />
-      </Stack>
-      <Divider />
-      <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
-        <Typography size="xl" fontWeight="bold" component="span">
-          合計
+const OrderDetail = ({ loading }: { loading: boolean }) => {
+  const navigate = useGamersNavigate()
+  return (
+    // 実物の Paper は pt 6・pb 8・px 4。見出し・明細・区切り線・合計・ボタンの間はどれも 40px（mb 5 / my 5）
+    <Card padding="xl">
+      <Stack gap="xxl">
+        {/* 実物は variant='xxl_comfort' */}
+        <Typography size="xxl" fontWeight="bold" component="h2">
+          注文内容
         </Typography>
-        {loading ? (
-          <Pending />
-        ) : (
-          <Typography size="xxl" fontWeight="bold" component="span">
-            {order.total}
+        <Stack gap="xs">
+          <OrderRow title="ゲーム" value={loading ? undefined : order.game} />
+          <OrderRow title="容量" value={loading ? undefined : order.memory} />
+          <OrderRow title="期間" value={loading ? undefined : order.period} help={order.range} />
+          <OrderRow title="月額" value={loading ? undefined : order.monthly} />
+        </Stack>
+        <Divider />
+        <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
+          <Typography size="xl" fontWeight="bold" component="span">
+            合計
           </Typography>
-        )}
+          {loading ? (
+            <Pending />
+          ) : (
+            <Typography size="xxl" fontWeight="bold" component="span">
+              {order.total}
+            </Typography>
+          )}
+        </Stack>
+        {/* 押すと購入中（InSubmitDialog）の後、PayPay の決済ページ（paypayUrl）へ。始められなかったときは支払い（payment）へ戻る */}
+        <Button
+          color="interactive"
+          size="l"
+          width="full"
+          isDisabled={loading}
+          onPress={() => navigate('external')}
+        >
+          購入する
+        </Button>
       </Stack>
-      <Button color="interactive" size="l" width="full" isDisabled={loading}>
-        購入する
-      </Button>
-    </Stack>
-  </Card>
-)
+    </Card>
+  )
+}
 
 // GAP-NEW: Dialog に幅の prop（MUI の fullWidth・600px）が無い。inline style を当てない方針のため未対応で、中身の幅で縮む
 
@@ -174,17 +192,20 @@ const RenewalScreen = ({
   loading?: boolean
   submitting?: boolean
 }): ReactNode => (
-  <AppShell active="billing" nav={false}>
-    <Grid spacing="m">
-      <GridItem size={{ xxs: 12, m: 8 }}>
-        <PaymentInfo loading={loading} />
-      </GridItem>
-      <GridItem size={{ xxs: 12, m: 4 }}>
-        <OrderDetail loading={loading} />
-      </GridItem>
-    </Grid>
+  <GamersShell>
+    {/* client.tsx の Container（mt 3）＋ Message ＋ Grid（spacing 2、md 以上で 8 / 4） */}
+    <GamersPageContainer maxWidth="lg">
+      <Grid spacing="m">
+        <GridItem size={{ xxs: 12, m: 8 }}>
+          <PaymentInfo loading={loading} />
+        </GridItem>
+        <GridItem size={{ xxs: 12, m: 4 }}>
+          <OrderDetail loading={loading} />
+        </GridItem>
+      </Grid>
+    </GamersPageContainer>
     {submitting && <InSubmitDialog />}
-  </AppShell>
+  </GamersShell>
 )
 
 // ─── ストーリー ───

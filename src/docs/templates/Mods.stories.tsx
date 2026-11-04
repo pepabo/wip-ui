@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
 import { Checkbox } from '../../Checkbox'
+import { Container } from '../../Container'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
@@ -16,8 +17,8 @@ import { Tab, TabList, Tabs } from '../../Tab'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
-import { ServerDetailHeader, server } from './gameServer'
+import { GamersServerShell, ServerPageLayout, useGamersNavigate } from './gamersShell'
+import { server } from './gameServer'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -27,10 +28,26 @@ import type { Key, Selection } from 'react-aria-components'
  * MOD 管理（apollo/frontend の (server)/_components/ModManager の「MOD」タブ）。
  * Minecraft (Java版) でサーバーの種類が Vanilla 以外のときだけタブが出る。
  * 一覧（InstalledModsTable）と、「追加」で開く全画面の MOD追加（AddModsDialog: Modrinth の検索）の 2 画面。
+ * 一覧は servers/[id]/layout.tsx（ServerListHeader・Sidebar の「サーバー」）と (server)/layout.tsx（ServerDetailHeader）の
+ * 中の「MOD」タブ（gamersShell.tsx）。MOD追加は実物では fullScreen の Dialog で、ヘッダーとサイドバーごと画面を覆うので、
+ * ここでも枠を出さずに Dialog の中身（Container maxWidth='md'）だけを出す。
+ *
+ * 実物と違って残っている点:
+ * - MOD追加は Dialog ではなく、画面の置き換えで出している（地色 #04132B も無い）
+ * - 一覧の表は MUI x の DataGrid（行の高さ 72px、表の最小の高さ 400px）。名前の左のアイコンは 40px 角の画像か
+ *   ExtensionOutlined（パズルのピース）だが、ここでは plus_on_circle
+ * - 検索欄は幅 393px で、先頭に虫めがね、入力があると末尾に × が入る。ここでは × を欄の外に置いている
+ * - MOD / プラグインの絞り込みは MUI の Chip。ここでは Button
+ * - 行のゴミ箱のボタンのツールチップ「アンインストール」が無い
+ * - MOD追加のカテゴリには Modrinth のアイコン（SVG）が付く。ここでは名前だけ
+ * - MOD追加の左のカテゴリは幅 230px 固定。ここでは Grid の列
+ * - Modrinth の名前・作者名、MODパックの注意の「バックアップ」は実物では文中のリンク。ここでは transparent の Button
+ * - 並べ替えの表示値は「並べ替え：関連性」のように接頭辞が付く。ここでは「関連性」だけ
+ * - md 未満の「フィルタ」は右下に浮く Popover。ここでは検索欄の下に差し込んでいる
  * ここでは MOD とプラグインの両方を入れられる HYBRID のサーバー（mohist）にしている。
  */
 const meta = {
-  title: 'Templates/Mods',
+  title: 'Templates/Gamers/Mods',
   parameters: {
     layout: 'fullscreen',
   },
@@ -571,100 +588,133 @@ const CategorySidebar = ({
   onClear: () => void
   /** md 未満の「フィルタ」から開いたときだけ、プラットフォームの右に閉じるボタンが出る */
   onClose?: () => void
-}) => (
-  <Paper elevation={0} outlined>
-    <Stack gap="m">
-      <Stack gap="xs">
+}) => {
+  // CategorySidebar/hooks.ts の isCategoryOpen。最初は開いている
+  const [isCategoryOpen, setIsCategoryOpen] = useState(true)
+  return (
+    <Paper elevation={0} outlined>
+      <Stack gap="m">
+        <Stack gap="xs">
+          <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
+            <Typography size="xs" color="medium_emphasis" component="h3">
+              プラットフォーム
+            </Typography>
+            {onClose && (
+              <Button
+                appearance="transparent"
+                size="s"
+                iconOnly
+                aria-label="閉じる"
+                onPress={onClose}
+              >
+                <Icon name="cross" size="s" />
+              </Button>
+            )}
+          </Stack>
+          <Typography size="s">Modrinth</Typography>
+        </Stack>
+        <Divider />
         <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
           <Typography size="xs" color="medium_emphasis" component="h3">
-            プラットフォーム
+            フィルタ
           </Typography>
-          {onClose && (
-            <Button
-              appearance="transparent"
-              size="s"
-              iconOnly
-              aria-label="閉じる"
-              onPress={onClose}
-            >
-              <Icon name="cross" size="s" />
-            </Button>
-          )}
+          <Button appearance="transparent" size="s" onPress={onClear}>
+            すべてクリア
+          </Button>
         </Stack>
-        <Typography size="s">Modrinth</Typography>
+        <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
+          <Typography size="s">カテゴリ</Typography>
+          {/* 実物は ExpandLess / ExpandMore */}
+          <Button
+            appearance="transparent"
+            size="s"
+            iconOnly
+            aria-label="カテゴリ"
+            aria-expanded={isCategoryOpen}
+            onPress={() => setIsCategoryOpen((v) => !v)}
+          >
+            <Icon name={isCategoryOpen ? 'chevron_up' : 'chevron_down'} size="m" />
+          </Button>
+        </Stack>
+        {isCategoryOpen && (
+          <Stack gap="xs">
+            {categories.map((c) => (
+              <Checkbox key={c} isSelected={selected.includes(c)} onChange={() => onToggle(c)}>
+                {c}
+              </Checkbox>
+            ))}
+          </Stack>
+        )}
       </Stack>
-      <Divider />
-      <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
-        <Typography size="xs" color="medium_emphasis" component="h3">
-          フィルタ
-        </Typography>
-        <Button appearance="transparent" size="s" onPress={onClear}>
-          すべてクリア
-        </Button>
-      </Stack>
-      {/* GAP-NEW: Collapse / Accordion が無い。実アプリは「カテゴリ」の右の ∨ で開閉する。ここでは開いた状態で固定 */}
-      <Typography size="s">カテゴリ</Typography>
-      <Stack gap="xs">
-        {categories.map((c) => (
-          <Checkbox key={c} isSelected={selected.includes(c)} onChange={() => onToggle(c)}>
-            {c}
-          </Checkbox>
-        ))}
-      </Stack>
-    </Stack>
-  </Paper>
-)
+    </Paper>
+  )
+}
 
 /** ModManager/ModResultItem */
-const ModResultItem = ({ mod }: { mod: SearchResult }) => (
-  <>
-    <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
-      <Stack flexDirection="row" gap="m" alignItems="center">
-        <ModIcon />
-        <Stack gap="xxs">
-          <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s" alignItems="flex-start">
-            {/* GAP-NEW: 文中のリンク（Link）が無い。名前は Modrinth のページを新しいタブで開くリンク */}
-            <Stack flexDirection="row" gap="xxs" alignItems="center">
-              <Typography size="s" fontWeight="bold" component="span">
+const ModResultItem = ({ mod }: { mod: SearchResult }) => {
+  const navigate = useGamersNavigate()
+  return (
+    <>
+      <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
+        <Stack flexDirection="row" gap="m" alignItems="center">
+          <ModIcon />
+          <Stack gap="xxs">
+            <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s" alignItems="flex-start">
+              {/* 名前は Modrinth のプロジェクトのページ（projectUrl）を新しいタブで開くリンク。文中のリンクが無いので Button */}
+              <Button
+                appearance="transparent"
+                size="s"
+                trailing={<Icon name="launch" size="s" />}
+                aria-label={`${mod.name}（新しいタブで開く）`}
+                onPress={() => navigate('external')}
+              >
                 {mod.name}
-              </Typography>
+              </Button>
+              <Stack flexDirection="row" gap="xxs" alignItems="center">
+                <Typography size="xs" color="medium_emphasis" component="span">
+                  by
+                </Typography>
+                {/* 作者名は authorUrl を新しいタブで開くリンク（下線付き） */}
+                <Button
+                  appearance="transparent"
+                  size="s"
+                  aria-label={`${mod.author}（新しいタブで開く）`}
+                  onPress={() => navigate('external')}
+                >
+                  {mod.author}
+                </Button>
+              </Stack>
+            </Stack>
+            <Stack flexDirection="row" gap="s" alignItems="center">
+              <Stack flexDirection="row" gap="xxs" alignItems="center">
+                <Typography size="xs" color="medium_emphasis" component="span">
+                  <Icon name="download" size="s" />
+                </Typography>
+                <Typography size="xs" color="medium_emphasis" component="span">
+                  {mod.downloads}
+                </Typography>
+              </Stack>
+              <Stack flexDirection="row" gap="xxs" alignItems="center">
+                <Typography size="xs" color="medium_emphasis" component="span">
+                  <Icon name="heart_border" size="s" />
+                </Typography>
+                <Typography size="xs" color="medium_emphasis" component="span">
+                  {mod.follows}
+                </Typography>
+              </Stack>
               <Typography size="xs" color="medium_emphasis" component="span">
-                <Icon name="launch" size="s" />
+                更新: {mod.updated}
               </Typography>
             </Stack>
-            <Typography size="xs" color="medium_emphasis" component="span">
-              by {mod.author}
-            </Typography>
-          </Stack>
-          <Stack flexDirection="row" gap="s" alignItems="center">
-            <Stack flexDirection="row" gap="xxs" alignItems="center">
-              <Typography size="xs" color="medium_emphasis" component="span">
-                <Icon name="download" size="s" />
-              </Typography>
-              <Typography size="xs" color="medium_emphasis" component="span">
-                {mod.downloads}
-              </Typography>
-            </Stack>
-            <Stack flexDirection="row" gap="xxs" alignItems="center">
-              <Typography size="xs" color="medium_emphasis" component="span">
-                <Icon name="heart_border" size="s" />
-              </Typography>
-              <Typography size="xs" color="medium_emphasis" component="span">
-                {mod.follows}
-              </Typography>
-            </Stack>
-            <Typography size="xs" color="medium_emphasis" component="span">
-              更新: {mod.updated}
-            </Typography>
           </Stack>
         </Stack>
+        <Button color="interactive" size="s" isDisabled={mod.isInstalled}>
+          {mod.isInstalled ? 'インストール済' : 'インストール'}
+        </Button>
       </Stack>
-      <Button color="interactive" size="s" isDisabled={mod.isInstalled}>
-        {mod.isInstalled ? 'インストール済' : 'インストール'}
-      </Button>
-    </Stack>
-  </>
-)
+    </>
+  )
+}
 
 /**
  * ModSearchResults の Pagination（showFirstButton / showLastButton）。totalPages が 2 以上のときだけ出る。
@@ -736,9 +786,12 @@ const Pager = ({
 )
 
 const AddMods = ({ initialQuery, onBack }: { initialQuery: string; onBack: () => void }) => {
+  const navigate = useGamersNavigate()
   const narrow = useNarrow()
   const [type, setType] = useState<ProjectType>('mod')
   const [query, setQuery] = useState(initialQuery)
+  // AddModsDialog/hooks.ts の effectiveQuery。検索は Enter で確定する
+  const [effectiveQuery, setEffectiveQuery] = useState(initialQuery)
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [modpackAlert, setModpackAlert] = useState(true)
   const [page, setPage] = useState(1)
@@ -755,146 +808,161 @@ const AddMods = ({ initialQuery, onBack }: { initialQuery: string; onBack: () =>
   }
 
   const results = searchResults[type].filter((m) =>
-    m.name.toLowerCase().includes(query.trim().toLowerCase())
+    m.name.toLowerCase().includes(effectiveQuery.trim().toLowerCase())
   )
 
   return (
-    <Stack gap="m">
-      <Stack alignItems="flex-start">
-        {/* GAP-NEW: ArrowBack に当たるアイコンが無いので chevron_left で代用 */}
-        <Button
-          appearance="outlined"
-          size="l"
-          leading={<Icon name="chevron_left" size="m" />}
-          onPress={onBack}
-        >
-          戻る
-        </Button>
-      </Stack>
-      <Stack flexDirection="row" gap="m" alignItems="center">
-        <Typography size={{ xxs: 'xxl', m: 'xxxl' }} fontWeight="bold" component="h1">
-          MOD追加
-        </Typography>
-        <ConfigSticker />
-      </Stack>
-      <Grid spacing="m">
-        {/* 実アプリは幅 230px の固定。md 未満ではサイドバーを隠し、「フィルタ」ボタンの Popover に入れる */}
-        {!narrow && (
-          <GridItem size={{ m: 4, l: 3 }}>
-            <CategorySidebar
-              selected={selectedCategories}
-              onToggle={toggleCategory}
-              onClear={clearCategories}
-            />
-          </GridItem>
-        )}
-        <GridItem size={narrow ? 12 : { m: 8, l: 9 }}>
-          <Stack gap="m">
-            {/* ModSearchResults。HYBRID のサーバーは MOD / プラグイン / MODパック の 3 つ。
-                Select を Tabs の中に置くと落ちるため、Tabs にはタブの列だけを入れて中身は外に出している */}
-            <Tabs
-              selectedKey={type}
-              onSelectionChange={(k) => {
-                setType(k as ProjectType)
-                setPage(1)
-              }}
-            >
-              <TabList aria-label="種類">
-                <Tab id="mod">MOD</Tab>
-                <Tab id="plugin">プラグイン</Tab>
-                <Tab id="modpack">MODパック</Tab>
-              </TabList>
-            </Tabs>
-            {type === 'modpack' && modpackAlert && (
-              // GAP-NEW: Callout に閉じるボタンの枠が無いので action に置く。文中の「バックアップ」も本来はリンク
-              <Callout
-                color="informative"
-                appearance="outline"
-                action={
-                  <Button
-                    appearance="transparent"
-                    size="s"
-                    iconOnly
-                    aria-label="閉じる"
-                    onPress={() => setModpackAlert(false)}
-                  >
-                    <Icon name="cross" size="s" />
-                  </Button>
-                }
-              >
-                MODパックをインストールすると既存の設定ファイルが上書きされることがあります。また、パック内のMODを個別に削除・変更すると、正常に動作しなくなる場合があります。操作前に必ずバックアップを作成してください。
-              </Callout>
-            )}
-            <Stack
-              flexDirection={{ xxs: 'column', s: 'row' }}
-              gap="s"
-              justifyContent="space-between"
-            >
-              <SearchField value={query} onChange={setQuery} />
-              <Stack flexDirection="row" gap="s" alignItems="center">
-                {/* GAP-NEW: Select の表示値に「並べ替え：」の接頭辞を付けられない（MUI の renderValue） */}
-                <Select
-                  aria-label="並べ替え"
-                  size="s"
-                  defaultSelectedKey="relevance"
-                  onSelectionChange={() => setPage(1)}
-                >
-                  {sortOptions.map((o) => (
-                    <SelectItem key={o.id} id={o.id}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </Select>
-                {narrow && (
-                  <Button
-                    appearance="outlined"
-                    leading={<Icon name="funnel" size="s" />}
-                    aria-expanded={filterOpen}
-                    onPress={() => setFilterOpen((v) => !v)}
-                  >
-                    フィルタ
-                  </Button>
-                )}
-              </Stack>
-            </Stack>
-            {narrow && filterOpen && (
-              // GAP-NEW: Popover が無い。実アプリは「フィルタ」の右下に浮く Popover（幅 230px）に
-              // サイドバーと同じ中身を入れる。ここでは検索欄の下に差し込んでいる
+    // AddModsDialog/view.tsx の Container maxWidth='md'（pt 3〜6, pb 16）
+    <Container size="m">
+      <Stack gap="m">
+        <Stack alignItems="flex-start">
+          {/* GAP-NEW: ArrowBack に当たるアイコンが無いので chevron_left で代用 */}
+          <Button
+            appearance="outlined"
+            size="l"
+            leading={<Icon name="chevron_left" size="m" />}
+            onPress={onBack}
+          >
+            戻る
+          </Button>
+        </Stack>
+        <Stack flexDirection="row" gap="m" alignItems="center">
+          <Typography size={{ xxs: 'xxl', m: 'xxxl' }} fontWeight="bold" component="h1">
+            MOD追加
+          </Typography>
+          <ConfigSticker />
+        </Stack>
+        <Grid spacing="m">
+          {/* 実アプリは幅 230px の固定。md 未満ではサイドバーを隠し、「フィルタ」ボタンの Popover に入れる */}
+          {!narrow && (
+            <GridItem size={{ m: 4, l: 3 }}>
               <CategorySidebar
                 selected={selectedCategories}
                 onToggle={toggleCategory}
                 onClear={clearCategories}
-                onClose={() => setFilterOpen(false)}
               />
-            )}
-            <Paper padding="none" elevation={0} outlined>
-              {results.length === 0 ? (
-                // 実アプリは上下 48px の余白
-                <Paper padding="xxl" elevation={0}>
-                  <Stack alignItems="center">
-                    <Typography color="medium_emphasis">検索結果がありません</Typography>
-                  </Stack>
-                </Paper>
-              ) : (
-                results.map((mod, i) => (
-                  <Stack key={mod.id}>
-                    {i > 0 && <Divider />}
-                    {/* 1 件ごとに左右 24px・上下 16px の余白（スマートフォンでは 16px・12px） */}
-                    <Paper padding="m" elevation={0}>
-                      <ModResultItem mod={mod} />
-                    </Paper>
-                  </Stack>
-                ))
+            </GridItem>
+          )}
+          <GridItem size={narrow ? 12 : { m: 8, l: 9 }}>
+            <Stack gap="m">
+              {/* ModSearchResults。HYBRID のサーバーは MOD / プラグイン / MODパック の 3 つ。
+                Select を Tabs の中に置くと落ちるため、Tabs にはタブの列だけを入れて中身は外に出している */}
+              <Tabs
+                selectedKey={type}
+                onSelectionChange={(k) => {
+                  setType(k as ProjectType)
+                  setPage(1)
+                }}
+              >
+                <TabList aria-label="種類">
+                  <Tab id="mod">MOD</Tab>
+                  <Tab id="plugin">プラグイン</Tab>
+                  <Tab id="modpack">MODパック</Tab>
+                </TabList>
+              </Tabs>
+              {type === 'modpack' && modpackAlert && (
+                // GAP-NEW: Callout に閉じるボタンの枠が無いので action に置く。文中の「バックアップ」も本来はリンク
+                <Callout
+                  color="informative"
+                  appearance="outline"
+                  action={
+                    <Button
+                      appearance="transparent"
+                      size="s"
+                      iconOnly
+                      aria-label="閉じる"
+                      onPress={() => setModpackAlert(false)}
+                    >
+                      <Icon name="cross" size="s" />
+                    </Button>
+                  }
+                >
+                  MODパックをインストールすると既存の設定ファイルが上書きされることがあります。また、パック内のMODを個別に削除・変更すると、正常に動作しなくなる場合があります。操作前に必ず
+                  {/* 「バックアップ」は /servers/[id]/backup へのリンク。文中のリンクが無いので Button */}
+                  <Button appearance="transparent" size="s" onPress={() => navigate('backup')}>
+                    バックアップ
+                  </Button>
+                  を作成してください。
+                </Callout>
               )}
-            </Paper>
-            {/* 見本は総件数を固定しているので、検索語で 0 件になったときだけ隠す（実物は totalCount が 0 になる） */}
-            {results.length > 0 && totalPages > 1 && (
-              <Pager page={page} totalPages={totalPages} onChange={setPage} />
-            )}
-          </Stack>
-        </GridItem>
-      </Grid>
-    </Stack>
+              <Stack
+                flexDirection={{ xxs: 'column', s: 'row' }}
+                gap="s"
+                justifyContent="space-between"
+              >
+                <SearchField
+                  value={query}
+                  onChange={setQuery}
+                  onSubmit={() => {
+                    setEffectiveQuery(query)
+                    setPage(1)
+                  }}
+                />
+                <Stack flexDirection="row" gap="s" alignItems="center">
+                  {/* GAP-NEW: Select の表示値に「並べ替え：」の接頭辞を付けられない（MUI の renderValue） */}
+                  <Select
+                    aria-label="並べ替え"
+                    size="s"
+                    defaultSelectedKey="relevance"
+                    onSelectionChange={() => setPage(1)}
+                  >
+                    {sortOptions.map((o) => (
+                      <SelectItem key={o.id} id={o.id}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  {narrow && (
+                    <Button
+                      appearance="outlined"
+                      leading={<Icon name="funnel" size="s" />}
+                      aria-expanded={filterOpen}
+                      onPress={() => setFilterOpen((v) => !v)}
+                    >
+                      フィルタ
+                    </Button>
+                  )}
+                </Stack>
+              </Stack>
+              {narrow && filterOpen && (
+                // GAP-NEW: Popover が無い。実アプリは「フィルタ」の右下に浮く Popover（幅 230px）に
+                // サイドバーと同じ中身を入れる。ここでは検索欄の下に差し込んでいる
+                <CategorySidebar
+                  selected={selectedCategories}
+                  onToggle={toggleCategory}
+                  onClear={clearCategories}
+                  onClose={() => setFilterOpen(false)}
+                />
+              )}
+              <Paper padding="none" elevation={0} outlined>
+                {results.length === 0 ? (
+                  // 実アプリは上下 48px の余白
+                  <Paper padding="xxl" elevation={0}>
+                    <Stack alignItems="center">
+                      <Typography color="medium_emphasis">検索結果がありません</Typography>
+                    </Stack>
+                  </Paper>
+                ) : (
+                  results.map((mod, i) => (
+                    <Stack key={mod.id}>
+                      {i > 0 && <Divider />}
+                      {/* 1 件ごとに左右 24px・上下 16px の余白（スマートフォンでは 16px・12px） */}
+                      <Paper padding="m" elevation={0}>
+                        <ModResultItem mod={mod} />
+                      </Paper>
+                    </Stack>
+                  ))
+                )}
+              </Paper>
+              {/* 見本は総件数を固定しているので、検索語で 0 件になったときだけ隠す（実物は totalCount が 0 になる） */}
+              {results.length > 0 && totalPages > 1 && (
+                <Pager page={page} totalPages={totalPages} onChange={setPage} />
+              )}
+            </Stack>
+          </GridItem>
+        </Grid>
+      </Stack>
+    </Container>
   )
 }
 
@@ -915,23 +983,21 @@ const ModsScreen = ({
   addQuery?: string
 }) => {
   const [isAdding, setIsAdding] = useState(adding)
+  // AddModsDialog は fullScreen の Dialog で、ヘッダー・サイドバーごと覆う。全画面の Dialog が無いので画面ごと置き換える
+  if (isAdding) {
+    return <AddMods initialQuery={addQuery} onBack={() => setIsAdding(false)} />
+  }
   return (
-    <AppShell active="mods">
-      {isAdding ? (
-        // GAP-NEW: 全画面の Dialog が無い。実アプリは fullScreen の Dialog（幅 900px）なので AppShell の中身を置き換えている
-        <AddMods initialQuery={addQuery} onBack={() => setIsAdding(false)} />
-      ) : (
-        <>
-          <ServerDetailHeader status="RUNNING" tab="MOD" />
-          <InstalledMods
-            loading={loading}
-            mods={mods}
-            initialUninstall={uninstall}
-            onAdd={() => setIsAdding(true)}
-          />
-        </>
-      )}
-    </AppShell>
+    <GamersServerShell active="server">
+      <ServerPageLayout status="RUNNING" tab="modManager">
+        <InstalledMods
+          loading={loading}
+          mods={mods}
+          initialUninstall={uninstall}
+          onAdd={() => setIsAdding(true)}
+        />
+      </ServerPageLayout>
+    </GamersServerShell>
   )
 }
 

@@ -5,14 +5,14 @@ import { Callout } from '../../Callout'
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
+import { Loader } from '../../Loader'
 import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
-import { ServerDetailHeader } from './gameServer'
+import { GamersServerShell, ServerPageLayout, useGamersNavigate } from './gamersShell'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -21,14 +21,14 @@ import type { ReactNode } from 'react'
 /**
  * ロリポップ！for Gamers（apollo/frontend）のバックアップの再現。
  * - サーバーのバックアップ: app/(application)/(private)/servers/[id]/(server)/backup
- * - マイバックアップ（全ゲーム）はホームのタブなので Templates/Home の MyBackups にある
+ * - マイバックアップ（全ゲーム）はホームのタブなので Templates/Gamers/Home の MyBackups にある
  * - 共通の部品: components/BackupListTable・BackupUsage・CreateBackupDialog・DeleteBackupDialog
  *
  * 実アプリに自動バックアップの設定は無い（手動作成のみ）ので、ここにも置いていない。
  */
 
 const meta = {
-  title: 'Templates/Backup',
+  title: 'Templates/Gamers/Backup',
   parameters: {
     layout: 'fullscreen',
   },
@@ -57,7 +57,9 @@ type Backup = {
   createdAt: string
   /** ダイアログの本文で使う toLocaleString() の形 */
   createdAtLocale: string
-  status: 'SUCCESS' | 'FAILED'
+  status: 'SUCCESS' | 'FAILED' | 'PENDING'
+  /** MenuCell の「削除」を押せるか（isDeletable） */
+  isDeletable?: boolean
 }
 
 const GB = 1024 ** 3
@@ -129,11 +131,15 @@ const Meter = ({ ratio }: { ratio: number }) => (
   </Typography>
 )
 
-/** 各 Paper の見出しと右のボタン。実アプリは variant='xxl' の太字で、狭い幅ではボタンが下に回る */
+/**
+ * 各 Paper の見出しと右のボタン。実アプリは variant='xxl' の太字で、狭い幅ではボタンが下に回る（gap 2）。
+ * 実物は sm 以上で縦の中央にそろえる（alignItems が xs: flex-start / sm: center）。Stack の alignItems が
+ * レスポンシブにならないので flex-start のまま（GAP-17）
+ */
 const PaperTitle = ({ children, action }: { children: ReactNode; action: ReactNode }) => (
   <Stack
     flexDirection={{ xxs: 'column', s: 'row' }}
-    gap="s"
+    gap="m"
     alignItems="flex-start"
     justifyContent="space-between"
   >
@@ -144,13 +150,13 @@ const PaperTitle = ({ children, action }: { children: ReactNode; action: ReactNo
   </Stack>
 )
 
-/** components/BackupUsage */
+/** components/BackupUsage（Stack spacing 2） */
 const BackupUsage = ({ usageBytes }: { usageBytes: number }) => (
-  <Stack gap="s">
+  <Stack gap="m">
     <Typography size="l" fontWeight="bold" component="h3">
       容量使用状況
     </Typography>
-    <Grid spacing="s">
+    <Grid spacing="m">
       {/* 実アプリのバーは最大 400px */}
       <GridItem size={{ xxs: 12, m: 5 }}>
         <Meter ratio={usageBytes / LIMIT_BYTES} />
@@ -169,9 +175,12 @@ const BackupUsage = ({ usageBytes }: { usageBytes: number }) => (
 const BackupListTable = ({
   backups,
   isServerBackup = false,
+  onRestore,
 }: {
   backups: Backup[]
   isServerBackup?: boolean
+  /** 「復元」を押したとき（RestoreBackupDialog を開く） */
+  onRestore: (backup: Backup) => void
 }) => {
   const [deleting, setDeleting] = useState<Backup | null>(null)
   return (
@@ -203,6 +212,11 @@ const BackupListTable = ({
                   <Typography component="span" size="s">
                     {b.name}
                   </Typography>
+                  {b.status === 'PENDING' && (
+                    <Sticker color="notice" size="s">
+                      作成中
+                    </Sticker>
+                  )}
                   {b.status === 'FAILED' && (
                     <Sticker color="negative" size="s">
                       失敗
@@ -214,11 +228,14 @@ const BackupListTable = ({
               <Cell>{b.createdAt}</Cell>
               {isServerBackup ? null : <Cell>{gameName[b.game]}</Cell>}
               <Cell>
-                {/* BackupListTable/MenuCell。成功は「復元」と ⋮、失敗は × だけ */}
-                {b.status === 'SUCCESS' ? (
+                {/* BackupListTable/MenuCell。成功は「復元」と ⋮、失敗は × だけ、作成中はスピナー */}
+                {b.status === 'PENDING' ? (
+                  <Loader size="m" />
+                ) : b.status === 'SUCCESS' ? (
                   <Stack flexDirection="row" gap="xs" alignItems="center">
                     {/* GAP-NEW: Replay（↺）に当たるアイコンが無いので arrow_order で代用 */}
                     <Button
+                      onPress={() => onRestore(b)}
                       appearance="outlined"
                       size="s"
                       leading={<Icon name="arrow_order" size="s" />}
@@ -234,9 +251,10 @@ const BackupListTable = ({
                       >
                         <Icon name="ellipsis_vertical" size="m" aria-hidden="true" />
                       </Button>
+                      {/* 実物の項目は「削除」1 つだけ（ダウンロードはコメントアウトされている）。色は付いていない */}
                       <Menu placement="bottom end">
                         <MenuItem
-                          color="negative"
+                          isDisabled={b.isDeletable === false}
                           leading={<Icon name="garbage_can" size="s" />}
                           onAction={() => setDeleting(b)}
                         >
@@ -301,7 +319,7 @@ const DialogActions = ({
   </DialogFooter>
 )
 
-/** 項目名（太字）と値。CreateBackupDialog の「ゲーム」 */
+/** 項目名（太字）と値。CreateBackupDialog の「ゲーム」（Stack spacing 1） */
 const ConfigRow = ({ label, children }: { label: string; children: ReactNode }) => (
   <Stack gap="xs">
     <Typography size="s" fontWeight="bold" component="span">
@@ -313,9 +331,12 @@ const ConfigRow = ({ label, children }: { label: string; children: ReactNode }) 
   </Stack>
 )
 
-/** components/CreateBackupDialog（サーバーのバックアップから開いたとき） */
-const CreateBackupDialog = () => (
-  <OpenDialog>
+/**
+ * components/CreateBackupDialog（サーバーのバックアップから開いたとき）。
+ * servers を渡さないので「サーバー」の Select は出ず、名前 → ゲーム → 注意の順
+ */
+const CreateBackupDialog = ({ onClose }: { onClose?: () => void }) => (
+  <OpenDialog onClose={onClose}>
     <DialogHeader>
       <DialogTitle>バックアップ作成</DialogTitle>
     </DialogHeader>
@@ -328,13 +349,13 @@ const CreateBackupDialog = () => (
         保存期間はアカウントにサーバーのご契約がある間は無期限、ご契約がない場合は契約終了日から90日間です。
       </Callout>
     </Stack>
-    <DialogActions confirm="作成" />
+    <DialogActions confirm="作成" onClose={onClose} />
   </OpenDialog>
 )
 
 /** (server)/backup/_components/RestoreBackupDialog */
-const RestoreBackupDialog = ({ backup }: { backup: Backup }) => (
-  <OpenDialog>
+const RestoreBackupDialog = ({ backup, onClose }: { backup: Backup; onClose?: () => void }) => (
+  <OpenDialog onClose={onClose}>
     <DialogHeader>
       <DialogTitle>「{backup.name}」を復元しますか？</DialogTitle>
     </DialogHeader>
@@ -349,13 +370,13 @@ const RestoreBackupDialog = ({ backup }: { backup: Backup }) => (
         復元したデータは元に戻せないためご注意ください。
       </Callout>
     </Stack>
-    <DialogActions confirm="復元" />
+    <DialogActions confirm="復元" onClose={onClose} />
   </OpenDialog>
 )
 
 /** components/DeleteBackupDialog。注意文は実アプリの文言のまま（「復元したデータは」） */
 const DeleteBackupDialog = ({ backup, onClose }: { backup: Backup; onClose?: () => void }) => (
-  <OpenDialog role="alertdialog" onClose={onClose}>
+  <OpenDialog onClose={onClose}>
     <DialogHeader>
       <DialogTitle>「{backup.name}」を削除しますか？</DialogTitle>
     </DialogHeader>
@@ -376,51 +397,92 @@ const usageOf = (backups: Backup[]) => backups.reduce((sum, b) => sum + b.sizeBy
 
 // ─── サーバーのバックアップ（servers/[id]/(server)/backup/page.tsx）───
 
+/** MyBackupPaper の「全てのゲームのバックアップを管理」。実物は href='/home?activeTab=myBackups' */
+const ManageAllBackupsButton = () => {
+  const navigate = useGamersNavigate()
+  return (
+    <Button
+      appearance="outlined"
+      leading={<Icon name="person" size="s" />}
+      onPress={() => navigate('home-backups')}
+    >
+      全てのゲームのバックアップを管理
+    </Button>
+  )
+}
+
+type OpenedDialog = { kind: 'create' } | { kind: 'restore'; backup: Backup } | null
+
 const ServerBackupScreen = ({
   backups = minecraftBackups,
+  initialDialog = null,
   dialog,
 }: {
   backups?: Backup[]
+  /** 開いた状態から始めるダイアログ（作成・復元） */
+  initialDialog?: OpenedDialog
+  /** そのほかに重ねて出すダイアログ */
   dialog?: ReactNode
-}) => (
-  <AppShell active="backup">
-    {/* (server)/layout.tsx の ServerDetailHeader（サーバー詳細と共通。gameServer.tsx） */}
-    <ServerDetailHeader status="RUNNING" tab="バックアップ" />
-    {/* backup/_components/BackupListPaper */}
-    <Card>
-      <Stack gap="l">
-        {/* GAP-NEW: BackupOutlined（雲に上矢印）に当たるアイコンが無いので upload で代用 */}
-        <PaperTitle
-          action={
-            <Button appearance="outlined" leading={<Icon name="upload" size="s" />}>
-              バックアップ作成
-            </Button>
-          }
-        >
-          Minecraft (Java版)のバックアップ
-        </PaperTitle>
-        <BackupListTable backups={backups} isServerBackup />
-      </Stack>
-    </Card>
-    {/* backup/_components/MyBackupPaper。容量はマイバックアップ全体（他のゲームを含む） */}
-    <Card>
-      <Stack gap="l">
-        {/* GAP-NEW: ManageAccountsOutlined に当たるアイコンが無いので person で代用 */}
-        <PaperTitle
-          action={
-            <Button appearance="outlined" leading={<Icon name="person" size="s" />}>
-              全てのゲームのバックアップを管理
-            </Button>
-          }
-        >
-          マイバックアップ
-        </PaperTitle>
-        <BackupUsage usageBytes={usageOf(backups) + usageOf(palworldBackups)} />
-      </Stack>
-    </Card>
-    {dialog}
-  </AppShell>
-)
+}) => {
+  const [opened, setOpened] = useState<OpenedDialog>(initialDialog)
+  const close = () => setOpened(null)
+  const usageBytes = usageOf(backups) + usageOf(palworldBackups)
+  return (
+    // servers/[id]/layout.tsx の Sidebar で「バックアップ」。(server)/layout.tsx の ServerDetailHeader の下にタブは無い
+    <GamersServerShell active="backup">
+      <ServerPageLayout status="RUNNING">
+        {/* backup/_components/BackupListPaper（Paper の p は xs: 3 / md: 6） */}
+        <Card padding={{ xxs: 'l', m: 'xxl' }}>
+          <Stack gap="l">
+            {/* GAP-NEW: BackupOutlined（雲に上矢印）に当たるアイコンが無いので upload で代用 */}
+            <PaperTitle
+              action={
+                <Button
+                  appearance="outlined"
+                  isDisabled={usageBytes >= LIMIT_BYTES}
+                  leading={<Icon name="upload" size="s" />}
+                  onPress={() => setOpened({ kind: 'create' })}
+                >
+                  バックアップ作成
+                </Button>
+              }
+            >
+              Minecraft (Java版)のバックアップ
+            </PaperTitle>
+            <BackupListTable
+              backups={backups}
+              isServerBackup
+              onRestore={(backup) => setOpened({ kind: 'restore', backup })}
+            />
+          </Stack>
+        </Card>
+        {/* backup/_components/MyBackupPaper。容量はマイバックアップ全体（他のゲームを含む） */}
+        <Card padding={{ xxs: 'l', m: 'xxl' }}>
+          <Stack gap="l">
+            {/* GAP-NEW: ManageAccountsOutlined に当たるアイコンが無いので person で代用 */}
+            <PaperTitle action={<ManageAllBackupsButton />}>マイバックアップ</PaperTitle>
+            {usageBytes >= LIMIT_BYTES && (
+              <Callout color="notice">
+                <Stack gap="xxs">
+                  <Typography size="s" fontWeight="bold" component="span">
+                    空き容量がありません
+                  </Typography>
+                  <Typography size="s" component="span">
+                    バックアップを作成するには不要なバックアップを削除してください。
+                  </Typography>
+                </Stack>
+              </Callout>
+            )}
+            <BackupUsage usageBytes={usageBytes} />
+          </Stack>
+        </Card>
+      </ServerPageLayout>
+      {opened?.kind === 'create' && <CreateBackupDialog onClose={close} />}
+      {opened?.kind === 'restore' && <RestoreBackupDialog backup={opened.backup} onClose={close} />}
+      {dialog}
+    </GamersServerShell>
+  )
+}
 
 // ─── ストーリー ───
 
@@ -449,7 +511,7 @@ export const Empty: Story = {
  * @summary 作成のダイアログ
  */
 export const CreateDialog: Story = {
-  render: () => <ServerBackupScreen dialog={<CreateBackupDialog />} />,
+  render: () => <ServerBackupScreen initialDialog={{ kind: 'create' }} />,
 }
 
 /**
@@ -459,7 +521,7 @@ export const CreateDialog: Story = {
  */
 export const RestoreDialog: Story = {
   render: () => (
-    <ServerBackupScreen dialog={<RestoreBackupDialog backup={minecraftBackups[0]} />} />
+    <ServerBackupScreen initialDialog={{ kind: 'restore', backup: minecraftBackups[0] }} />
   ),
 }
 

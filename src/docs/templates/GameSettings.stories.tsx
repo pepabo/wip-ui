@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
 import { Checkbox } from '../../Checkbox'
+import { Container } from '../../Container'
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
@@ -15,8 +16,8 @@ import { Stack } from '../../Stack'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
-import { CalloutBody, ConfigRow, EmptyNotice, ServerDetailHeader, server } from './gameServer'
+import { GamersServerShell, ServerPageLayout } from './gamersShell'
+import { CalloutBody, ConfigRow, EmptyNotice, server } from './gameServer'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -43,7 +44,7 @@ import type { ServerStatus } from './gameServer'
  * 設定の項目・選択肢・範囲は backend/service の各 *_settings.go（Server-Driven UI）のまま。
  */
 const meta = {
-  title: 'Templates/GameSettings',
+  title: 'Templates/Gamers/GameSettings',
   parameters: {
     layout: 'fullscreen',
   },
@@ -799,7 +800,8 @@ const ActionPaper = ({
       justifyContent="space-between"
       alignItems="flex-start"
     >
-      <Stack gap="s">
+      {/* 説明は見出しの下 mt 2 */}
+      <Stack gap="m">
         <Typography size="l" fontWeight="bold" component="h2">
           {title}
         </Typography>
@@ -845,11 +847,11 @@ const SettingTitle = ({ onEdit, onReset }: { onEdit?: () => void; onReset: () =>
   </Stack>
 )
 
-/** GameSettings/GameSettingsView。グループの間に Divider */
+/** GameSettings/GameSettingsView。グループの間に Divider。見出しの下 mb 4、項目の間 spacing 4 */
 const SettingsView = ({ groups }: { groups: Group[] }) => (
   <>
     {groups.map((group, i) => (
-      <Stack key={group.id} gap="l">
+      <Stack key={group.id} gap="xl">
         {i > 0 && <Divider />}
         <Typography size="l" fontWeight="bold" component="h3">
           {group.title}
@@ -870,7 +872,10 @@ const SettingsView = ({ groups }: { groups: Group[] }) => (
 
 // ─── Minecraft (Java版) の設定 ───
 
-/** Accordion の中の「追加済ユーザー」の表。GAP-NEW: Accordion が無いので開いた状態で固定 */
+/**
+ * Accordion の中の「追加済ユーザー」の表（WhiteList / OpsList / components/UserListItem）。
+ * 実物は閉じた状態で始まり、見出しの行を押すと表が開く。Accordion が無いので、右端の山のボタンで開閉する
+ */
 const UserTable = ({
   label,
   users,
@@ -879,47 +884,64 @@ const UserTable = ({
   label: string
   users: string[]
   deletable?: boolean
-}) => (
-  <Paper padding="m" elevation={0} outlined>
-    <Stack gap="m">
-      <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="xl">
-        <Typography size="s" component="span">
-          追加済ユーザー
-        </Typography>
-        <Typography size="s" color="medium_emphasis" component="span">
-          {users.length}人
-        </Typography>
+}) => {
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <Paper padding="m" elevation={0} outlined>
+      <Stack gap="m">
+        <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
+          <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="m">
+            <Typography size="m" component="span">
+              追加済ユーザー
+            </Typography>
+            <Typography size="m" component="span">
+              {users.length}人
+            </Typography>
+          </Stack>
+          <Button
+            appearance="transparent"
+            size="s"
+            iconOnly
+            aria-label={`${label}の追加済ユーザー`}
+            aria-expanded={expanded}
+            onPress={() => setExpanded(!expanded)}
+          >
+            <Icon name={expanded ? 'chevron_up' : 'chevron_down'} size="m" />
+          </Button>
+        </Stack>
+        {expanded && (
+          <Table aria-label={`${label}の追加済ユーザー`}>
+            <TableHeader>
+              <Column isRowHeader allowsSorting>
+                ユーザー名
+              </Column>
+              {deletable ? <Column aria-label="操作"> </Column> : null}
+            </TableHeader>
+            <TableBody>
+              {users.map((u) => (
+                <Row key={u} id={u}>
+                  <Cell>{u}</Cell>
+                  {deletable ? (
+                    <Cell>
+                      <Button
+                        appearance="outlined"
+                        color="negative"
+                        size="s"
+                        leading={<Icon name="garbage_can" size="s" />}
+                      >
+                        削除
+                      </Button>
+                    </Cell>
+                  ) : null}
+                </Row>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </Stack>
-      <Table aria-label={`${label}の追加済ユーザー`}>
-        <TableHeader>
-          <Column isRowHeader allowsSorting>
-            ユーザー名
-          </Column>
-          {deletable ? <Column aria-label="操作"> </Column> : null}
-        </TableHeader>
-        <TableBody>
-          {users.map((u) => (
-            <Row key={u} id={u}>
-              <Cell>{u}</Cell>
-              {deletable ? (
-                <Cell>
-                  <Button
-                    appearance="outlined"
-                    color="negative"
-                    size="s"
-                    leading={<Icon name="garbage_can" size="s" />}
-                  >
-                    削除
-                  </Button>
-                </Cell>
-              ) : null}
-            </Row>
-          ))}
-        </TableBody>
-      </Table>
-    </Stack>
-  </Paper>
-)
+    </Paper>
+  )
+}
 
 /** MinecraftJavaManager/components/Setting（読み取り専用の表示） */
 const MinecraftJavaSettingPaper = ({
@@ -933,8 +955,8 @@ const MinecraftJavaSettingPaper = ({
     <Stack gap="xl">
       <SettingTitle onEdit={onEdit} onReset={onReset} />
       <Divider />
-      {/* Setting/components/WhiteList */}
-      <Stack gap="l">
+      {/* Setting/components/WhiteList（Stack spacing 4） */}
+      <Stack gap="xl">
         <Typography size="l" fontWeight="bold" component="h3">
           ホワイトリスト
         </Typography>
@@ -945,8 +967,8 @@ const MinecraftJavaSettingPaper = ({
         <UserTable label="ホワイトリスト" users={whiteList.users} />
       </Stack>
       <Divider />
-      {/* Setting/components/OpsList */}
-      <Stack gap="l">
+      {/* Setting/components/OpsList（Stack spacing 4） */}
+      <Stack gap="xl">
         <Typography size="l" fontWeight="bold" component="h3">
           管理者リスト
         </Typography>
@@ -1288,8 +1310,8 @@ type EditorProps = { onBack: () => void }
 
 /**
  * GameSettings/GameSettingsModal（Server-Driven UI の設定の編集）。
- * GAP-NEW: 全画面の Dialog が無い。実アプリは fullScreen の Dialog（幅 900px）で開くので、
- * ここでは AppShell の中身を置き換えて出している
+ * 実アプリは fullScreen の Dialog（Container maxWidth='md'）で開く。全画面の Dialog が無いので、
+ * ここではヘッダーとサイドバーを外した画面として出している
  */
 const GameSettingsEditor = ({ groups, onBack }: EditorProps & { groups: Group[] }) => {
   const [dirty, setDirty] = useState(false)
@@ -1895,62 +1917,63 @@ const GameSettingsScreen = ({
 
   const current = dialog ? dialogs[dialog] : null
 
+  // GameSettingsModal / SettingModal は fullScreen の Dialog で、ヘッダーとサイドバーごと画面を覆う。
+  // 全画面の Dialog が無いので、枠の代わりに Container maxWidth='md'（pt 6, pb 16）だけで出す
+  if (editing && editor) {
+    return <Container size="m">{editor}</Container>
+  }
+
   return (
-    <AppShell active="game">
-      {editing && editor ? (
-        editor
-      ) : (
-        <>
-          <ServerDetailHeader status={status} tab="ゲーム設定" game={gameNames[game]} />
+    // servers/[id]/layout.tsx の Sidebar で「サーバー」、(server) の ServerDetailHeader の下のタブで「ゲーム設定」
+    <GamersServerShell active="server" game={gameNames[game]}>
+      <ServerPageLayout status={status} game={gameNames[game]} tab="gameManager">
+        {status !== 'RUNNING' ? (
+          // ServerDetailTabPanels。停止中はゲーム設定の中身を出さず、Paper の無い面に 1 行だけ出す。
+          // GAP-NEW: 最小の高さ 200px の中で上下中央に置く指定ができないので、横の中央だけ
+          <EmptyNotice size="s">
+            😴
+            サーバー停止中のため非表示になっています。サーバーを起動後、最大30秒程度で表示されます。
+          </EmptyNotice>
+        ) : view === 'polling' ? (
+          // components/GameDataPollingAlert。GAP-NEW: Callout のアイコンを CircularProgress に差し替えられない
+          <Callout color="informative">
+            <CalloutBody title="ゲームデータを取得しています">
+              約10秒ごとにデータを取得しています。完了までお待ちください。
+              <br />
+              10分ほど待っても表示されない場合は、お手数ですがお問い合わせください。
+            </CalloutBody>
+          </Callout>
+        ) : view === 'loading' ? (
+          // GAP-NEW: Skeleton が無い。実アプリは高さ 140 / 300 / 500 の角丸の Skeleton を 3 つ縦に並べる
+          <Stack gap="l">
+            {[0, 1, 2].map((i) => (
+              <Card key={i}>
+                <Stack alignItems="center">
+                  <Loader size="m" />
+                </Stack>
+              </Card>
+            ))}
+          </Stack>
+        ) : (
+          <GameBody
+            game={game}
+            groups={groups ?? []}
+            open={setDialog}
+            onEdit={() => setEditing(true)}
+          />
+        )}
 
-          {status !== 'RUNNING' ? (
-            // ServerDetailTabPanels。停止中はゲーム設定の中身を出さず、Paper の無い面に 1 行だけ出す。
-            // GAP-NEW: 最小の高さ 200px の中で上下中央に置く指定ができないので、横の中央だけ
-            <EmptyNotice size="s">
-              😴
-              サーバー停止中のため非表示になっています。サーバーを起動後、最大30秒程度で表示されます。
-            </EmptyNotice>
-          ) : view === 'polling' ? (
-            // components/GameDataPollingAlert。GAP-NEW: Callout のアイコンを CircularProgress に差し替えられない
-            <Callout color="informative">
-              <CalloutBody title="ゲームデータを取得しています">
-                約10秒ごとにデータを取得しています。完了までお待ちください。
-                <br />
-                10分ほど待っても表示されない場合は、お手数ですがお問い合わせください。
-              </CalloutBody>
-            </Callout>
-          ) : view === 'loading' ? (
-            // GAP-NEW: Skeleton が無い。実アプリは高さ 140 / 300 / 500 の角丸の Skeleton を 3 つ縦に並べる
-            <Stack gap="l">
-              {[0, 1, 2].map((i) => (
-                <Card key={i}>
-                  <Stack alignItems="center">
-                    <Loader size="m" />
-                  </Stack>
-                </Card>
-              ))}
-            </Stack>
-          ) : (
-            <GameBody
-              game={game}
-              groups={groups ?? []}
-              open={setDialog}
-              onEdit={() => setEditing(true)}
-            />
-          )}
-
-          {current && (
-            <ConfirmDialog
-              title={current.title}
-              confirmLabel={current.confirmLabel}
-              onClose={() => setDialog(null)}
-            >
-              {current.body}
-            </ConfirmDialog>
-          )}
-        </>
-      )}
-    </AppShell>
+        {current && (
+          <ConfirmDialog
+            title={current.title}
+            confirmLabel={current.confirmLabel}
+            onClose={() => setDialog(null)}
+          >
+            {current.body}
+          </ConfirmDialog>
+        )}
+      </ServerPageLayout>
+    </GamersServerShell>
   )
 }
 

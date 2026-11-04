@@ -1,25 +1,21 @@
-// GAP-10: Tab が TabPanel を再エクスポートしていない
-import { TabPanel } from 'react-aria-components'
+import { useEffect, useState } from 'react'
 
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
-import { Checkbox } from '../../Checkbox'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Paper } from '../../Paper'
-import { Radio } from '../../Radio'
 import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Switch } from '../../Switch'
-import { Tab, TabList, Tabs } from '../../Tab'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
+import { AiGatewayShell, PageContainer, PageHeader } from './aiGatewayShell'
 import complimentaryCreditGranted from './assets/ai-gateway/campaigns/complimentary-credit-granted.png'
 import welcomeCreditIllustration from './assets/ai-gateway/campaigns/welcome-credit-illustration.svg'
 import amexLogo from './assets/ai-gateway/card-brands/amex.svg'
@@ -27,541 +23,57 @@ import dinersLogo from './assets/ai-gateway/card-brands/diners.svg'
 import jcbLogo from './assets/ai-gateway/card-brands/jcb.svg'
 import mastercardLogo from './assets/ai-gateway/card-brands/mastercard.svg'
 import visaLogo from './assets/ai-gateway/card-brands/visa.svg'
-import paypayLogo from './assets/gamers/paypay.svg'
-import surveyExcellent from './assets/gamers/survey-excellent.svg'
-import surveyGood from './assets/gamers/survey-good.svg'
-import surveyPoor from './assets/gamers/survey-poor.svg'
-import { Card, RadioField } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
-import type { ButtonColor } from '../../Button'
-import type { IconName } from '../../Icon'
-import type { TypographyColor } from '../../Typography'
 
 /**
- * お支払い。2 つの実画面を 1 ページに置いている。節見出しはそれぞれの実画面のページ見出しそのまま。
- * - ゲーマーズのサーバーの「支払い」：apollo/frontend/src/app/(application)/(private)/servers/[id]/payment
- *   （ServerPaymentHeader・PaymentTabPanels・RecentryPaymentsPaper・PaymentsTimeline・PaymentMethodsPaper・
- *   PaymentHistoryPaper・BillGroupTable・RetryContractPaymentDialog・ContractCancellationDialog・
- *   SatisfactionSurveyDialog・InvoiceDialog）と components/PaymentMethodChangeDialog。
- * - AI ゲートウェイの組織の「クレジット」：octane/admin-ui/src/features/Billing
- *   （index.tsx・BillingContent.tsx・sections.tsx・BillingDialogs.tsx・dialogs.tsx・CardTokenForm.tsx・
- *   ComplimentaryCreditNotice.tsx・CardChallengeReturn.tsx・usePrepaidBilling.ts）。
+ * AI ゲートウェイ（octane/admin-ui）の組織の「クレジット」（/accounts/[accountId]/billing）。
+ * features/Billing の index.tsx・BillingContent.tsx・sections.tsx・BillingDialogs.tsx・dialogs.tsx・
+ * CardTokenForm.tsx・CardBrandLabel.tsx・ComplimentaryCreditNotice.tsx・CardChallengeReturn.tsx に合わせている。
+ * 枠は aiGatewayShell（組織の画面。Sidebar の「クレジット」が現在地、パンくずは「組織 / クレジット」）。
  *
- * 主ボタンの色：AI ゲートウェイの実装は主ボタンを color="neutral"（黒）にしている。
- * Hosting はロリポップのトンマナを検証する場なので、ゲーマーズ（MUI の contained primary）とそろえて
- * color="interactive" に統一している。実装へ戻すときはこの差を判断材料にする。
+ * 実物と違って残っている点:
+ * - GAP: Skeleton が無い。読み込み中は、実物が骨格を出す場所（残高・ボタンの行・表）に Loader を置いている
+ * - GAP: InfoTip（hover とフォーカスで開く補足）が無い。開く先の無い iconOnly ボタンを置いている
+ * - GAP: Money が無い。残高の小数部（.6789）は実物では 0.6em・gray[500]。ここでは同じ大きさ・色で続けて出す
+ * - GAP: 残高・通知の面は実物では影の無い枠線（gray[200]）・角丸 12px。Paper の角丸のまま
+ * - GAP: 残高・通知の 2 枚は実物では同じ高さに伸び、ボタンの行が下端にそろう（margin-top: auto）。ここでは中身の高さのまま
+ * - GAP: 残高・通知の面のボタンは実物では文字 12px・太字・影なし（walletActionButton）。Button の size="s" のまま
+ * - GAP: shared/ui/DataTable の列の最小幅（minWidth）と右寄せ（align: 'end'。金額・付与額・残高）が無い。表は左寄せ
+ * - GAP: DataTableText tone="aux"（14px）の文字を、Typography size="s" で出している
+ * - GAP: Dialog の幅（実物は styles.dialog の 520px）を指定できず、ダイアログは中身の幅になる
+ * - GAP: SegmentedControl（shared/ui）が無い。選択中を flat、ほかを outlined の Button で並べている
+ * - GAP: 内訳の面（chargeDetails）は実物では地が gray[50]。Paper の地のまま
+ * - GAP: スイッチで開く欄の高さのアニメーション（collapsePanel）が無い。開いた状態だけを出している
+ * - GAP: カード番号・有効期限・セキュリティコードは実物では決済代行の iframe（枠線 gray[200]・角丸 6px）。TextField で代用している
+ * - GAP: WelcomeCreditGrantedDialog は実物では 480px 幅・中央揃え・独自の文字組み（オレンジの小見出し、メッシュで抜いた 90px の数字、
+ *   右上に重ねた閉じるボタン、グラデーションの地の面）。Typography と Paper の範囲で並べている
+ * - GAP: ComplimentaryCreditGrantedDialog の画像は実物では幅 100%・角丸 8px。原寸（1080 角）だと収まらないので 400 角にしている
  */
 
 const meta = {
-  title: 'Templates/Billing',
+  title: 'Templates/AiGateway/Billing',
   parameters: {
     layout: 'fullscreen',
   },
   tags: ['!manifest'],
+  // 画面の部品は Templates/AiGateway/App から使うために export している。ストーリーとしては数えない
+  excludeStories: /Screen$|^productionUsage$/,
 } satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** AI ゲートウェイの主ボタンの色。冒頭のコメントのとおり neutral ではなく interactive にそろえている */
-const primaryColor: ButtonColor = 'interactive'
-
-// ─── 共通 ───
-
-/**
- * 実画面のページ見出し。ゲーマーズの ServerPaymentHeader は xxxl の「支払い」だけ、
- * AI ゲートウェイの shared/ui/PageHeader は xl の見出しと xs の説明
- */
-const AppHeading = ({
-  title,
-  description,
-  size = 'xl',
-}: {
-  title: string
-  description?: string
-  size?: 'xl' | 'xxxl'
-}) => (
-  <Stack gap="xxs">
-    <Typography size={size} fontWeight="bold" component="h2">
-      {title}
-    </Typography>
-    {description && (
-      <Typography size="xs" color="medium_emphasis" component="div">
-        {description}
-      </Typography>
-    )}
-  </Stack>
-)
-
-// GAP-NEW: Skeleton が無い。実物は文字や表の形の骨格を出すが、Loader で代用している
-const LoadingBlock = ({ message }: { message?: string }) => (
-  <Stack alignItems="center">
-    <Loader size="m" message={message} />
-  </Stack>
-)
-
-/** shared/ui/RetryCallout */
-const RetryCallout = ({ message }: { message: string }) => (
-  <Callout
-    color="negative"
-    action={
-      <Button appearance="transparent" size="s">
-        再読み込みする
-      </Button>
-    }
-  >
-    {message}
-  </Callout>
-)
-
-// GAP-NEW: Dialog に幅の prop が無い（ゲーマーズは MUI の fullWidth・600px、AI ゲートウェイは 520px / 400px）。
-// inline style を当てない方針のため未対応で、ダイアログは中身の幅で縮む。
-
-// ─── ゲーマーズ：データ ───
-
-type GamersState = {
-  /** 自動更新の決済に失敗し、契約が停止（SUSPENDED）している */
-  error?: boolean
-  loading?: boolean
-}
-
-// useSubscriptionContractDisplayName（PlanService.findPlanTitle）。8GB・1ヶ月契約は例
-const planDisplayName = '8GBプラン'
-const gamersYen = (n: number) => `${n.toLocaleString()}円`
-/** PaymentsTimeline/model.ts の formatAmountBreakdown（「（3,000円×1ヶ月）」） */
-const amountWithBreakdown = (total: number, months: number) =>
-  `${gamersYen(total)}（${gamersYen(Math.floor(total / months))}×${months}ヶ月）`
-
-// BillGroupTableRow の日付は toLocaleDateString() の既定（ゼロ埋めなし）
-const billGroups = [
-  { id: 'bg-3', issuedAt: '2026/10/1', amount: 3000, period: '2026/10/1 ~ 2026/10/31' },
-  { id: 'bg-2', issuedAt: '2026/9/1', amount: 3000, period: '2026/9/1 ~ 2026/9/30' },
-  { id: 'bg-1', issuedAt: '2026/8/1', amount: 1500, period: '2026/8/1 ~ 2026/8/31' },
-]
-
-// ─── ゲーマーズ：支払い ───
-
-/**
- * PaymentsTimeline の 1 段。左に丸いアイコン、右に地色の付いた面。
- * GAP-NEW: Timeline が無い。実物は左のアイコンを縦線でつなぐ。
- * GAP-NEW: Paper に地色の違う面（background.default）が無いので、枠線の面で代用している。
- * GAP-NEW: Stack の子に flex-grow を指定できず、面が右端まで伸びない（実物は flex: 1）。
- * GAP-NEW: アイコンセットに丸に感嘆符（MUI の ErrorOutline）が無い。失敗と次回の段の実物は丸のアイコンで、三角で代用している。
- */
-const TimelineStep = ({
-  icon,
-  tone,
-  children,
-  action,
-}: {
-  icon: IconName
-  tone: TypographyColor
-  children: ReactNode
-  action?: ReactNode
-}) => (
-  <Stack flexDirection="row" gap="m" alignItems="flex-start">
-    <Typography component="span" color={tone}>
-      <Icon name={icon} size="m" />
-    </Typography>
-    <Paper padding="m" elevation={0} outlined>
-      <Stack
-        flexDirection={{ xxs: 'column', s: 'row' }}
-        gap="m"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <Stack gap="xxs">{children}</Stack>
-        {action}
-      </Stack>
-    </Paper>
-  </Stack>
-)
-
-/** 真ん中の「〇〇を契約中」。実物は 2 つの段をつなぐ縦線の上に文字だけを置く。GAP-2 と同じく縦罫で線を描く */
-const TimelineMiddle = ({ children }: { children: ReactNode }) => (
-  <Stack flexDirection="row" gap="l" alignItems="center">
-    <Divider orientation="vertical" flexItem />
-    {children}
-  </Stack>
-)
-
-const LatestStep = ({ state }: { state: GamersState }) => (
-  <TimelineStep
-    icon={state.error ? 'exclamation_on_triangle' : 'check_on_circle'}
-    tone={state.error ? 'negative' : 'positive'}
-    action={
-      state.error &&
-      !state.loading && (
-        <Button appearance="outlined" color="negative">
-          再決済
-        </Button>
-      )
-    }
-  >
-    {state.loading ? (
-      <LoadingBlock />
-    ) : (
-      <>
-        <Typography fontWeight="bold" component="span">
-          {state.error
-            ? '決済に問題が発生しました。'
-            : `2026/10/01：${amountWithBreakdown(3000, 1)}を支払い済み`}
-        </Typography>
-        <Typography size="s" component="span">
-          前回の自動更新
-        </Typography>
-        {state.error && (
-          <Typography fontWeight="bold" color="negative" component="span">
-            ご登録されている支払い方法にて、決済がうまく行えませんでした。
-            <br />
-            契約を継続したい場合には支払い方法をご確認の上、再決済を行ってください。
-            <br />
-            2026/11/10までにご対応いただけない場合、サービスの提供を終了させていただきますので、予めご了承ください。
-          </Typography>
-        )}
-      </>
-    )}
-  </TimelineStep>
-)
-
-const NextStep = ({ state }: { state: GamersState }) => (
-  <TimelineStep
-    icon="exclamation_on_triangle"
-    tone="notice"
-    action={
-      !state.loading && (
-        <Button appearance="outlined" color="negative">
-          自動更新の停止
-        </Button>
-      )
-    }
-  >
-    {state.loading ? (
-      <LoadingBlock />
-    ) : (
-      <>
-        <Typography fontWeight="bold" component="span">
-          2026/11/01：{amountWithBreakdown(3000, 1)}を支払い予定
-        </Typography>
-        <Typography size="s" component="span">
-          次回の自動更新
-        </Typography>
-      </>
-    )}
-  </TimelineStep>
-)
-
-/**
- * components/PaymentCardDetail。カードブランドはゲーマーズでは SvgIcon の手書き（PaymentCardBrandIcon）で、
- * 同じ図柄（780×500）の AI ゲートウェイの public/card-brands/*.svg を使う。実物は fontSize 60
- */
-const PaymentCardDetail = () => (
-  <Stack flexDirection="row" gap="m" alignItems="center">
-    {/* GAP-NEW: 画像の枠（Image）が無い。実物は白地に角丸 0.125rem */}
-    <img src={visaLogo} alt="Visa" width={60} height={38} />
-    <Stack gap="xs">
-      <Typography size="s" component="span">
-        **** **** **** 4242
-      </Typography>
-      <Typography size="s" component="span">
-        有効期限 : 28/12
-      </Typography>
-    </Stack>
-  </Stack>
-)
-
-const GamersPayment = ({ state, tab }: { state: GamersState; tab: 'detail' | 'history' }) => (
-  <Stack gap="l">
-    {/* ServerPaymentHeader */}
-    <AppHeading title="支払い" size="xxxl" />
-    {/* PaymentTabPanels。Tabs の中には Select を置かない（既知の不具合）。ダイアログは Tabs の外に置く */}
-    <Tabs defaultSelectedKey={tab}>
-      <TabList aria-label="支払い">
-        <Tab id="detail">詳細</Tab>
-        <Tab id="history">履歴</Tab>
-      </TabList>
-      <TabPanel id="detail">
-        <Stack gap="l">
-          {/* RecentryPaymentsPaper */}
-          <Card>
-            <Stack gap="xl">
-              <Typography size="xl" fontWeight="bold" component="h3">
-                最近の支払い
-              </Typography>
-              <Stack gap="l">
-                <LatestStep state={state} />
-                <TimelineMiddle>
-                  {state.loading ? (
-                    <LoadingBlock />
-                  ) : (
-                    <Typography fontWeight="bold" component="span">
-                      {planDisplayName}を契約中
-                    </Typography>
-                  )}
-                </TimelineMiddle>
-                <NextStep state={state} />
-              </Stack>
-            </Stack>
-          </Card>
-          {/* PaymentMethodsPaper */}
-          <Card>
-            <Stack
-              flexDirection={{ xxs: 'column', m: 'row' }}
-              gap="s"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Stack gap="m">
-                <Typography size="xl" fontWeight="bold" component="h3">
-                  決済手段
-                </Typography>
-                {state.loading ? <LoadingBlock /> : <PaymentCardDetail />}
-              </Stack>
-              <Button appearance="outlined">変更</Button>
-            </Stack>
-          </Card>
-        </Stack>
-      </TabPanel>
-      <TabPanel id="history">
-        {/* PaymentHistoryPaper / BillGroupTable */}
-        <Card>
-          <Stack gap="l">
-            <Typography size="xl" fontWeight="bold" component="h3">
-              支払い履歴
-            </Typography>
-            <Table aria-label="支払い履歴">
-              <TableHeader>
-                <Column isRowHeader>決済日</Column>
-                <Column>金額</Column>
-                <Column>契約期間</Column>
-                <Column>ステータス</Column>
-                {/* 実物の列見出しは空 */}
-                <Column aria-label="操作"> </Column>
-              </TableHeader>
-              <TableBody>
-                {billGroups.map((bg) => (
-                  <Row key={bg.id} id={bg.id}>
-                    <Cell>{bg.issuedAt}</Cell>
-                    <Cell>{gamersYen(bg.amount)}</Cell>
-                    <Cell>{bg.period}</Cell>
-                    <Cell>
-                      {/* 失敗は negative の文字で「失敗」、未決済は「未決済」 */}
-                      <Typography size="s" color="high_emphasis" component="span">
-                        成功
-                      </Typography>
-                    </Cell>
-                    <Cell>
-                      {/* 決済に失敗した行は領収書ではなく再決済を出す。未決済の行は何も出さない */}
-                      <Button
-                        appearance="outlined"
-                        size="s"
-                        leading={<Icon name="download" size="s" />}
-                      >
-                        領収書
-                      </Button>
-                    </Cell>
-                  </Row>
-                ))}
-              </TableBody>
-            </Table>
-          </Stack>
-        </Card>
-      </TabPanel>
-    </Tabs>
-  </Stack>
-)
-
-// ─── ゲーマーズ：ダイアログ ───
-// ボタンは lib/dialog.ts に合わせる（キャンセル・閉じる = 文字だけ、確定 = 枠線、削除の確定 = 赤の枠線）
-
-/**
- * RetryContractPaymentDialog。確定すると処理中（LoadingDialogContent）・完了（SuccessDialogContent）・失敗の段に移る。
- * GAP-NEW: Icon の大きさが l 止まり。完了の段の実物は 150px の CheckCircle を置く
- */
-const RetryPaymentDialog = () => (
-  <Dialog isOpen>
-    <DialogHeader>
-      <DialogTitle>再決済</DialogTitle>
-    </DialogHeader>
-    <Typography size="s">2026-11-01 〜 2026-12-01 ご利用分の再決済を行います</Typography>
-    <DialogFooter>
-      <Button appearance="transparent">閉じる</Button>
-      <Button appearance="outlined">決済</Button>
-    </DialogFooter>
-  </Dialog>
-)
-
-/** ContractCancellationDialog。停止すると続けて満足度のアンケートを出す（「今後表示しない」を選んでいなければ） */
-const ContractCancellationDialog = () => (
-  <Dialog isOpen>
-    <DialogHeader>
-      <DialogTitle>自動更新の停止</DialogTitle>
-    </DialogHeader>
-    <Stack gap="l">
-      <Typography>{planDisplayName}の自動更新を停止します</Typography>
-      <Callout color="informative" appearance="outline">
-        自動更新停止後も2026/11/01までご利用可能です
-      </Callout>
-    </Stack>
-    <DialogFooter>
-      <Button appearance="transparent">閉じる</Button>
-      <Button appearance="outlined" color="negative">
-        停止
-      </Button>
-    </DialogFooter>
-  </Dialog>
-)
-
-/** SatisfactionSurveyDialog/model.ts の items */
-const surveyItems = [
-  { label: 'よかった', image: surveyExcellent },
-  { label: '普通だった', image: surveyGood },
-  { label: '悪かった', image: surveyPoor },
-]
-
-const SatisfactionSurveyDialog = () => (
-  <Dialog isOpen>
-    <DialogHeader>
-      <DialogTitle>サーバーの使い心地はどうでしたか？</DialogTitle>
-    </DialogHeader>
-    <Stack gap="l">
-      {/* GAP-NEW: 画像を選ぶトグル（ToggleButtonGroup）が無い。実物は 3 枚の絵（142×180）を並べ、ラベルは alt にだけある。
-          ここでは絵を並べ、その下に枠線のボタンを文字で置く。
-          GAP-NEW: 画像の枠（Image）が無い。実物は絵を角丸 16px・グラデーションの枠のカードに入れる */}
-      <Stack flexDirection="row" gap="m" justifyContent="center">
-        {surveyItems.map((item) => (
-          <Stack key={item.label} gap="s" alignItems="center">
-            <img src={item.image} alt="" width={142} height={180} />
-            <Button appearance="outlined" size="l">
-              {item.label}
-            </Button>
-          </Stack>
-        ))}
-      </Stack>
-      <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
-        <Checkbox>今後表示しない</Checkbox>
-        <Button appearance="transparent">閉じる</Button>
-      </Stack>
-    </Stack>
-  </Dialog>
-)
-
-const InvoiceDialog = () => (
-  <Dialog isOpen>
-    <DialogHeader>
-      <DialogTitle>領収書の宛名</DialogTitle>
-    </DialogHeader>
-    <TextField label="宛名" caption="書類の交付を受ける事業者の氏名または名称" width="full" />
-    <DialogFooter>
-      <Button appearance="transparent">閉じる</Button>
-      <Button appearance="outlined">ダウンロード</Button>
-    </DialogFooter>
-  </Dialog>
-)
-
-const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
-const years = Array.from({ length: 10 }, (_, i) => String(2026 + i))
-
-/** servers/new/payment-info の RegisterPaymentCardForm ＋ components/PaymentCardForm */
-// GAP-NEW: Select の placeholder の既定値が英語（Select an item）。実物（CcExpSelect）は未選択で空欄
-const RegisterPaymentCardForm = () => (
-  <Paper padding="m" elevation={0} outlined>
-    <Stack gap="l">
-      <Typography size="l" fontWeight="bold" component="h3">
-        クレジットカード情報
-      </Typography>
-      <TextField label="名義" autoComplete="cc-name" width="full" />
-      <TextField label="カード番号" autoComplete="cc-number" inputMode="numeric" width="full" />
-      <Grid spacing="xs">
-        <GridItem size={6}>
-          <Select label="有効期限(月)" width="full" autoComplete="cc-exp-month">
-            {months.map((m) => (
-              <SelectItem key={m} id={m}>
-                {m}
-              </SelectItem>
-            ))}
-          </Select>
-        </GridItem>
-        <GridItem size={6}>
-          <Select label="有効期限(年)" width="full" autoComplete="cc-exp-year">
-            {years.map((y) => (
-              <SelectItem key={y} id={y}>
-                {y}
-              </SelectItem>
-            ))}
-          </Select>
-        </GridItem>
-      </Grid>
-      <TextField label="セキュリティコード" type="password" autoComplete="cc-csc" width="full" />
-      <Paper padding="m" elevation={0} outlined>
-        <Typography size="xs" component="p">
-          当社がお客様から収集した以下の個人情報等は、カード発行会社がおこなう不正利用検知・防止のために、お客様が利用されているカード発行会社へ提供させていただきます。氏名、電話番号、emailアドレス、請求先住所、配送先住所、インターネット利用環境に関する情報等（送信するパラメータの内容に応じて個人情報を記載ください）
-          <br />
-          お客様が利用されているカード発行会社が海外にある場合、これらの情報は当該発行会社が所属する国に移転される場合があります。お客様が未成年の場合、親権者または後見人の承諾を得た上で、本サービスを利用するものとします。
-        </Typography>
-      </Paper>
-    </Stack>
-  </Paper>
-)
-
-/**
- * components/PaymentMethodChangeDialog の入力の段。登録済みのカードがあるときは、カードと「変更」
- * （ConfirmPaymentCardForm）を出し、「変更」を押すとこのカード情報の入力に切り替わる。
- */
-const PaymentMethodChangeDialog = () => (
-  // 実物は onClose を渡しておらず、外側を押しても閉じない
-  <Dialog isOpen isDismissable={false}>
-    <DialogHeader>
-      <DialogTitle>支払い方法の変更</DialogTitle>
-    </DialogHeader>
-    <Stack gap="l">
-      <Callout color="notice" appearance="outline">
-        現在登録可能なクレジットカードの情報はアカウントに対して1件のみです。
-        <br />
-        クレジットカード情報を変更した場合は、クレジット支払いを選択しているすべてのサーバーの情報が変更されます。
-      </Callout>
-      <RadioField label="支払い方法" defaultValue="credit-card">
-        <Stack gap="m">
-          {/* components/PaymentCardBrandIconsList。実物は 32×20 の白地の枠に SvgIcon。図柄は AI ゲートウェイの card-brands/*.svg で代える。
-              GAP-NEW: 画像の枠（Image）が無い */}
-          <Stack flexDirection="row" gap="xs" alignItems="center">
-            <Radio value="credit-card">クレジットカード</Radio>
-            <Stack flexDirection="row" gap="xxs" alignItems="center">
-              {cardBrands.map((brand) => (
-                <img key={brand.label} src={brand.logo} alt={brand.label} width={32} height={20} />
-              ))}
-            </Stack>
-          </Stack>
-          <RegisterPaymentCardForm />
-          <Stack flexDirection="row" gap="xs" alignItems="center">
-            <Radio value="paypay">PayPay</Radio>
-            <img src={paypayLogo} alt="PayPay" width={30} height={30} />
-          </Stack>
-          {/* GAP-NEW: 文中のテキストリンク（Link）が無い。「利用できる支払い方法と対応ブランド」をリンクにできない */}
-          <Typography size="xxs" component="p">
-            ※この支払い方法は自動更新に対応していません。詳しくは利用できる支払い方法と対応ブランドをご確認ください。
-          </Typography>
-        </Stack>
-      </RadioField>
-    </Stack>
-    <DialogFooter>
-      <Button appearance="transparent">キャンセル</Button>
-      <Button appearance="outlined">変更</Button>
-    </DialogFooter>
-  </Dialog>
-)
-
-// ─── AI ゲートウェイ：クレジット（features/Billing）───
+// ─── データ（値はダミー）───
 
 /** cardChallengeReturn はカード認証（3DS2）から戻った直後の画面（CardChallengeReturn） */
 type CreditView = 'loading' | 'error' | 'success' | 'cardChallengeReturn'
 
-// formatMicroJpy（Intl の ja-JP / JPY）。残高は小数 4 桁まで出す
+// formatMicroJpyParts（Intl の ja-JP / JPY）。残高は小数 4 桁まで出す
 const balance = '￥12,345.6789'
 
-// mergeHistoryEntries。色が付くのは失敗（negative）と確認中（notice）だけ
+// mergeHistoryEntries。チャージと特典の付与を日時の新しい順に混ぜる。色が付くのは失敗（negative）と確認中（notice）だけ
 const chargeHistory: { at: string; source: string; amount: string; status: string }[] = [
   { at: '2026/10/29 10:12', source: '自動', amount: '￥5,000', status: 'チャージ済み' },
   { at: '2026/10/15 18:40', source: '手動', amount: '￥10,000', status: 'チャージ済み' },
@@ -569,17 +81,15 @@ const chargeHistory: { at: string; source: string; amount: string; status: strin
   { at: '2026/10/01 00:00', source: '特典', amount: '￥1,000', status: '付与済み' },
 ]
 
-// formatDateTime（Intl の ja-JP、dateStyle: medium・timeStyle: short）
-const complimentaryExpiresAt = '2026/12/31 23:59'
-
 const historyColor: Record<string, 'negative' | 'notice' | undefined> = {
   失敗: 'negative',
   確認中: 'notice',
 }
 
-// cardLabelText（ブランド名 + formatMaskedNumber）
-const card = 'Visa •••• 4242'
-// CardBrandLabel ではブランド名をロゴで出すので、番号だけを使う
+// formatDateTime（Intl の ja-JP、dateStyle: medium・timeStyle: short）
+const complimentaryExpiresAt = '2026/12/31 23:59'
+
+// formatMaskedNumber
 const cardNumber = '•••• 4242'
 
 // mulpay.ts の supportedCardBrands。ロゴは public/card-brands/*.svg
@@ -600,241 +110,327 @@ const chargeAmounts = [
   { id: 'custom', label: 'カスタム' },
 ]
 
-const SubTitle = ({ children, action }: { children: string; action?: ReactNode }) => (
-  <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
-    <Typography size="m" fontWeight="bold" component="h3">
+/** 開いているダイアログ（BillingDialogs と ComplimentaryCreditNotice が出すもの） */
+type DialogName =
+  | 'charge'
+  | 'chargeConfirm'
+  | 'autoCharge'
+  | 'lowBalance'
+  | 'card'
+  | 'complimentary'
+  | 'welcome'
+
+type OpenDialog = (name: DialogName) => void
+
+// ─── 部品 ───
+
+const LoadingBlock = () => (
+  <Stack alignItems="flex-start">
+    <Loader size="s" />
+  </Stack>
+)
+
+/** shared/ui/RetryCallout */
+const RetryCallout = ({ message }: { message: string }) => (
+  <Callout
+    color="negative"
+    action={
+      <Button appearance="transparent" color="neutral" size="s">
+        再読み込みする
+      </Button>
+    }
+  >
+    {message}
+  </Callout>
+)
+
+/** 節の見出し（Typography m 太字）。お支払い方法だけ右にボタンを持つ（styles.sectionHead） */
+const SectionTitle = ({ children, action }: { children: string; action?: ReactNode }) => (
+  <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
+    <Typography size="m" fontWeight="bold" component="h2">
       {children}
     </Typography>
     {action}
   </Stack>
 )
 
+/** CardBrandLabel。ロゴ（幅 32px）と伏せたカード番号 */
+const CardBrandLabel = () => (
+  <Stack flexDirection="row" gap="xs" alignItems="center">
+    <img src={visaLogo} alt="Visa" width={32} height={21} />
+    <span>{cardNumber}</span>
+  </Stack>
+)
+
+/** DataTableEmpty（s の太字の h3） */
+const TableEmpty = ({ title }: { title: string }) => (
+  <Typography component="h3" size="s" fontWeight="bold">
+    {title}
+  </Typography>
+)
+
+/** DataTableText tone="aux" */
+const Aux = ({ children }: { children: ReactNode }) => (
+  <Typography size="s" component="span">
+    {children}
+  </Typography>
+)
+
 /**
- * sections.tsx の PrepaidBalanceSection の左の面（styles.wallet）と LowBalanceNotificationCard（styles.sideCard）。
- * 実物はどちらも枠線（gray-200）・角丸 12px・padding 24px の影の無い面で、900px 以上で 2 列に等分する（styles.walletGrid）
+ * sections.tsx の PrepaidBalanceSection（styles.wallet）と LowBalanceNotificationCard（styles.sideCard）。
+ * どちらも padding 24px・中の gap 16px の枠線の面で、900px 以上で 2 列に等分する（styles.walletGrid、gap 16px）
  */
-const WalletCards = ({ loading = false }: { loading?: boolean }) => (
-  <Grid spacing="m">
-    <GridItem size={{ xxs: 12, m: 6 }}>
-      <Paper elevation={0} outlined>
-        <Stack gap="m">
+const WalletCards = ({ loading = false, onOpen }: { loading?: boolean; onOpen?: OpenDialog }) => (
+  <section aria-label="クレジット残高">
+    <Grid spacing="m">
+      <GridItem size={{ xxs: 12, l: 6 }}>
+        <Paper elevation={0} outlined>
           <Stack gap="m">
-            {/* GAP-NEW: InfoTip が無い（中身は「追加したクレジットは、購入日から1年で失効します。」）。
-                開く先の無い iconOnly ボタンを置く。読み込み中の骨格には InfoTip が無い */}
-            <Stack flexDirection="row" gap="xxs" alignItems="center">
-              <Typography size="m" fontWeight="bold" component="h3">
-                クレジット残高
-              </Typography>
-              {!loading && (
-                <Button
-                  appearance="transparent"
-                  size="s"
-                  iconOnly
-                  aria-label="クレジットの有効期限とは"
-                >
-                  <Icon name="info_on_circle" size="s" />
-                </Button>
+            {/* walletHead（gap 4px）: 見出しの行（gap 8px）と残高 */}
+            <Stack gap="xxs">
+              <Stack flexDirection="row" gap="xs" alignItems="center">
+                <Typography size="m" fontWeight="bold">
+                  クレジット残高
+                </Typography>
+                {/* 中身は「追加したクレジットは、購入日から1年で失効します。」。骨格では出さない */}
+                {!loading && (
+                  <Button
+                    appearance="transparent"
+                    color="neutral"
+                    size="s"
+                    iconOnly
+                    aria-label="クレジットの有効期限とは"
+                  >
+                    <Icon name="info_on_circle" size="s" />
+                  </Button>
+                )}
+              </Stack>
+              {loading ? (
+                <LoadingBlock />
+              ) : (
+                <Typography component="span" size="xxl" fontWeight="bold">
+                  {balance}
+                </Typography>
               )}
             </Stack>
             {loading ? (
               <LoadingBlock />
             ) : (
-              // GAP-NEW: Money（小数部を小さく薄くする）が無い
-              <Typography size="xxl" fontWeight="bold" component="div">
-                {balance}
-              </Typography>
+              // actionRow（gap 8px）。自動チャージはカードがあるときだけ
+              <Stack flexDirection="row" gap="xs">
+                {/* カードがあれば ManualChargeDialog、無ければ CardRegistrationDialog */}
+                <Button
+                  size="s"
+                  leading={<Icon name="plus" size="s" />}
+                  onPress={() => onOpen?.('charge')}
+                >
+                  追加する
+                </Button>
+                <Button
+                  appearance="outlined"
+                  color="neutral"
+                  size="s"
+                  leading={<Icon name="gear" size="s" />}
+                  onPress={() => onOpen?.('autoCharge')}
+                >
+                  自動チャージ
+                </Button>
+              </Stack>
             )}
           </Stack>
-          {loading ? (
-            <LoadingBlock />
-          ) : (
-            // GAP-NEW: 実物は styles.walletActionButton で文字を 12px・太字にし、影を消している
-            <Stack flexDirection="row" gap="xs">
-              <Button color={primaryColor} size="s" leading={<Icon name="plus" size="s" />}>
-                追加する
-              </Button>
-              <Button appearance="outlined" size="s" leading={<Icon name="gear" size="s" />}>
-                自動チャージ
-              </Button>
+        </Paper>
+      </GridItem>
+      <GridItem size={{ xxs: 12, l: 6 }}>
+        <section aria-label="通知">
+          <Paper elevation={0} outlined>
+            <Stack gap="m">
+              <Stack gap="xxs">
+                <Typography size="m" fontWeight="bold">
+                  通知
+                </Typography>
+                <Typography size="s" color="medium_emphasis">
+                  クレジット残高が基準を下回ったときにメールでお知らせします。
+                </Typography>
+              </Stack>
+              {loading ? (
+                <LoadingBlock />
+              ) : (
+                <Stack flexDirection="row" gap="xs">
+                  <Button
+                    appearance="outlined"
+                    color="neutral"
+                    size="s"
+                    leading={<Icon name="bell" size="s" />}
+                    onPress={() => onOpen?.('lowBalance')}
+                  >
+                    設定する
+                  </Button>
+                </Stack>
+              )}
             </Stack>
-          )}
-        </Stack>
-      </Paper>
-    </GridItem>
-    <GridItem size={{ xxs: 12, m: 6 }}>
-      <Paper elevation={0} outlined>
-        <Stack gap="m">
-          <Stack gap="xxs">
-            <Typography size="m" fontWeight="bold" component="h3">
-              通知
-            </Typography>
-            <Typography size="s" color="medium_emphasis" component="div">
-              クレジット残高が基準を下回ったときにメールでお知らせします。
-            </Typography>
-          </Stack>
-          {loading ? (
-            <LoadingBlock />
-          ) : (
-            <Stack flexDirection="row">
-              <Button appearance="outlined" size="s" leading={<Icon name="bell" size="s" />}>
-                設定する
-              </Button>
-            </Stack>
-          )}
-        </Stack>
-      </Paper>
-    </GridItem>
-  </Grid>
+          </Paper>
+        </section>
+      </GridItem>
+    </Grid>
+  </section>
 )
 
-const AiCredit = ({ view }: { view: CreditView }) => {
-  if (view === 'cardChallengeReturn') {
-    // CardChallengeReturn。請求画面へ戻すまでの間だけ出る
+/** BillingContent。節は面に入れず、見出しと表を縦に積む（styles.sections は gap 32px、styles.stack は 16px） */
+const BillingContent = ({
+  view,
+  onOpen,
+}: {
+  view: Exclude<CreditView, 'cardChallengeReturn'>
+  onOpen: OpenDialog
+}) => {
+  if (view === 'loading') {
+    // BillingSkeleton。特典クレジットの節は出さない
     return (
-      <Stack gap="l">
-        <AppHeading title="カード認証" description="カード認証の結果を確認しています" />
-        <Paper>
-          <Loader message="確認しています" />
-        </Paper>
+      <Stack gap="xl">
+        <WalletCards loading />
+        <Stack gap="m">
+          <SectionTitle>チャージ履歴</SectionTitle>
+          <LoadingBlock />
+        </Stack>
+        <Stack gap="m">
+          <SectionTitle>お支払い方法</SectionTitle>
+          <LoadingBlock />
+        </Stack>
       </Stack>
     )
   }
+  if (view === 'error') return <RetryCallout message="請求情報を読み込めませんでした。" />
   return (
-    <Stack gap="l">
-      {/* index.tsx の PageHeader */}
-      <AppHeading
-        title="クレジット"
-        description="クレジット残高、支払い方法、チャージ履歴を管理します"
-      />
-      {/* BillingContent。実物の節は面に入れず、見出しと表を縦に積む（styles.sections は gap 32px、styles.stack は 16px） */}
-      {view === 'loading' && (
-        // BillingSkeleton。骨格では特典クレジットの節を出さない
-        <Stack gap="xl">
-          <WalletCards loading />
-          <Stack gap="m">
-            <SubTitle>チャージ履歴</SubTitle>
-            <LoadingBlock />
-          </Stack>
-          <Stack gap="m">
-            <SubTitle>お支払い方法</SubTitle>
-            <LoadingBlock />
-          </Stack>
+    <Stack gap="xl">
+      <WalletCards onOpen={onOpen} />
+
+      {/* ComplimentaryCreditSection。有効な特典があるときだけ出る */}
+      <section aria-label="特典クレジット">
+        <Stack gap="m">
+          <SectionTitle>特典クレジット</SectionTitle>
+          {/* shared/ui/DataTable は表を枠線の Paper（padding 0）に入れる */}
+          <Paper outlined padding="none">
+            <Table aria-label="特典クレジット">
+              <TableHeader>
+                <Column isRowHeader>特典名</Column>
+                <Column>付与額</Column>
+                <Column>有効期限</Column>
+                <Column>残高</Column>
+              </TableHeader>
+              <TableBody renderEmptyState={() => <TableEmpty title="特典クレジットはありません" />}>
+                <Row>
+                  <Cell>ウェルカムクレジット</Cell>
+                  <Cell>￥1,000</Cell>
+                  <Cell>
+                    <Aux>{complimentaryExpiresAt}</Aux>
+                  </Cell>
+                  <Cell>￥412.5</Cell>
+                </Row>
+              </TableBody>
+            </Table>
+          </Paper>
+          <Typography size="s" color="medium_emphasis">
+            特典クレジットは、チャージしたクレジットより先に消費されます。
+          </Typography>
         </Stack>
-      )}
-      {view === 'error' && <RetryCallout message="請求情報を読み込めませんでした。" />}
-      {view === 'success' && (
-        <Stack gap="xl">
-          {/* PrepaidBalanceSection */}
-          <WalletCards />
+      </section>
 
-          {/* ComplimentaryCreditSection。有効な特典があるときだけ出る */}
-          <Stack gap="m">
-            <SubTitle>特典クレジット</SubTitle>
-            {/* shared/ui/DataTable は表を枠線の Paper（padding 0）に入れる。GAP-NEW: Table が幅 100% にならず（実物は CSS で width: 100%）、列の右寄せ（align: 'end'）も無い */}
-            <Paper outlined padding="none">
-              <Table aria-label="特典クレジット">
-                <TableHeader>
-                  <Column isRowHeader>特典名</Column>
-                  <Column>付与額</Column>
-                  <Column>有効期限</Column>
-                  <Column>残高</Column>
-                </TableHeader>
-                <TableBody renderEmptyState={() => '特典クレジットはありません'}>
-                  <Row>
-                    <Cell>ウェルカムクレジット</Cell>
-                    <Cell>￥1,000</Cell>
-                    <Cell>{complimentaryExpiresAt}</Cell>
-                    <Cell>￥412.5</Cell>
-                  </Row>
-                </TableBody>
-              </Table>
-            </Paper>
-            <Typography size="s" color="medium_emphasis" component="div">
-              特典クレジットは、チャージしたクレジットより先に消費されます。
-            </Typography>
-          </Stack>
-
-          {/* PaymentHistorySection */}
-          <Stack gap="m">
-            <SubTitle>チャージ履歴</SubTitle>
-            {/* shared/ui/DataTable は表を枠線の Paper（padding 0）に入れる。GAP-NEW: Table が幅 100% にならず（実物は CSS で width: 100%）、列の右寄せ（align: 'end'）も無い */}
-            <Paper outlined padding="none">
-              <Table aria-label="チャージ履歴">
-                <TableHeader>
-                  <Column isRowHeader>日時</Column>
-                  <Column>種別</Column>
-                  <Column>金額</Column>
-                  <Column>結果</Column>
-                </TableHeader>
-                <TableBody renderEmptyState={() => 'チャージ履歴はありません'}>
-                  {chargeHistory.map((h) => (
-                    <Row key={`${h.at}-${h.status}`}>
-                      <Cell>{h.at}</Cell>
-                      <Cell>{h.source}</Cell>
-                      <Cell>{h.amount}</Cell>
-                      <Cell>
-                        {historyColor[h.status] ? (
-                          <Sticker size="s" color={historyColor[h.status]}>
-                            {h.status}
-                          </Sticker>
-                        ) : (
-                          h.status
-                        )}
-                      </Cell>
-                    </Row>
-                  ))}
-                </TableBody>
-              </Table>
-            </Paper>
-          </Stack>
-
-          {/* PaymentMethodsSection */}
-          <Stack gap="m">
-            <SubTitle
-              action={
-                <Button color={primaryColor} size="s">
-                  カードを追加する
-                </Button>
-              }
-            >
-              お支払い方法
-            </SubTitle>
-            {/* shared/ui/DataTable は表を枠線の Paper（padding 0）に入れる。GAP-NEW: Table が幅 100% にならず（実物は CSS で width: 100%）、列の右寄せ（align: 'end'）も無い */}
-            <Paper outlined padding="none">
-              <Table aria-label="お支払い方法">
-                <TableHeader>
-                  <Column isRowHeader>カード番号</Column>
-                  <Column>有効期限</Column>
-                </TableHeader>
-                <TableBody renderEmptyState={() => '登録されているカードはありません'}>
-                  <Row>
+      {/* PaymentHistorySection */}
+      <section aria-label="チャージ履歴">
+        <Stack gap="m">
+          <SectionTitle>チャージ履歴</SectionTitle>
+          <Paper outlined padding="none">
+            <Table aria-label="チャージ履歴">
+              <TableHeader>
+                <Column isRowHeader>日時</Column>
+                <Column>種別</Column>
+                <Column>金額</Column>
+                <Column>結果</Column>
+              </TableHeader>
+              <TableBody renderEmptyState={() => <TableEmpty title="チャージ履歴はありません" />}>
+                {chargeHistory.map((h) => (
+                  <Row key={`${h.at}-${h.status}`}>
                     <Cell>
-                      {/* CardIdentity ＋ CardBrandLabel。実物はロゴ（幅 32px）＋伏せたカード番号 */}
-                      <Stack flexDirection="row" gap="xs" alignItems="center">
-                        <img src={visaLogo} alt="Visa" width={32} height={21} />
-                        <Typography size="s" component="span">
-                          {cardNumber}
-                        </Typography>
-                        <Sticker size="s" color="neutral">
-                          既定
-                        </Sticker>
-                      </Stack>
+                      <Aux>{h.at}</Aux>
                     </Cell>
-                    <Cell>12/28</Cell>
+                    <Cell>
+                      <Aux>{h.source}</Aux>
+                    </Cell>
+                    <Cell>{h.amount}</Cell>
+                    <Cell>
+                      {historyColor[h.status] ? (
+                        <Sticker size="s" color={historyColor[h.status]}>
+                          {h.status}
+                        </Sticker>
+                      ) : (
+                        <Aux>{h.status}</Aux>
+                      )}
+                    </Cell>
                   </Row>
-                </TableBody>
-              </Table>
-            </Paper>
-          </Stack>
+                ))}
+              </TableBody>
+            </Table>
+          </Paper>
         </Stack>
-      )}
+      </section>
+
+      {/* PaymentMethodsSection。「カードを追加する」は契約が有効なときだけ */}
+      <section aria-label="お支払い方法">
+        <Stack gap="m">
+          <SectionTitle
+            action={
+              <Button color="neutral" size="s" onPress={() => onOpen('card')}>
+                カードを追加する
+              </Button>
+            }
+          >
+            お支払い方法
+          </SectionTitle>
+          <Paper outlined padding="none">
+            <Table aria-label="お支払い方法">
+              <TableHeader>
+                <Column isRowHeader>カード番号</Column>
+                <Column>有効期限</Column>
+              </TableHeader>
+              <TableBody
+                renderEmptyState={() => <TableEmpty title="登録されているカードはありません" />}
+              >
+                <Row>
+                  <Cell>
+                    {/* CardIdentity: CardBrandLabel と、既定のカードなら「既定」 */}
+                    <Stack flexDirection="row" gap="xs" alignItems="center">
+                      <CardBrandLabel />
+                      <Sticker size="s" color="neutral">
+                        既定
+                      </Sticker>
+                    </Stack>
+                  </Cell>
+                  <Cell>
+                    <Aux>12/28</Aux>
+                  </Cell>
+                </Row>
+              </TableBody>
+            </Table>
+          </Paper>
+        </Stack>
+      </section>
     </Stack>
   )
 }
 
-// ─── AI ゲートウェイ：ダイアログ ───
+// ─── ダイアログ（dialogs.tsx・BillingDialogs.tsx・ComplimentaryCreditNotice.tsx）───
 
-/** dialogs.tsx の ChargeDetail。項目名と金額の行 */
+type DialogProps = {
+  onClose: () => void
+  onOpen: (name: DialogName) => void
+  onNavigate?: (to: string) => void
+}
+
+const closeOn = (onClose: () => void) => (open: boolean) => {
+  if (!open) onClose()
+}
+
+/** dialogs.tsx の ChargeDetail。項目名と金額の行。合計の行は上に罫線 */
 const ChargeDetail = ({
   label,
   value,
@@ -844,19 +440,20 @@ const ChargeDetail = ({
   value: string
   total?: boolean
 }) => (
-  <Stack flexDirection="row" justifyContent="space-between">
-    <Typography size={total ? 'm' : 's'} color="medium_emphasis" component="span">
+  <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
+    <Typography component="span" size={total ? 'm' : 's'} color="medium_emphasis">
       {label}
     </Typography>
-    <Typography size={total ? 'm' : 's'} fontWeight={total ? 'bold' : 'normal'} component="span">
+    <Typography component="span" size={total ? 'm' : 's'} fontWeight={total ? 'bold' : undefined}>
       {value}
     </Typography>
   </Stack>
 )
 
+/** 内訳の面（styles.section の padding 16px、行の間 12px） */
 const ChargeDetails = ({ amount, totalLabel }: { amount: string; totalLabel: string }) => (
-  <Paper padding="m" elevation={0} outlined>
-    <Stack gap="xs">
+  <Paper outlined padding="m">
+    <Stack gap="s">
       <ChargeDetail label="クレジット" value={amount} />
       <ChargeDetail label="手数料" value="￥0" />
       <ChargeDetail label="消費税" value="￥0" />
@@ -867,73 +464,120 @@ const ChargeDetails = ({ amount, totalLabel }: { amount: string; totalLabel: str
 )
 
 /** ManualChargeDialog。確定すると BillingDialogs の ConfirmDialog（「クレジットを追加しますか？」）が重なる */
-const ManualChargeDialog = () => (
-  <Dialog isOpen>
+const ManualChargeDialog = ({ onClose, onOpen }: DialogProps) => (
+  <Dialog isOpen onOpenChange={closeOn(onClose)}>
     <DialogHeader>
       <DialogTitle>クレジットを追加する</DialogTitle>
       <DialogDescription>追加したクレジットは、購入日から1年で失効します。</DialogDescription>
     </DialogHeader>
+    {/* dialogFields（gap 16px） */}
     <Stack gap="m">
-      {/* GAP-NEW: カードブランドのロゴ（CardBrandLabel）を選択肢に置けない */}
-      <Select label="支払いカード" width="full" defaultSelectedKey="card-0">
-        <SelectItem id="card-0">{card}</SelectItem>
+      {/* 「別のカードを登録する」を選ぶと、このダイアログを閉じてカードの登録を開く（registerCardFromCharge） */}
+      <Select
+        label="支払いカード"
+        width="full"
+        defaultSelectedKey="card-0"
+        onSelectionChange={(key) => {
+          if (key === 'register-card') onOpen('card')
+        }}
+      >
+        <SelectItem id="card-0" textValue={`Visa ${cardNumber}`}>
+          <CardBrandLabel />
+        </SelectItem>
         <SelectItem id="register-card">別のカードを登録する</SelectItem>
       </Select>
-      <Stack gap="xs">
-        <Typography size="s" fontWeight="bold" component="span">
-          追加する金額
-        </Typography>
-        {/* GAP-NEW: SegmentedControl が無い。選択中を flat、ほかを outlined にして並べる */}
-        <Stack flexDirection="row" gap="xxs">
-          {chargeAmounts.map((o) => (
-            <Button
-              key={o.id}
-              size="s"
-              appearance={o.id === '5000' ? 'flat' : 'outlined'}
-              aria-label={`追加する金額: ${o.label}`}
-            >
-              {o.label}
-            </Button>
-          ))}
+      {/* amountSection（gap なし）: 金額の選択、「カスタム」のときだけ開く金額の欄、残りチャージ可能額 */}
+      <Stack>
+        <Stack gap="xxs">
+          <Typography size="s" fontWeight="bold" component="span">
+            追加する金額
+          </Typography>
+          <Stack flexDirection="row" gap="xxs">
+            {chargeAmounts.map((o) => (
+              <Button
+                key={o.id}
+                size="s"
+                color="neutral"
+                appearance={o.id === '5000' ? 'flat' : 'outlined'}
+                aria-pressed={o.id === '5000'}
+              >
+                {o.label}
+              </Button>
+            ))}
+          </Stack>
         </Stack>
-        <Typography size="s" color="medium_emphasis" component="div">
+        <Typography size="s" color="medium_emphasis">
           残りチャージ可能額 ￥487,654.3211（クレジット保有上限 ¥500,000）
         </Typography>
       </Stack>
       <ChargeDetails amount="￥5,000" totalLabel="合計金額" />
     </Stack>
     <DialogFooter>
-      <Button appearance="transparent">閉じる</Button>
-      <Button color={primaryColor}>クレジットを追加する</Button>
+      <Button appearance="transparent" color="neutral" onPress={onClose}>
+        閉じる
+      </Button>
+      <Button color="neutral" onPress={() => onOpen('chargeConfirm')}>
+        クレジットを追加する
+      </Button>
+    </DialogFooter>
+  </Dialog>
+)
+
+/**
+ * BillingDialogs の ConfirmDialog（shared/ui/ConfirmDialog、幅 400px）。
+ * 確定すると決済を始め、カード認証（3DS2）が要るときは決済代行の認証画面へ移り、終わると CardChallengeReturn に戻る
+ */
+const ChargeConfirmDialog = ({ onClose, onNavigate }: DialogProps) => (
+  <Dialog isOpen onOpenChange={closeOn(onClose)} role="alertdialog">
+    <DialogHeader>
+      <DialogTitle>クレジットを追加しますか？</DialogTitle>
+    </DialogHeader>
+    <DialogDescription>￥5,000をVisa •••• 4242で追加します。</DialogDescription>
+    <DialogFooter>
+      <Button appearance="transparent" color="neutral" onPress={onClose}>
+        キャンセル
+      </Button>
+      <Button color="neutral" onPress={() => onNavigate?.('card-challenge-return')}>
+        クレジットを追加する
+      </Button>
     </DialogFooter>
   </Dialog>
 )
 
 /** 項目名とスイッチの行（styles.switchRow） */
 const SwitchRow = ({ label }: { label: string }) => (
-  <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
-    <Typography size="s" fontWeight="bold" component="span">
+  <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
+    <Typography size="s" fontWeight="bold">
       {label}
     </Typography>
     <Switch defaultSelected aria-label={label} />
   </Stack>
 )
 
-const AutoChargeSettingsDialog = () => (
-  <Dialog isOpen>
+/** スイッチがオンのときだけ開く欄（collapseFields）。上に gray[100] の罫線、欄の間 16px */
+const CollapseFields = ({ children }: { children: ReactNode }) => (
+  <Stack gap="m">
+    <Divider />
+    {children}
+  </Stack>
+)
+
+const AutoChargeSettingsDialog = ({ onClose }: DialogProps) => (
+  <Dialog isOpen onOpenChange={closeOn(onClose)}>
     <DialogHeader>
       <DialogTitle>自動チャージを設定する</DialogTitle>
       <DialogDescription>
         残高が基準を下回ったときに、登録したカードで自動的にチャージします。
       </DialogDescription>
     </DialogHeader>
-    <Stack gap="m">
+    <Stack gap="s">
       <SwitchRow label="自動チャージを使う" />
-      {/* スイッチがオンのときだけ出る。GAP-NEW: Disclosure / Collapse が無い。実物は高さのアニメーションで開閉する */}
-      <Stack gap="m">
-        {/* 自分で設定したカードは「設定済みのカード」、ほかのメンバーなら「〇〇が設定したカード」 */}
+      <CollapseFields>
+        {/* placeholder は自分で設定したカードなら「設定済みのカード」、ほかのメンバーなら「〇〇が設定したカード」、未設定なら「カードを選ぶ」 */}
         <Select label="支払いカード" width="full" placeholder="設定済みのカード">
-          <SelectItem id="card-0">{card}</SelectItem>
+          <SelectItem id="card-0" textValue={`Visa ${cardNumber}`}>
+            <CardBrandLabel />
+          </SelectItem>
         </Select>
         <TextField
           label="基準残高（円）"
@@ -957,77 +601,97 @@ const AutoChargeSettingsDialog = () => (
           inputMode="numeric"
         />
         <ChargeDetails amount="￥5,000" totalLabel="1回の請求額" />
-      </Stack>
+      </CollapseFields>
     </Stack>
     <DialogFooter>
-      <Button appearance="transparent">閉じる</Button>
-      <Button color={primaryColor}>保存する</Button>
+      <Button appearance="transparent" color="neutral" onPress={onClose}>
+        閉じる
+      </Button>
+      <Button color="neutral" onPress={onClose}>
+        保存する
+      </Button>
     </DialogFooter>
   </Dialog>
 )
 
-const LowBalanceNotificationDialog = () => (
-  <Dialog isOpen>
+const LowBalanceNotificationDialog = ({ onClose }: DialogProps) => (
+  <Dialog isOpen onOpenChange={closeOn(onClose)}>
     <DialogHeader>
       <DialogTitle>通知を設定する</DialogTitle>
       <DialogDescription>
         クレジット残高が基準を下回ったときにメールでお知らせします。
       </DialogDescription>
     </DialogHeader>
-    <Stack gap="m">
+    <Stack gap="s">
       <SwitchRow label="残高が下回ったら通知する" />
-      {/* スイッチがオンのときだけ出る */}
-      <TextField label="通知する残高（円）" defaultValue="1,000" width="full" inputMode="numeric" />
+      <CollapseFields>
+        <TextField
+          label="通知する残高（円）"
+          defaultValue="1,000"
+          width="full"
+          inputMode="numeric"
+        />
+      </CollapseFields>
     </Stack>
     <DialogFooter>
-      <Button appearance="transparent">閉じる</Button>
-      <Button color={primaryColor}>保存する</Button>
+      <Button appearance="transparent" color="neutral" onPress={onClose}>
+        閉じる
+      </Button>
+      <Button color="neutral" onPress={onClose}>
+        保存する
+      </Button>
     </DialogFooter>
   </Dialog>
 )
 
-/** CardRegistrationDialog ＋ CardTokenForm。実物のカード番号・有効期限・セキュリティコードは決済代行の iframe */
-const CardRegistrationDialog = () => (
-  <Dialog isOpen>
+/** CardRegistrationDialog ＋ CardTokenForm */
+const CardRegistrationDialog = ({ onClose, onNavigate }: DialogProps) => (
+  <Dialog isOpen onOpenChange={closeOn(onClose)}>
     <DialogHeader>
       <DialogTitle>クレジットカードを追加する</DialogTitle>
     </DialogHeader>
     <Stack gap="m">
+      {/* cardBrands（gap 8px）。ロゴは幅 40px で gap 8px */}
       <Stack gap="xs">
         <Typography size="s" color="medium_emphasis" component="span">
           以下のカードをご利用いただけます
         </Typography>
-        {/* 実物はロゴを幅 40px で並べる。GAP-NEW: 画像の枠（Image）が無い */}
-        <Stack flexDirection="row" gap="xxs">
+        <Stack flexDirection="row" gap="xs">
           {cardBrands.map((brand) => (
             <img key={brand.label} src={brand.logo} alt={brand.label} width={40} height={26} />
           ))}
         </Stack>
       </Stack>
-      <TextField label="カード番号" placeholder="1234 5678 9012 3456" width="full" />
-      <Grid spacing="s">
-        <GridItem size={6}>
-          <TextField label="有効期限" placeholder="MM / YY" width="full" />
-        </GridItem>
-        <GridItem size={6}>
-          <TextField label="セキュリティコード" placeholder="123" width="full" />
-        </GridItem>
-      </Grid>
-      <TextField label="カード名義" width="full" />
+      {/* CardTokenFields（dialogFields、gap 16px） */}
+      <Stack gap="m">
+        <TextField label="カード番号" placeholder="1234 5678 9012 3456" width="full" />
+        <Grid spacing="m">
+          <GridItem size={6}>
+            <TextField label="有効期限" placeholder="MM / YY" width="full" />
+          </GridItem>
+          <GridItem size={6}>
+            <TextField label="セキュリティコード" placeholder="123" width="full" />
+          </GridItem>
+        </Grid>
+        <TextField label="カード名義" width="full" />
+      </Stack>
     </Stack>
     <DialogFooter>
-      <Button appearance="transparent">キャンセル</Button>
-      <Button color={primaryColor}>カードを登録する</Button>
+      <Button appearance="transparent" color="neutral" onPress={onClose}>
+        キャンセル
+      </Button>
+      {/* 認証が要るカードは決済代行の認証画面へ移り、終わると CardChallengeReturn に戻る。要らなければ閉じて一覧を読み直す */}
+      <Button color="neutral" onPress={() => onNavigate?.('card-challenge-return')}>
+        カードを登録する
+      </Button>
     </DialogFooter>
   </Dialog>
 )
 
-/** ComplimentaryCreditNotice の ComplimentaryCreditGrantedDialog */
-const ComplimentaryCreditGrantedDialog = () => (
-  <Dialog isOpen>
+/** ComplimentaryCreditNotice の ComplimentaryCreditGrantedDialog。見出しはキャンペーンごとの画像で、alt が見出しの名前になる */
+const ComplimentaryCreditGrantedDialog = ({ onClose, onNavigate }: DialogProps) => (
+  <Dialog isOpen onOpenChange={closeOn(onClose)}>
     <DialogHeader>
-      {/* 実物はキャンペーンごとの画像を見出しにし、alt が見出しの名前になる。画像が無いときだけ文字を出す。
-          GAP-NEW: 画像の枠（Image）が無い。実物は CSS で幅 100%・角丸 8px。ここでは原寸（1080 角）だと収まらないので 400 角にする */}
       <DialogTitle>
         <img
           src={complimentaryCreditGranted}
@@ -1041,66 +705,79 @@ const ComplimentaryCreditGrantedDialog = () => (
         条件達成キャンペーンの特典として、10,000円分のクレジットを付与しました。
       </DialogDescription>
     </DialogHeader>
-    <Stack gap="xxs">
+    <div>
       <Typography size="s">有効期限: 2027/10/31 23:59まで</Typography>
       <Typography size="s" color="medium_emphasis">
         特典クレジットは、チャージしたクレジットより先に消費されます。
       </Typography>
-    </Stack>
+    </div>
     <DialogFooter>
-      <Button appearance="transparent">閉じる</Button>
-      <Button color={primaryColor}>クレジットを確認する</Button>
+      <Button appearance="transparent" color="neutral" onPress={onClose}>
+        閉じる
+      </Button>
+      <Button color="neutral" onPress={() => onNavigate?.('billing')}>
+        クレジットを確認する
+      </Button>
     </DialogFooter>
   </Dialog>
 )
 
 /**
  * ComplimentaryCreditNotice の WelcomeCreditGrantedDialog。会員登録で 1,000 円分を付与したときの案内。
- * GAP-NEW: 実物は styles.welcomeCredit* の独自 CSS で、イラスト・大きな金額・右上の閉じるを組んでいる。
- * 金額は Typography の最大の大きさで代用する。
+ * 上から 閉じる（右上）・イラスト・見出し・金額の面・リード文・ボタン 2 つ。DialogHeader と DialogFooter は使わない
  */
-const WelcomeCreditGrantedDialog = () => (
-  <Dialog isOpen>
-    <Stack gap="l">
+const WelcomeCreditGrantedDialog = ({ onClose, onNavigate }: DialogProps) => (
+  <Dialog isOpen onOpenChange={closeOn(onClose)}>
+    <Stack gap="m" alignItems="center">
       <Stack flexDirection="row" justifyContent="flex-end">
-        <Button iconOnly appearance="transparent" aria-label="閉じる">
+        <Button
+          iconOnly
+          appearance="transparent"
+          color="neutral"
+          aria-label="閉じる"
+          onPress={onClose}
+        >
           <Icon name="cross" />
         </Button>
       </Stack>
-      {/* GAP-NEW: 画像の枠（Image）が無い。実物は幅 100% で、上下を負のマージンで閉じるボタンと見出しに重ねる */}
       <img src={welcomeCreditIllustration} alt="" width={512} height={168} />
-      <DialogHeader>
-        <DialogTitle>会員登録ありがとうございます！</DialogTitle>
-      </DialogHeader>
-      <Paper padding="m" elevation={0} outlined>
+      <DialogTitle>会員登録ありがとうございます！</DialogTitle>
+      <Paper elevation={0} outlined padding="m">
         <Stack gap="xxs" alignItems="center">
-          <Typography size="s" component="p">
+          <Typography size="s" fontWeight="bold" color="negative" component="p">
             感謝の気持ちを込めて
           </Typography>
           <Stack flexDirection="row" gap="xxs" alignItems="flex-end">
             <Typography size="xxxl" fontWeight="bold" component="span">
               1,000
             </Typography>
-            <Typography size="l" fontWeight="bold" component="span">
+            <Typography size="xl" fontWeight="bold" component="span">
               円分
             </Typography>
           </Stack>
-          <Typography fontWeight="bold" component="p">
+          <Typography size="xl" fontWeight="bold" component="p">
             クレジットを付与しました！
           </Typography>
         </Stack>
       </Paper>
-      <Typography component="p">
+      <Typography size="s" fontWeight="bold" component="p">
         今すぐAPIキーを発行して、
         <br />
         AIを試してみよう。
       </Typography>
-      <Stack gap="xs" alignItems="center">
+      <Stack gap="xxs" alignItems="center">
         {/* APIキーを発行できるプロジェクトが無いときは出さず、下のボタンが「閉じる」になる */}
-        <Button color={primaryColor} size="l" width="full" trailing={<Icon name="arrow_right" />}>
+        {/* すぐ使えるプロジェクトの APIキー画面へ */}
+        <Button
+          color="neutral"
+          size="l"
+          width="full"
+          trailing={<Icon name="arrow_right" />}
+          onPress={() => onNavigate?.('keys')}
+        >
           APIキーを発行する
         </Button>
-        <Button appearance="transparent" size="s">
+        <Button appearance="transparent" color="neutral" size="s" onPress={onClose}>
           あとで設定する
         </Button>
       </Stack>
@@ -1110,104 +787,89 @@ const WelcomeCreditGrantedDialog = () => (
 
 // ─── 画面 ───
 
-const BillingScreen = ({
-  gamers = {},
-  credit = 'success',
-  tab = 'detail',
-  dialog,
-}: {
-  gamers?: GamersState
-  credit?: CreditView
-  tab?: 'detail' | 'history'
-  dialog?: ReactNode
-}) => (
-  <AppShell active="billing">
-    <GamersPayment state={gamers} tab={tab} />
-    <Divider />
-    <AiCredit view={credit} />
-    {/* Tabs の外に置く。Dialog の中の Select を Tabs の子孫にしないため */}
-    {dialog}
-  </AppShell>
-)
-
-// ─── ストーリー：ゲーマーズ ───
+const dialogs: Record<DialogName, (props: DialogProps) => ReactNode> = {
+  charge: ManualChargeDialog,
+  chargeConfirm: ChargeConfirmDialog,
+  autoCharge: AutoChargeSettingsDialog,
+  lowBalance: LowBalanceNotificationDialog,
+  card: CardRegistrationDialog,
+  complimentary: ComplimentaryCreditGrantedDialog,
+  welcome: WelcomeCreditGrantedDialog,
+}
 
 /**
- * ゲームサーバーの支払い（最近の支払いのタイムライン・決済手段）と、AI ゲートウェイのクレジット
- * （残高・通知・特典クレジット・チャージ履歴・お支払い方法）。
+ * CardChallengeReturn（/payment/complete/[accountId]）。開いたらすぐ請求画面へ戻す（window.location.replace）。
+ * パスが /accounts の下に無いので、Sidebar に現在地は付かない
+ */
+const CardChallengeReturnScreen = ({ onNavigate }: { onNavigate?: (to: string) => void }) => {
+  useEffect(() => {
+    onNavigate?.('billing')
+  }, [onNavigate])
+  return (
+    <AiGatewayShell title="カード認証" onNavigate={onNavigate}>
+      <PageContainer>
+        <PageHeader title="カード認証" description="カード認証の結果を確認しています" />
+        <Paper>
+          <Loader message="確認しています" />
+        </Paper>
+      </PageContainer>
+    </AiGatewayShell>
+  )
+}
+
+export const BillingScreen = ({
+  view = 'success',
+  dialog: initialDialog = null,
+  onNavigate,
+}: {
+  view?: CreditView
+  /** 開いた状態で始めるダイアログ */
+  dialog?: DialogName | null
+  onNavigate?: (to: string) => void
+}) => {
+  const [dialog, setDialog] = useState<DialogName | null>(initialDialog)
+  if (view === 'cardChallengeReturn') return <CardChallengeReturnScreen onNavigate={onNavigate} />
+  const OpenDialogView = dialog ? dialogs[dialog] : null
+  return (
+    <AiGatewayShell current="billing" title="クレジット" onNavigate={onNavigate}>
+      <PageContainer>
+        <PageHeader
+          title="クレジット"
+          description="クレジット残高、支払い方法、チャージ履歴を管理します"
+        />
+        <BillingContent view={view} onOpen={setDialog} />
+      </PageContainer>
+      {OpenDialogView && (
+        <OpenDialogView
+          // 確認はクレジットの追加の上に重なる。キャンセルで追加のダイアログへ戻る
+          onClose={() => setDialog(dialog === 'chargeConfirm' ? 'charge' : null)}
+          onOpen={setDialog}
+          onNavigate={onNavigate}
+        />
+      )}
+    </AiGatewayShell>
+  )
+}
+
+// ─── ストーリー ───
+
+/**
+ * クレジット残高・通知・特典クレジット・チャージ履歴・お支払い方法。
  *
- * @summary 支払いとクレジット
+ * @summary クレジット
  */
 export const Default: Story = {
   render: () => <BillingScreen />,
 }
 
 /**
- * 読み込み中。ゲーマーズはタイムラインと決済手段、AI ゲートウェイは請求情報全体を骨格で出す
- * （GAP-NEW: Skeleton が無いので Loader で代用）。
+ * 読み込み中。実物は請求情報全体を骨格で出す（Loader で代用）。
  *
  * @summary 読み込み中
  */
 export const Loading: Story = {
-  render: () => <BillingScreen gamers={{ loading: true }} credit="loading" />,
+  render: () => <BillingScreen view="loading" />,
 }
-
-/**
- * 支払い履歴。成功した行には「領収書」が出る。列見出しの最後は空。
- *
- * @summary 支払い履歴
- */
-export const History: Story = {
-  render: () => <BillingScreen tab="history" />,
-}
-
-/**
- * 自動更新の決済に失敗し、契約が停止（SUSPENDED）しているときの再決済の確認。
- * タイムラインの先頭に再決済の案内が出ている。
- *
- * @summary 再決済の確認
- */
-export const RetryPayment: Story = {
-  render: () => <BillingScreen gamers={{ error: true }} dialog={<RetryPaymentDialog />} />,
-}
-
-/**
- * 自動更新の停止の確認。停止後もいつまで使えるかを出す。
- *
- * @summary 自動更新の停止
- */
-export const StopAutoRenewal: Story = {
-  render: () => <BillingScreen dialog={<ContractCancellationDialog />} />,
-}
-
-/**
- * 自動更新を停止した直後に出る満足度のアンケート。選ぶと閉じる。「今後表示しない」で次から出さない。
- *
- * @summary 満足度のアンケート
- */
-export const SatisfactionSurvey: Story = {
-  render: () => <BillingScreen dialog={<SatisfactionSurveyDialog />} />,
-}
-
-/**
- * 領収書の宛名。支払い履歴の「領収書」から開く。
- *
- * @summary 領収書の宛名
- */
-export const Invoice: Story = {
-  render: () => <BillingScreen tab="history" dialog={<InvoiceDialog />} />,
-}
-
-/**
- * 支払い方法の変更。クレジットカードの情報を入力する。
- *
- * @summary 支払い方法の変更
- */
-export const ChangePaymentMethod: Story = {
-  render: () => <BillingScreen dialog={<PaymentMethodChangeDialog />} />,
-}
-
-// ─── ストーリー：AI ゲートウェイ ───
 
 /**
  * 請求情報を読み込めなかったとき。
@@ -1215,7 +877,7 @@ export const ChangePaymentMethod: Story = {
  * @summary クレジットの読み込みに失敗
  */
 export const CreditError: Story = {
-  render: () => <BillingScreen credit="error" />,
+  render: () => <BillingScreen view="error" />,
 }
 
 /**
@@ -1224,7 +886,7 @@ export const CreditError: Story = {
  * @summary カード認証から戻る
  */
 export const CardChallengeReturn: Story = {
-  render: () => <BillingScreen credit="cardChallengeReturn" />,
+  render: () => <BillingScreen view="cardChallengeReturn" />,
 }
 
 /**
@@ -1233,7 +895,7 @@ export const CardChallengeReturn: Story = {
  * @summary クレジットの追加
  */
 export const ChargeCredit: Story = {
-  render: () => <BillingScreen dialog={<ManualChargeDialog />} />,
+  render: () => <BillingScreen dialog="charge" />,
 }
 
 /**
@@ -1242,7 +904,7 @@ export const ChargeCredit: Story = {
  * @summary 自動チャージの設定
  */
 export const AutoChargeSettings: Story = {
-  render: () => <BillingScreen dialog={<AutoChargeSettingsDialog />} />,
+  render: () => <BillingScreen dialog="autoCharge" />,
 }
 
 /**
@@ -1251,7 +913,7 @@ export const AutoChargeSettings: Story = {
  * @summary 通知の設定
  */
 export const LowBalanceNotification: Story = {
-  render: () => <BillingScreen dialog={<LowBalanceNotificationDialog />} />,
+  render: () => <BillingScreen dialog="lowBalance" />,
 }
 
 /**
@@ -1260,7 +922,7 @@ export const LowBalanceNotification: Story = {
  * @summary カードの追加
  */
 export const AddCard: Story = {
-  render: () => <BillingScreen dialog={<CardRegistrationDialog />} />,
+  render: () => <BillingScreen dialog="card" />,
 }
 
 /**
@@ -1269,7 +931,7 @@ export const AddCard: Story = {
  * @summary 特典クレジットの付与
  */
 export const ComplimentaryCreditGranted: Story = {
-  render: () => <BillingScreen dialog={<ComplimentaryCreditGrantedDialog />} />,
+  render: () => <BillingScreen dialog="complimentary" />,
 }
 
 /**
@@ -1278,5 +940,5 @@ export const ComplimentaryCreditGranted: Story = {
  * @summary ウェルカムクレジットの付与
  */
 export const WelcomeCreditGranted: Story = {
-  render: () => <BillingScreen dialog={<WelcomeCreditGrantedDialog />} />,
+  render: () => <BillingScreen dialog="welcome" />,
 }

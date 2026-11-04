@@ -9,14 +9,15 @@ import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Menu, MenuItem, MenuTrigger } from '../../Menu'
+import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Tab, TabList, Tabs } from '../../Tab'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
 import buyImage from './assets/gamers/buy.svg'
+import { GamersPageContainer, GamersShell, useGamersNavigate } from './gamersShell'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -27,11 +28,11 @@ import type { TypographyColor } from '../../Typography'
 /**
  * ホーム。ゲーマーズのホーム（apollo/frontend の app/(application)/(private)/home）の再現。
  * ページ見出し「ホーム」の直下に「サーバー」「マイバックアップ」のタブ。元にしたファイルは各部品のコメントに書いた。
- * デプロイナウのプロジェクト一覧は Templates/Projects にある。
+ * デプロイナウのプロジェクト一覧は Templates/DeployNow/Projects にある。
  */
 
 const meta = {
-  title: 'Templates/Home',
+  title: 'Templates/Gamers/Home',
   parameters: {
     layout: 'fullscreen',
   },
@@ -255,63 +256,74 @@ const ServerSpecRow = ({ label, children }: { label: string; children: ReactNode
 )
 
 /** home/_components/ServerCard。実アプリはカード全体がサーバー詳細へのリンク（CardActionArea） */
-const ServerCard = ({ server, onRename }: { server: Server; onRename: () => void }) => (
-  <Card padding="m">
-    <Stack gap="m">
-      <Stack flexDirection="row" gap="s" alignItems="flex-start" justifyContent="space-between">
-        {/* components/Sticker の spec='game-title' */}
-        <Sticker color="informative" size="s">
-          {gameNames[server.game]}
-        </Sticker>
-        <Button
-          appearance="transparent"
-          size="s"
-          iconOnly
-          aria-label="サーバーネーム変更"
-          onPress={onRename}
-        >
-          <Icon name="pencil" size="m" />
-        </Button>
-      </Stack>
-      {/* GAP-3: 実物はカード全体がサーバー詳細へのリンク（CardActionArea）。押せる面にできないので名前は文字のまま。
+const ServerCard = ({ server, onRename }: { server: Server; onRename: () => void }) => {
+  const navigate = useGamersNavigate()
+  return (
+    <Card padding="m">
+      <Stack gap="m">
+        <Stack flexDirection="row" gap="s" alignItems="flex-start" justifyContent="space-between">
+          {/* components/Sticker の spec='game-title' */}
+          <Sticker color="informative" size="s">
+            {gameNames[server.game]}
+          </Sticker>
+          <Button
+            appearance="transparent"
+            size="s"
+            iconOnly
+            aria-label="サーバーネーム変更"
+            onPress={onRename}
+          >
+            <Icon name="pencil" size="m" />
+          </Button>
+        </Stack>
+        {/* GAP-3: 実物はカード全体がサーバー詳細（/servers/{id}）へのリンク（CardActionArea）。
+          押せる面にできないので、名前をボタンにしてそこから移る。
           GAP-NEW: 1 行で省略（text-overflow: ellipsis）する指定が無く、長い名前は折り返す */}
-      <Typography size="xxl" fontWeight="bold" component="h3">
-        {server.name}
-      </Typography>
-      <ServerStatusView server={server} />
-      <Stack gap="xs">
-        <ServerSpecRow label="IPアドレス">
-          <Typography size="s" component="span">
-            {server.ip}
-          </Typography>
-        </ServerSpecRow>
-        <ServerSpecRow label="プラン">
-          <Typography size="s" component="span">
-            {server.plan}
-          </Typography>
-        </ServerSpecRow>
+        <Stack flexDirection="row">
+          <Button appearance="transparent" onPress={() => navigate('server')}>
+            <Typography size="xxl" fontWeight="bold" component="span">
+              {server.name}
+            </Typography>
+          </Button>
+        </Stack>
+        <ServerStatusView server={server} />
+        <Stack gap="xs">
+          <ServerSpecRow label="IPアドレス">
+            <Typography size="s" component="span">
+              {server.ip}
+            </Typography>
+          </ServerSpecRow>
+          <ServerSpecRow label="プラン">
+            <Typography size="s" component="span">
+              {server.plan}
+            </Typography>
+          </ServerSpecRow>
+        </Stack>
       </Stack>
-    </Stack>
-  </Card>
-)
+    </Card>
+  )
+}
 
 /** home/_components/HomeServerCardsList の最後の「サーバーを追加」 */
-const AddServerCard = () => (
-  // GAP-3: 実アプリは紫の破線（3px dashed）＋薄紫の地のカード全体が /servers/new/game-select へのリンク。
-  // GAP-NEW: 破線の枠が無いので outlined で代用。最小の高さ（280px）も指定できない
-  <Card padding="m" outlined elevation={0}>
-    <Stack gap="m" alignItems="center" justifyContent="center">
-      <Typography component="span" color="informative">
-        <Icon name="plus" size="l" />
-      </Typography>
-      <Button appearance="transparent" color="interactive">
-        <Typography size="xxl" fontWeight="bold" component="span">
-          サーバーを追加
+const AddServerCard = () => {
+  const navigate = useGamersNavigate()
+  return (
+    // GAP-3: 実アプリは紫の破線（3px dashed）＋薄紫の地のカード全体が /servers/new/game-select へのリンク。
+    // GAP-NEW: 破線の枠が無いので outlined で代用。最小の高さ（280px）も指定できない
+    <Card padding="m" outlined elevation={0}>
+      <Stack gap="m" alignItems="center" justifyContent="center">
+        <Typography component="span" color="informative">
+          <Icon name="plus" size="l" />
         </Typography>
-      </Button>
-    </Stack>
-  </Card>
-)
+        <Button appearance="transparent" color="interactive" onPress={() => navigate('server-new')}>
+          <Typography size="xxl" fontWeight="bold" component="span">
+            サーバーを追加
+          </Typography>
+        </Button>
+      </Stack>
+    </Card>
+  )
+}
 
 /** home/_components/HomeServerCardsList（xs 12 / sm 4 の 3 カラム） */
 const ServerCardsList = ({
@@ -334,25 +346,29 @@ const ServerCardsList = ({
 )
 
 /** home/_components/EmptyServersView（home/not-found.tsx）。実物は Paper の高さ 400px・p={8}（GAP-NEW: 高さの指定が無い） */
-const EmptyServersView = () => (
-  <Container size="s">
-    <Card elevation={0}>
-      <Stack gap="l">
-        {/* GAP-NEW: 画像の枠（Image）が無い。実アプリは buy.svg を 12em 角（192px）で置いている */}
-        <Stack alignItems="center">
-          <img src={buyImage} alt="購入のイラスト" width={192} height={192} />
+const EmptyServersView = () => {
+  const navigate = useGamersNavigate()
+  return (
+    <Container size="s">
+      <Card elevation={0}>
+        <Stack gap="l">
+          {/* GAP-NEW: 画像の枠（Image）が無い。実アプリは buy.svg を 12em 角（192px）で置いている */}
+          <Stack alignItems="center">
+            <img src={buyImage} alt="購入のイラスト" width={192} height={192} />
+          </Stack>
+          <Stack gap="xs">
+            <Typography>契約中のサーバーがありません</Typography>
+            <Typography>契約してゲームを楽しみましょう！！</Typography>
+          </Stack>
+          {/* 実物は href='/servers/new/game-select' */}
+          <Button color="interactive" size="l" width="full" onPress={() => navigate('server-new')}>
+            申し込む
+          </Button>
         </Stack>
-        <Stack gap="xs">
-          <Typography>契約中のサーバーがありません</Typography>
-          <Typography>契約してゲームを楽しみましょう！！</Typography>
-        </Stack>
-        <Button color="interactive" size="l" width="full">
-          申し込む
-        </Button>
-      </Stack>
-    </Card>
-  </Container>
-)
+      </Card>
+    </Container>
+  )
+}
 
 /** components/BackupUsage */
 const BackupUsage = ({ usageBytes }: { usageBytes: number }) => (
@@ -376,7 +392,15 @@ const BackupUsage = ({ usageBytes }: { usageBytes: number }) => (
 )
 
 /** components/BackupListTable（マイバックアップでは「ゲーム」列が出る） */
-const BackupListTable = ({ items }: { items: Backup[] }) => (
+const BackupListTable = ({
+  items,
+  onRestore,
+  onDelete,
+}: {
+  items: Backup[]
+  onRestore: (backup: Backup) => void
+  onDelete: (backup: Backup) => void
+}) => (
   <Table aria-label="マイバックアップ">
     <TableHeader>
       <Column isRowHeader>名前</Column>
@@ -407,6 +431,7 @@ const BackupListTable = ({ items }: { items: Backup[] }) => (
                   作成中
                 </Sticker>
               )}
+              {/* 失敗したバックアップは確認なしですぐ消える（MenuCell の onClickDeleteNow） */}
               {b.status === 'FAILED' && (
                 <Sticker color="negative" size="s">
                   失敗
@@ -426,6 +451,7 @@ const BackupListTable = ({ items }: { items: Backup[] }) => (
                   appearance="outlined"
                   size="s"
                   leading={<Icon name="arrow_order" size="s" />}
+                  onPress={() => onRestore(b)}
                 >
                   復元
                 </Button>
@@ -439,7 +465,11 @@ const BackupListTable = ({ items }: { items: Backup[] }) => (
                     <Icon name="ellipsis_vertical" size="m" aria-hidden="true" />
                   </Button>
                   <Menu placement="bottom end">
-                    <MenuItem color="negative" leading={<Icon name="garbage_can" size="s" />}>
+                    {/* 実物の削除は色を付けない（DeleteOutline color='secondary'） */}
+                    <MenuItem
+                      leading={<Icon name="garbage_can" size="s" />}
+                      onAction={() => onDelete(b)}
+                    >
                       削除
                     </MenuItem>
                   </Menu>
@@ -475,42 +505,202 @@ const CalloutBody = ({ title, children }: { title: string; children: ReactNode }
 const MyBackupPaper = ({ items }: { items: Backup[] }) => {
   const usageBytes = items.reduce((sum, b) => sum + b.sizeBytes, 0)
   const isFull = usageBytes >= LIMIT_BYTES
+  const [dialog, setDialog] = useState<
+    { type: 'create' } | { type: 'restore' | 'delete'; backup: Backup } | null
+  >(null)
+  const close = () => setDialog(null)
   return (
-    // 実アプリの Paper は p={{ xs: 3, md: 6 }}・中身の間隔は spacing={4}
-    <Card>
-      <Stack gap="xl">
-        <Stack
-          flexDirection={{ xxs: 'column', s: 'row' }}
-          gap="s"
-          alignItems="flex-start"
-          justifyContent="space-between"
-        >
-          {/* サーバーのバックアップ画面の見出しと違い、ここは太字にしていない */}
-          <Typography size="xxl" component="h2">
-            マイバックアップ
-          </Typography>
-          {/* GAP-NEW: BackupOutlined（雲）に当たるアイコンが無いので upload で代用 */}
-          <Button
-            appearance="outlined"
-            leading={<Icon name="upload" size="s" />}
-            isDisabled={isFull}
+    <>
+      {/* 実アプリの Paper は p={{ xs: 3, md: 6 }}・中身の間隔は spacing={4} */}
+      <Card>
+        <Stack gap="xl">
+          <Stack
+            flexDirection={{ xxs: 'column', s: 'row' }}
+            gap="s"
+            alignItems="flex-start"
+            justifyContent="space-between"
           >
-            バックアップ作成
-          </Button>
+            {/* サーバーのバックアップ画面の見出しと違い、ここは太字にしていない */}
+            <Typography size="xxl" component="h2">
+              マイバックアップ
+            </Typography>
+            {/* GAP-NEW: BackupOutlined（雲）に当たるアイコンが無いので upload で代用 */}
+            <Button
+              appearance="outlined"
+              leading={<Icon name="upload" size="s" />}
+              isDisabled={isFull}
+              onPress={() => setDialog({ type: 'create' })}
+            >
+              バックアップ作成
+            </Button>
+          </Stack>
+          {isFull && (
+            <Callout color="notice">
+              <CalloutBody title="空き容量がありません">
+                バックアップを作成するには不要なバックアップを削除してください。
+              </CalloutBody>
+            </Callout>
+          )}
+          <BackupUsage usageBytes={usageBytes} />
+          <BackupListTable
+            items={items}
+            onRestore={(backup) => setDialog({ type: 'restore', backup })}
+            onDelete={(backup) => setDialog({ type: 'delete', backup })}
+          />
         </Stack>
-        {isFull && (
-          <Callout color="notice">
-            <CalloutBody title="空き容量がありません">
-              バックアップを作成するには不要なバックアップを削除してください。
-            </CalloutBody>
-          </Callout>
-        )}
-        <BackupUsage usageBytes={usageBytes} />
-        <BackupListTable items={items} />
-      </Stack>
-    </Card>
+      </Card>
+      {dialog?.type === 'create' && <CreateBackupDialog onClose={close} />}
+      {dialog?.type === 'restore' && <RestoreBackupDialog backup={dialog.backup} onClose={close} />}
+      {dialog?.type === 'delete' && <DeleteBackupDialog backup={dialog.backup} onClose={close} />}
+    </>
   )
 }
+
+// ─── マイバックアップのダイアログ ───
+// ボタンの見た目は lib/dialog.ts（キャンセル = 文字だけ、確定 = 枠線、削除の確定 = 赤の枠線）。
+// GAP-NEW: Dialog に幅の prop（MUI の fullWidth・最大 600px）が無く、ダイアログは中身の幅で縮む。
+
+/** CreateBackupDialog の timestamp()（yyyyMMdd-HHmm）。ストーリーでは固定 */
+const TIMESTAMP = '20261030-1200'
+
+/** formatCreatedAt の値を Date#toLocaleString（ja-JP）の形にする */
+const toLocale = (createdAt: string) => {
+  const [date, time] = createdAt.split(' ')
+  const [y, m, d] = date.split('-').map(Number)
+  const [h, min] = time.split(':')
+  return `${y}/${m}/${d} ${Number(h)}:${min}:00`
+}
+
+/** Stack spacing 1 の「項目名（太字）＋値」 */
+const DialogRow = ({ label, children }: { label: string; children: ReactNode }) => (
+  <Stack gap="xs">
+    <Typography size="s" fontWeight="bold" component="span">
+      {label}
+    </Typography>
+    <Typography size="s" component="span">
+      {children}
+    </Typography>
+  </Stack>
+)
+
+const DialogActions = ({
+  confirm,
+  negative = false,
+  onClose,
+}: {
+  confirm: string
+  negative?: boolean
+  onClose: () => void
+}) => (
+  <DialogFooter>
+    <Button appearance="transparent" onPress={onClose}>
+      キャンセル
+    </Button>
+    <Button appearance="outlined" color={negative ? 'negative' : 'neutral'} onPress={onClose}>
+      {confirm}
+    </Button>
+  </DialogFooter>
+)
+
+/** 「サーバー」の Select。ホームから開くと契約中のサーバー（先頭が既定）から選ぶ */
+const ServerSelect = ({ value, onChange }: { value: Server; onChange: (s: Server) => void }) => (
+  <Select
+    label="サーバー"
+    size="s"
+    width="full"
+    selectedKey={value.id}
+    onSelectionChange={(key) => {
+      const next = servers.find((s) => s.id === key)
+      if (next) onChange(next)
+    }}
+  >
+    {servers.map((s) => (
+      <SelectItem key={s.id} id={s.id}>
+        {s.name}
+      </SelectItem>
+    ))}
+  </Select>
+)
+
+/**
+ * components/CreateBackupDialog（ホームから開いたとき）。servers を渡すので
+ * サーバー → 名前 → ゲーム → 注意 の順。名前はサーバーを選び直すと「サーバー名-日時」に戻る
+ */
+const CreateBackupDialog = ({ onClose }: { onClose: () => void }) => {
+  const [selected, setSelected] = useState<Server>(servers[0])
+  const [name, setName] = useState(`${servers[0].name}-${TIMESTAMP}`)
+  return (
+    <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+      <DialogHeader>
+        <DialogTitle>バックアップ作成</DialogTitle>
+      </DialogHeader>
+      <Stack gap="l">
+        <ServerSelect
+          value={selected}
+          onChange={(s) => {
+            setSelected(s)
+            setName(`${s.name}-${TIMESTAMP}`)
+          }}
+        />
+        <TextField label="名前" width="full" value={name} onChange={setName} />
+        <DialogRow label="ゲーム">{gameNames[selected.game]}</DialogRow>
+        <Callout color="notice" appearance="outline">
+          バックアップ作成中はサーバーが停止状態になります。
+          <br />
+          保存期間はアカウントにサーバーのご契約がある間は無期限、ご契約がない場合は契約終了日から90日間です。
+        </Callout>
+      </Stack>
+      <DialogActions confirm="作成" onClose={onClose} />
+    </Dialog>
+  )
+}
+
+/** home/_components/RestoreBackupDialog。復元先のサーバーを選ぶ（先頭が既定） */
+const RestoreBackupDialog = ({ backup, onClose }: { backup: Backup; onClose: () => void }) => {
+  const [selected, setSelected] = useState<Server>(servers[0])
+  return (
+    <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+      <DialogHeader>
+        <DialogTitle>「{backup.name}」を復元しますか？</DialogTitle>
+      </DialogHeader>
+      <Stack gap="l">
+        <Typography size="s">
+          「{backup.name}」作成日時：{toLocale(backup.createdAt)} サイズ：
+          {formatBytes(backup.sizeBytes)} を復元します。
+          <br />
+          復元するサーバーを選択してください。
+        </Typography>
+        <ServerSelect value={selected} onChange={setSelected} />
+        <DialogRow label="ゲーム">{gameNames[selected.game]}</DialogRow>
+        <Callout color="notice" appearance="outline">
+          バックアップ復元中はサーバーが停止状態になります。
+          <br />
+          復元したデータは元に戻せないためご注意ください。
+        </Callout>
+      </Stack>
+      <DialogActions confirm="復元" onClose={onClose} />
+    </Dialog>
+  )
+}
+
+/** components/DeleteBackupDialog */
+const DeleteBackupDialog = ({ backup, onClose }: { backup: Backup; onClose: () => void }) => (
+  <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+    <DialogHeader>
+      <DialogTitle>「{backup.name}」を削除しますか？</DialogTitle>
+    </DialogHeader>
+    <Stack gap="l">
+      <Typography size="s">
+        「{backup.name}」作成日時：{toLocale(backup.createdAt)} サイズ：
+        {formatBytes(backup.sizeBytes)} を完全に削除します。
+      </Typography>
+      <Callout color="notice" appearance="outline">
+        復元したデータは元に戻せないためご注意ください。
+      </Callout>
+    </Stack>
+    <DialogActions confirm="削除" negative onClose={onClose} />
+  </Dialog>
+)
 
 /** home/_components/ChangeServerNameModal。ボタンの見た目は lib/dialog.ts（閉じる = 文字だけ、確定 = 枠線） */
 const RenameDialog = ({ server, onClose }: { server: Server | null; onClose: () => void }) => {
@@ -597,8 +787,10 @@ const HomeContents = ({
 // ─── 画面 ───
 
 /**
- * home/page.tsx。見出し「ホーム」（HomeHeader）の直下にタブ。パンくずは無い。
- * 契約が 0 件のときは notFound() で home/not-found.tsx（EmptyServersView）に置き換わり、見出しも出ない
+ * home/page.tsx。(private)/layout.tsx の GlobalHeader の下に Container maxWidth='xl'。
+ * 見出し「ホーム」（HomeHeader）の直下にタブ。パンくずもサイドナビも無い。
+ * 契約が 0 件のときは notFound() で home/not-found.tsx（EmptyServersView）に置き換わり、
+ * page.tsx の Container と見出しごと消える（EmptyServersView が自分の Container maxWidth='sm' を持つ）
  */
 const HomeScreen = ({
   serverItems = servers,
@@ -611,19 +803,21 @@ const HomeScreen = ({
   renaming?: Server
   accountMenuOpen?: boolean
 }) => (
-  <AppShell active="home" defaultAccountMenuOpen={accountMenuOpen}>
+  <GamersShell defaultUserMenuOpen={accountMenuOpen}>
     {serverItems.length === 0 ? (
       <EmptyServersView />
     ) : (
-      <Stack gap="m">
-        {/* HomeHeader。実物は variant='xxxl_comfort' の太字 */}
-        <Typography size="xxxl" fontWeight="bold" component="h1">
-          ホーム
-        </Typography>
-        <HomeContents items={serverItems} defaultTab={defaultTab} initialRenaming={renaming} />
-      </Stack>
+      <GamersPageContainer maxWidth="xl">
+        <Stack gap="m">
+          {/* HomeHeader。実物は variant='xxxl_comfort' の太字・白、mb 2。component の指定は無い */}
+          <Typography size="xxxl" fontWeight="bold" component="h1">
+            ホーム
+          </Typography>
+          <HomeContents items={serverItems} defaultTab={defaultTab} initialRenaming={renaming} />
+        </Stack>
+      </GamersPageContainer>
     )}
-  </AppShell>
+  </GamersShell>
 )
 
 // ─── ストーリー ───
@@ -641,8 +835,8 @@ export const Default: Story = {
 }
 
 /**
- * ヘッダー右のアカウントから開くユーザーメニュー。
- * 項目はゲーマーズとデプロイナウのメニューを合わせたもの（理由は AppShell のコメント）。
+ * ヘッダー右のアバターから開くユーザーメニュー（components/GlobalHeader）。
+ * 項目は アカウント詳細 / お問合せ / ログアウト の 3 つで、区切りは無い。
  *
  * @summary ユーザーメニューを開いた状態
  */
@@ -679,8 +873,7 @@ export const Empty: Story = {
 }
 
 /**
- * スマートフォン幅。サーバーのカードは 1 カラムに落ちる。
- * サイドナビが本文の上に積まれる問題（GAP-14）もここで見える。
+ * スマートフォン幅。サーバーのカードは 1 カラムに落ちる。ホームにはサイドナビが無い。
  *
  * @summary スマートフォン幅でのホーム
  */

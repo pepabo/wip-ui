@@ -15,8 +15,7 @@ import { Stack } from '../../Stack'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
-import { ServerDetailHeader } from './gameServer'
+import { GamersServerShell, ServerPageLayout } from './gamersShell'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -26,12 +25,12 @@ import type { IconName } from '../../Icon'
 /**
  * ロリポップ！for Gamers（apollo/frontend）のファイル管理の再現。
  * 元: app/(application)/(private)/servers/[id]/(server)/_components/FileManager 以下。
- * 実アプリはサーバー詳細のタブの 1 つ（詳細 / ゲーム設定 / MOD / ファイル管理）で、
- * ここではサイドナビの「ファイル管理」に置き換えている。
+ * 実アプリはサーバー画面（Sidebar の「サーバー」）のタブの 1 つ（詳細 / ゲーム設定 / MOD / ファイル管理）。
+ * 枠は gamersShell.tsx の GamersServerShell ＋ ServerPageLayout（tab="fileManager"）。
  */
 
 const meta = {
-  title: 'Templates/FileManager',
+  title: 'Templates/Gamers/FileManager',
   parameters: {
     layout: 'fullscreen',
   },
@@ -438,8 +437,9 @@ const UploadResourceDialog = () => (
     <DialogHeader>
       <DialogTitle>アップロード</DialogTitle>
     </DialogHeader>
-    {/* GAP-NEW: ドロップゾーン（DropZone / FileTrigger）が無い。outlined の Paper で面だけ作っている */}
-    <Paper outlined>
+    {/* GAP-NEW: ドロップゾーン（DropZone / FileTrigger）が無い。実物と同じ elevation 0 の Paper で面だけ作っている。
+        実物は高さ 360px で中央寄せ、アイコンは 64px */}
+    <Paper elevation={0}>
       <Stack gap="m" alignItems="center">
         <Typography component="span" color="medium_emphasis">
           <Icon name="upload" size="l" />
@@ -598,218 +598,221 @@ const FileManager = ({
   const hideTree = useBelow(belowLg)
 
   return (
-    <AppShell active="files">
-      {/* (server)/layout.tsx の ServerDetailHeader（サーバー詳細と共通。gameServer.tsx） */}
-      <ServerDetailHeader status="RUNNING" tab="ファイル管理" />
-      <Paper padding="none" elevation={1}>
-        <Grid gapless>
-          {/* 実アプリは lg（1200px）未満でツリーを出さない。ツリーの幅は 230px の固定
+    <GamersServerShell active="server">
+      <ServerPageLayout status="RUNNING" tab="fileManager">
+        <Paper padding="none" elevation={1}>
+          <Grid gapless>
+            {/* 実アプリは lg（1200px）未満でツリーを出さない。ツリーの幅は 230px の固定
               GAP-NEW: GridItem に境界線を付けられず、ツリーと一覧の間の縦罫（borderRight）が無い */}
-          {!hideTree && (
-            <GridItem size={3}>
-              <Paper padding="m" elevation={0}>
-                <DirectoryTree activePath={path} onSelect={navigate} label="フォルダ" />
-              </Paper>
-            </GridItem>
-          )}
-          <GridItem size={hideTree ? 12 : 9}>
-            <Stack>
-              {/* FileBrowser/Header */}
-              <Paper padding="m" elevation={0}>
-                <Stack
-                  flexDirection="row"
-                  gap="s"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <PathBreadcrumbs key={path} path={path} onNavigate={navigate} />
-                  {/* FileBrowser/Header/SingleActionButton */}
-                  <MenuTrigger>
-                    <Button
-                      appearance="outlined"
-                      leading={<Icon name="plus" size="s" />}
-                      trailing={<Icon name="chevron_down" size="s" />}
-                    >
-                      追加
-                    </Button>
-                    <Menu placement="bottom end">
-                      <MenuItem
-                        leading={<Icon name="upload" size="s" />}
-                        onAction={() => setOpenDialog(<UploadResourceDialog />)}
+            {!hideTree && (
+              <GridItem size={3}>
+                <Paper padding="m" elevation={0}>
+                  <DirectoryTree activePath={path} onSelect={navigate} label="フォルダ" />
+                </Paper>
+              </GridItem>
+            )}
+            <GridItem size={hideTree ? 12 : 9}>
+              <Stack>
+                {/* FileBrowser/Header */}
+                <Paper padding="m" elevation={0}>
+                  <Stack
+                    flexDirection="row"
+                    gap="s"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <PathBreadcrumbs key={path} path={path} onNavigate={navigate} />
+                    {/* FileBrowser/Header/SingleActionButton */}
+                    <MenuTrigger>
+                      <Button
+                        appearance="outlined"
+                        leading={<Icon name="plus" size="s" />}
+                        trailing={<Icon name="chevron_down" size="s" />}
                       >
-                        アップロード
-                      </MenuItem>
-                      <MenuItem
-                        leading={<Icon name="note" size="s" />}
-                        onAction={() => setOpenDialog(<CreateResourceDialog />)}
-                      >
-                        新規ファイル
-                      </MenuItem>
-                      <MenuItem
-                        leading={<Icon name="folder" size="s" />}
-                        onAction={() => setOpenDialog(<CreateResourceDialog folder />)}
-                      >
-                        新規フォルダ
-                      </MenuItem>
-                    </Menu>
-                  </MenuTrigger>
-                </Stack>
-              </Paper>
-              <Divider />
-              {/* FileBrowser/MultiActionSection */}
-              <Paper padding="m" elevation={0}>
-                <Stack
-                  flexDirection={{ xxs: 'column', m: 'row' }}
-                  gap="s"
-                  justifyContent="space-between"
-                >
-                  <Typography size="s" component="span">
-                    {noSelection ? '未選択' : `${selected.length}個選択中`}
-                  </Typography>
-                  {/* 実アプリは flexWrap で折り返す。Stack に折り返しが無いので、狭い幅では 2 つずつ 2 行に分けている */}
-                  <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="m">
-                    {[bulkActions.slice(0, 2), bulkActions.slice(2)].map((group) => (
-                      <Stack key={group[0][0]} flexDirection="row" gap="m">
-                        {group.map(([label, icon]) => (
-                          <Button
-                            key={label}
-                            appearance="outlined"
-                            leading={<Icon name={icon} size="s" />}
-                            isDisabled={noSelection}
-                          >
-                            {label}
-                          </Button>
-                        ))}
-                      </Stack>
-                    ))}
-                  </Stack>
-                </Stack>
-              </Paper>
-              <Divider />
-              {/* FileBrowser/ResourcesTable。行を押すとフォルダが開く（実アプリは PC ではダブルクリック、
-                  タッチ端末では 1 回のタップ。ファイルのダブルクリックで編集が開く操作は入れていない） */}
-              <Table
-                aria-label="ファイル一覧"
-                selectionMode="multiple"
-                selectedKeys={new Set(selected)}
-                onSelectionChange={(keys: Selection) =>
-                  setSelected(keys === 'all' ? rows.map((r) => r.path) : ([...keys] as string[]))
-                }
-                sortDescriptor={sort}
-                onSortChange={setSort}
-              >
-                <TableHeader>
-                  <Column>
-                    <Checkbox slot="selection" aria-label="すべて選択">
-                      {null}
-                    </Checkbox>
-                  </Column>
-                  <Column id="name" isRowHeader allowsSorting>
-                    ファイル名
-                  </Column>
-                  <Column id="size" allowsSorting>
-                    サイズ
-                  </Column>
-                  <Column id="updatedAt" allowsSorting>
-                    最終更新日時
-                  </Column>
-                  <Column aria-label="操作"> </Column>
-                </TableHeader>
-                <TableBody
-                  renderEmptyState={() => (
-                    <Typography size="s" color="medium_emphasis">
-                      このフォルダにはファイルがありません
-                    </Typography>
-                  )}
-                >
-                  {rows.map((r) => (
-                    <Row
-                      key={r.path}
-                      id={r.path}
-                      onAction={r.kind === 'DIRECTORY' ? () => navigate(r.path) : undefined}
-                    >
-                      <Cell>
-                        <Checkbox slot="selection" aria-label={`${r.name}を選択`}>
-                          {null}
-                        </Checkbox>
-                      </Cell>
-                      <Cell>
-                        <Stack flexDirection="row" gap="xxs" alignItems="center">
-                          <Typography component="span" color="medium_emphasis">
-                            <Icon name={kindIcon[r.kind]} size="s" />
-                          </Typography>
-                          <Typography component="span" size="s">
-                            {r.name}
-                          </Typography>
-                        </Stack>
-                      </Cell>
-                      <Cell>{r.size}</Cell>
-                      <Cell>{r.updatedAt}</Cell>
-                      <Cell>
-                        {/* FileBrowser/ResourcesTable/MenuCell。⋮ を押した行だけを選び直してメニューを開く */}
-                        <MenuTrigger
-                          onOpenChange={(open) => {
-                            if (open && !(selected.includes(r.path) && selected.length > 1)) {
-                              setSelected([r.path])
-                            }
-                          }}
+                        追加
+                      </Button>
+                      <Menu placement="bottom end">
+                        <MenuItem
+                          leading={<Icon name="upload" size="s" />}
+                          onAction={() => setOpenDialog(<UploadResourceDialog />)}
                         >
-                          <Button
-                            appearance="transparent"
-                            size="s"
-                            iconOnly
-                            aria-label={`${r.name}の操作`}
+                          アップロード
+                        </MenuItem>
+                        <MenuItem
+                          leading={<Icon name="note" size="s" />}
+                          onAction={() => setOpenDialog(<CreateResourceDialog />)}
+                        >
+                          新規ファイル
+                        </MenuItem>
+                        <MenuItem
+                          leading={<Icon name="folder" size="s" />}
+                          onAction={() => setOpenDialog(<CreateResourceDialog folder />)}
+                        >
+                          新規フォルダ
+                        </MenuItem>
+                      </Menu>
+                    </MenuTrigger>
+                  </Stack>
+                </Paper>
+                <Divider />
+                {/* FileBrowser/MultiActionSection */}
+                <Paper padding="m" elevation={0}>
+                  <Stack
+                    flexDirection={{ xxs: 'column', m: 'row' }}
+                    gap="s"
+                    justifyContent="space-between"
+                  >
+                    <Typography size="s" component="span">
+                      {noSelection ? '未選択' : `${selected.length}個選択中`}
+                    </Typography>
+                    {/* 実アプリは flexWrap で折り返す。Stack に折り返しが無いので、狭い幅では 2 つずつ 2 行に分けている */}
+                    <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="m">
+                      {[bulkActions.slice(0, 2), bulkActions.slice(2)].map((group) => (
+                        <Stack key={group[0][0]} flexDirection="row" gap="m">
+                          {group.map(([label, icon]) => (
+                            <Button
+                              key={label}
+                              appearance="outlined"
+                              leading={<Icon name={icon} size="s" />}
+                              isDisabled={noSelection}
+                            >
+                              {label}
+                            </Button>
+                          ))}
+                        </Stack>
+                      ))}
+                    </Stack>
+                  </Stack>
+                </Paper>
+                <Divider />
+                {/* FileBrowser/ResourcesTable。行を押すとフォルダが開く（実アプリは PC ではダブルクリック、
+                  タッチ端末では 1 回のタップ。ファイルのダブルクリックで編集が開く操作は入れていない） */}
+                <Table
+                  aria-label="ファイル一覧"
+                  selectionMode="multiple"
+                  selectedKeys={new Set(selected)}
+                  onSelectionChange={(keys: Selection) =>
+                    setSelected(keys === 'all' ? rows.map((r) => r.path) : ([...keys] as string[]))
+                  }
+                  sortDescriptor={sort}
+                  onSortChange={setSort}
+                >
+                  <TableHeader>
+                    <Column>
+                      <Checkbox slot="selection" aria-label="すべて選択">
+                        {null}
+                      </Checkbox>
+                    </Column>
+                    <Column id="name" isRowHeader allowsSorting>
+                      ファイル名
+                    </Column>
+                    <Column id="size" allowsSorting>
+                      サイズ
+                    </Column>
+                    <Column id="updatedAt" allowsSorting>
+                      最終更新日時
+                    </Column>
+                    <Column aria-label="操作"> </Column>
+                  </TableHeader>
+                  <TableBody
+                    renderEmptyState={() => (
+                      <Typography size="s" color="medium_emphasis">
+                        このフォルダにはファイルがありません
+                      </Typography>
+                    )}
+                  >
+                    {rows.map((r) => (
+                      <Row
+                        key={r.path}
+                        id={r.path}
+                        onAction={r.kind === 'DIRECTORY' ? () => navigate(r.path) : undefined}
+                      >
+                        <Cell>
+                          <Checkbox slot="selection" aria-label={`${r.name}を選択`}>
+                            {null}
+                          </Checkbox>
+                        </Cell>
+                        <Cell>
+                          <Stack flexDirection="row" gap="xxs" alignItems="center">
+                            <Typography component="span" color="medium_emphasis">
+                              <Icon name={kindIcon[r.kind]} size="s" />
+                            </Typography>
+                            <Typography component="span" size="s">
+                              {r.name}
+                            </Typography>
+                          </Stack>
+                        </Cell>
+                        <Cell>{r.size}</Cell>
+                        <Cell>{r.updatedAt}</Cell>
+                        <Cell>
+                          {/* FileBrowser/ResourcesTable/MenuCell。⋮ を押した行だけを選び直してメニューを開く */}
+                          <MenuTrigger
+                            onOpenChange={(open) => {
+                              if (open && !(selected.includes(r.path) && selected.length > 1)) {
+                                setSelected([r.path])
+                              }
+                            }}
                           >
-                            <Icon name="ellipsis_vertical" size="m" aria-hidden="true" />
-                          </Button>
-                          <ResourceMenu
-                            targets={
-                              selected.includes(r.path) && selected.length > 1 ? selected : [r.path]
-                            }
-                            onOpenDialog={setOpenDialog}
-                          />
-                        </MenuTrigger>
-                      </Cell>
-                    </Row>
-                  ))}
-                </TableBody>
-              </Table>
-            </Stack>
-          </GridItem>
-        </Grid>
-      </Paper>
-      <CloseDialogContext.Provider value={() => setOpenDialog(null)}>
-        {openDialog}
-      </CloseDialogContext.Provider>
-    </AppShell>
+                            <Button
+                              appearance="transparent"
+                              size="s"
+                              iconOnly
+                              aria-label={`${r.name}の操作`}
+                            >
+                              <Icon name="ellipsis_vertical" size="m" aria-hidden="true" />
+                            </Button>
+                            <ResourceMenu
+                              targets={
+                                selected.includes(r.path) && selected.length > 1
+                                  ? selected
+                                  : [r.path]
+                              }
+                              onOpenDialog={setOpenDialog}
+                            />
+                          </MenuTrigger>
+                        </Cell>
+                      </Row>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Stack>
+            </GridItem>
+          </Grid>
+        </Paper>
+        <CloseDialogContext.Provider value={() => setOpenDialog(null)}>
+          {openDialog}
+        </CloseDialogContext.Provider>
+      </ServerPageLayout>
+    </GamersServerShell>
   )
 }
 
 /** FileManager/index.tsx の初期化中（実アプリは高さ 550px の Skeleton）と、初期化の失敗 */
 const InitState = ({ state }: { state: 'loading' | 'error' }) => (
-  <AppShell active="files">
-    <ServerDetailHeader status="RUNNING" tab="ファイル管理" />
-    {state === 'loading' ? (
-      // GAP-NEW: Skeleton が無い。面の中央に Loader を置いて代用している
-      <Paper elevation={1}>
-        <Stack alignItems="center">
-          <Loader size="l" aria-label="読み込み中" />
-        </Stack>
-      </Paper>
-    ) : (
-      <Callout color="negative">
-        {/* GAP-NEW: Callout にタイトルの枠が無い（実アプリは AlertTitle） */}
-        <Stack gap="xxs">
-          <Typography size="s" fontWeight="bold" component="span">
-            ファイル管理機能の初期化に失敗しました。
-          </Typography>
-          <Typography size="s" component="span">
-            画面を更新して再読み込みしてください。
-          </Typography>
-        </Stack>
-      </Callout>
-    )}
-  </AppShell>
+  <GamersServerShell active="server">
+    <ServerPageLayout status="RUNNING" tab="fileManager">
+      {state === 'loading' ? (
+        // GAP-NEW: Skeleton が無い。面の中央に Loader を置いて代用している
+        <Paper elevation={1}>
+          <Stack alignItems="center">
+            <Loader size="l" aria-label="読み込み中" />
+          </Stack>
+        </Paper>
+      ) : (
+        <Callout color="negative">
+          {/* GAP-NEW: Callout にタイトルの枠が無い（実アプリは AlertTitle） */}
+          <Stack gap="xxs">
+            <Typography size="s" fontWeight="bold" component="span">
+              ファイル管理機能の初期化に失敗しました。
+            </Typography>
+            <Typography size="s" component="span">
+              画面を更新して再読み込みしてください。
+            </Typography>
+          </Stack>
+        </Callout>
+      )}
+    </ServerPageLayout>
+  </GamersServerShell>
 )
 
 // ─── ストーリー ───

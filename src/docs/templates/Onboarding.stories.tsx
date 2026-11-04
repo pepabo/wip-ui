@@ -13,7 +13,6 @@ import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
 import sevenDaysImage from './assets/gamers/game/7days-to-die.webp'
 import abioticFactorImage from './assets/gamers/game/abiotic-factor.webp'
 import arkImage from './assets/gamers/game/ark_image.webp'
@@ -50,10 +49,17 @@ import windroseImage from './assets/gamers/game/windrose.webp'
 import paypayLogo from './assets/gamers/paypay.svg'
 import maintenanceImage from './assets/gamers/purchase-maintenance.svg'
 import soldOutImage from './assets/gamers/sold-out.svg'
+import {
+  GamersPageContainer,
+  GamersPublicShell,
+  GamersShell,
+  useGamersNavigate,
+} from './gamersShell'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
+import type { PaperProps } from '../../Paper'
 
 /**
  * ゲームサーバーの申し込み。ゲーマーズ（apollo/frontend の app/(application)/(private)/servers/new）の
@@ -68,7 +74,7 @@ import type { ReactNode } from 'react'
  */
 
 const meta = {
-  title: 'Templates/Onboarding',
+  title: 'Templates/Gamers/Onboarding',
   parameters: {
     layout: 'fullscreen',
   },
@@ -389,6 +395,7 @@ const OrderDetail = ({
   /** 支払い情報入力では「変更」でプラン選択に戻れる */
   showChange?: boolean
 }) => {
+  const navigate = useGamersNavigate()
   const { unit, total } = priceOf(memory, period)
   const rows: { title: string; value: string; help?: string }[] = [
     { title: 'ゲーム', value: game.name },
@@ -401,13 +408,21 @@ const OrderDetail = ({
     ...(period.months === 0 ? [] : [{ title: '月額', value: yen(unit) }]),
   ]
   return (
-    <Card>
-      <Stack gap="l">
+    // 実物の Paper は pt 6・pb 8・px 4。見出し・明細・区切り線・合計・ボタンの間はどれも 40px（mb 5 / my 5）。
+    // クーポンを使うときは 小計 → 割引（mb 4）→ 区切り線（my 4）→ 合計
+    <Card padding="xl">
+      <Stack gap="xxl">
         <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
+          {/* 実物は variant='xxl_comfort' */}
           <Typography size="xxl" fontWeight="bold" component="h2">
             注文内容
           </Typography>
-          {showChange && <Button appearance="outlined">変更</Button>}
+          {/* changeButtonHref（orderDetailDialogChangeButtonHrefV2）。/servers/new/plan-select?game=…&plan=… */}
+          {showChange && (
+            <Button appearance="outlined" onPress={() => navigate('server-new-plan')}>
+              変更
+            </Button>
+          )}
         </Stack>
         <Stack gap="xs">
           {rows.map((r) => (
@@ -430,25 +445,27 @@ const OrderDetail = ({
         </Stack>
         <Divider />
         {coupon && (
-          <>
-            <Stack flexDirection="row" justifyContent="space-between">
-              <Typography size="l" fontWeight="bold" component="span">
-                小計
-              </Typography>
-              <Typography size="l" fontWeight="bold" component="span">
-                {yen(total)}
-              </Typography>
-            </Stack>
-            <Stack flexDirection="row" justifyContent="space-between">
-              <Typography size="l" fontWeight="bold" color="positive" component="span">
-                {COUPON.name}
-              </Typography>
-              <Typography size="l" fontWeight="bold" color="positive" component="span">
-                -{yen(COUPON.discount)}
-              </Typography>
+          <Stack gap="xl">
+            <Stack gap="xs">
+              <Stack flexDirection="row" justifyContent="space-between">
+                <Typography size="l" fontWeight="bold" component="span">
+                  小計
+                </Typography>
+                <Typography size="l" fontWeight="bold" component="span">
+                  {yen(total)}
+                </Typography>
+              </Stack>
+              <Stack flexDirection="row" justifyContent="space-between">
+                <Typography size="l" fontWeight="bold" color="positive" component="span">
+                  {COUPON.name}
+                </Typography>
+                <Typography size="l" fontWeight="bold" color="positive" component="span">
+                  -{yen(COUPON.discount)}
+                </Typography>
+              </Stack>
             </Stack>
             <Divider />
-          </>
+          </Stack>
         )}
         <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
           <Typography size="xl" fontWeight="bold" component="span">
@@ -467,10 +484,19 @@ const OrderDetail = ({
   )
 }
 
-/** 売り切れ・メンテナンス・空の状態に共通の、幅の狭い中央のカード（Container maxWidth='sm' ＋ Paper） */
-const NoticeCard = ({ children }: { children: ReactNode }) => (
+/**
+ * 売り切れ・メンテナンスに共通の、幅の狭い中央のカード（Container maxWidth='sm' ＋ Paper elevation 0）。
+ * 実物の Paper は高さ固定（売り切れ 400px・メンテナンス 480px）で、中身を縦の中央に置く。ここでは高さは中身なり
+ */
+const NoticeCard = ({
+  padding,
+  children,
+}: {
+  padding: PaperProps['padding']
+  children: ReactNode
+}) => (
   <Container size="s">
-    <Card elevation={0}>
+    <Card elevation={0} padding={padding}>
       <Stack gap="l">{children}</Stack>
     </Card>
   </Container>
@@ -479,60 +505,79 @@ const NoticeCard = ({ children }: { children: ReactNode }) => (
 // ─── 1. ゲーム選択（servers/new/game-select）───
 
 const GameSelect = () => {
+  const navigate = useGamersNavigate()
   const [query, setQuery] = useState('')
   const q = normalize(query.trim())
   const hits = games.filter(
     (g) => !q || [g.name, ...g.search].some((t) => normalize(t).includes(q))
   )
   return (
-    <Stack gap="l">
+    // 見出し（ServersNewHeader、mb 5）→ 検索欄（mb 3）→ カード
+    <Stack gap="xxl">
       {/* game-select/_components/ServersNewHeader */}
       <Typography size="xxxl" fontWeight="bold" component="h1">
         ゲーム選択
       </Typography>
-      {/* GAP-NEW: TextField に先頭アイコン（虫めがね）と末尾のクリアボタン（検索をクリア）の枠が無い */}
-      <TextField
-        aria-label="ゲームタイトルで検索"
-        placeholder="ゲームタイトルで検索"
-        width="full"
-        value={query}
-        onChange={setQuery}
-      />
-      <Grid spacing="m">
-        {hits.map((g) => (
-          <GridItem key={g.id} size={{ xxs: 12, m: 3 }}>
-            {/* components/GameCard（showdetail）。上半分がキービジュアル、下に名前と「3日 ○円 ~」。カード全体がボタン */}
-            <Card padding="m">
-              <Stack gap="s" alignItems="center">
-                {/* GAP-NEW: 画像の枠（Image）が無い。実物の CardMedia はカードの端まで広げ object-fit: cover で切り抜く */}
-                <img src={g.img} alt={g.name} width="100%" height={136} />
-                {/* GAP-3: カード全体を押せる面にできないので、ゲーム名をボタンにしている */}
-                <Button appearance="transparent" width="full">
-                  <Typography size="l" fontWeight="bold" component="span">
-                    {g.name}
-                  </Typography>
-                </Button>
-                <Stack flexDirection="row" gap="xxs" alignItems="flex-end">
-                  <Typography size="xs" fontWeight="bold" color="medium_emphasis" component="span">
-                    3日
-                  </Typography>
-                  <Typography fontWeight="bold" color="medium_emphasis" component="span">
-                    {g.minPrice.toLocaleString('ja-JP')}
-                  </Typography>
-                  <Typography size="xs" fontWeight="bold" color="medium_emphasis" component="span">
-                    円 ~
-                  </Typography>
+      <Stack gap="l">
+        {/* GAP-NEW: TextField に先頭アイコン（虫めがね）と末尾のクリアボタン（検索をクリア）の枠が無い */}
+        <TextField
+          aria-label="ゲームタイトルで検索"
+          placeholder="ゲームタイトルで検索"
+          width="full"
+          value={query}
+          onChange={setQuery}
+        />
+        <Grid spacing="m">
+          {hits.map((g) => (
+            <GridItem key={g.id} size={{ xxs: 12, m: 3 }}>
+              {/* components/GameCard（showdetail）。上半分がキービジュアル、下に名前と「3日 ○円 ~」。カード全体がボタン */}
+              <Card padding="m">
+                <Stack gap="s" alignItems="center">
+                  {/* GAP-NEW: 画像の枠（Image）が無い。実物の CardMedia はカードの端まで広げ object-fit: cover で切り抜く */}
+                  <img src={g.img} alt={g.name} width="100%" height={136} />
+                  {/* GAP-3: カード全体を押せる面にできないので、ゲーム名をボタンにしている */}
+                  {/* 押すと /servers/new/plan-select?game=… へ（GameCardsList/hooks.ts） */}
+                  <Button
+                    appearance="transparent"
+                    width="full"
+                    onPress={() => navigate('server-new-plan')}
+                  >
+                    <Typography size="l" fontWeight="bold" component="span">
+                      {g.name}
+                    </Typography>
+                  </Button>
+                  <Stack flexDirection="row" gap="xxs" alignItems="flex-end">
+                    <Typography
+                      size="xs"
+                      fontWeight="bold"
+                      color="medium_emphasis"
+                      component="span"
+                    >
+                      3日
+                    </Typography>
+                    <Typography fontWeight="bold" color="medium_emphasis" component="span">
+                      {g.minPrice.toLocaleString('ja-JP')}
+                    </Typography>
+                    <Typography
+                      size="xs"
+                      fontWeight="bold"
+                      color="medium_emphasis"
+                      component="span"
+                    >
+                      円 ~
+                    </Typography>
+                  </Stack>
                 </Stack>
-              </Stack>
-            </Card>
-          </GridItem>
-        ))}
-      </Grid>
-      {q && hits.length === 0 && (
-        <Typography color="medium_emphasis">
-          「{query}」に一致するゲームは見つかりませんでした。
-        </Typography>
-      )}
+              </Card>
+            </GridItem>
+          ))}
+        </Grid>
+        {q && hits.length === 0 && (
+          <Typography color="medium_emphasis">
+            「{query}」に一致するゲームは見つかりませんでした。
+          </Typography>
+        )}
+      </Stack>
     </Stack>
   )
 }
@@ -542,6 +587,7 @@ const GameSelect = () => {
 const SERVER_NAME_MAX = 128
 
 const PlanSelect = () => {
+  const navigate = useGamersNavigate()
   const [gameId, setGameId] = useState(games[0].id)
   const [memory, setMemory] = useState(8)
   const [period, setPeriod] = useState<Period>(periods[1])
@@ -550,11 +596,12 @@ const PlanSelect = () => {
   return (
     <Grid spacing="m">
       <GridItem size={{ xxs: 12, m: 8 }}>
-        {/* plan-select/_components/GameSpecPaper */}
-        <Card>
-          <Stack gap="xl">
+        {/* plan-select/_components/GameSpecPaper。Paper は pt 6・pb 8・px 4。
+            各節は 見出し（mb 3）→ 中身（mb 5） */}
+        <Card padding="xl">
+          <Stack gap="xxl">
             {/* GameSelectSection */}
-            <Stack gap="m">
+            <Stack gap="l">
               <SectionTitle>ゲーム</SectionTitle>
               {/* GAP-NEW: ComboBox（Autocomplete）が無い。実アプリは画像付きの候補と「○円〜」を出す検索ボックスで、
                   選んだゲームの 80px 角のキービジュアルを入力欄の先頭に出す。ここでは Select の左に置いている */}
@@ -577,7 +624,7 @@ const PlanSelect = () => {
             </Stack>
 
             {/* PlanCardsSection */}
-            <Stack gap="m">
+            <Stack gap="l">
               <SectionTitle>プラン</SectionTitle>
               <RadioGroup
                 aria-label="プラン"
@@ -606,7 +653,7 @@ const PlanSelect = () => {
               </RadioGroup>
             </Stack>
 
-            <Stack gap="m">
+            <Stack gap="l">
               <SectionTitle>期間</SectionTitle>
               <RadioGroup
                 aria-label="期間"
@@ -669,7 +716,7 @@ const PlanSelect = () => {
             </Stack>
 
             {/* ServerSettingSection */}
-            <Stack gap="m">
+            <Stack gap="l">
               <SectionTitle>サーバー名</SectionTitle>
               <TextField
                 aria-label="サーバー名"
@@ -690,6 +737,8 @@ const PlanSelect = () => {
           period={period}
           coupon={false}
           buttonText="支払い情報入力へ"
+          // form の onSubmit。/servers/new/payment-info へ（plan-select/hooks.ts）
+          onSubmit={() => navigate('server-new-payment')}
         />
       </GridItem>
     </Grid>
@@ -700,9 +749,10 @@ const PlanSelect = () => {
 
 /** payment-info/_components/RegisterPaymentCardForm ＋ components/PaymentCardForm */
 const RegisterPaymentCardForm = () => (
-  // 実アプリは一段明るい #1D2A40 の面
-  <Paper padding="m" elevation={0} outlined>
-    <Stack gap="l">
+  // 実アプリは一段明るい #1D2A40 の面（padding 4・pb 6）。見出しの下と各入力欄の下は mb 4、
+  // セキュリティコードの下だけ mb 5
+  <Paper padding="xl" elevation={0} outlined>
+    <Stack gap="xl">
       <Typography size="l" fontWeight="bold" component="h3">
         クレジットカード情報
       </Typography>
@@ -911,6 +961,7 @@ const PaymentInfo = ({
   /** 支払い方法の変更ダイアログを開いた状態で始める */
   initialChanging?: boolean
 }) => {
+  const navigate = useGamersNavigate()
   const game = games[0]
   const [coupon, setCoupon] = useState(false)
   const [couponDraft, setCouponDraft] = useState(initialCouponDraft)
@@ -920,8 +971,8 @@ const PaymentInfo = ({
     <>
       <Grid spacing="m">
         <GridItem size={{ xxs: 12, m: 8 }}>
-          {/* payment-info/_components/PaymentInfoPaper */}
-          <Card>
+          {/* payment-info/_components/PaymentInfoPaper。Paper は pt 6・pb 8・px 4、中身は Stack gap 4 */}
+          <Card padding="xl">
             <Stack gap="xl">
               <SectionTitle>支払い方法</SectionTitle>
               {registered ? (
@@ -943,22 +994,27 @@ const PaymentInfo = ({
                     </Typography>
                   </Stack>
                 ) : (
-                  // CouponCodeForm
-                  <Stack flexDirection="row" gap="xs" alignItems="flex-end">
-                    <TextField
-                      label="クーポンコード"
-                      width="full"
-                      value={couponDraft}
-                      onChange={setCouponDraft}
-                    />
-                    <Button
-                      appearance="outlined"
-                      onPress={() => {
-                        if (couponDraft.trim().toUpperCase() === COUPON.code) setCoupon(true)
-                      }}
-                    >
-                      適用
-                    </Button>
+                  // CouponCodeForm。太字の「クーポンコード」の下に、入力欄と「適用」を横に並べる
+                  <Stack gap="xs">
+                    <Typography size="s" fontWeight="bold" component="span">
+                      クーポンコード
+                    </Typography>
+                    <Stack flexDirection="row" gap="xs" alignItems="center">
+                      <TextField
+                        aria-label="クーポンコード"
+                        width="full"
+                        value={couponDraft}
+                        onChange={setCouponDraft}
+                      />
+                      <Button
+                        appearance="outlined"
+                        onPress={() => {
+                          if (couponDraft.trim().toUpperCase() === COUPON.code) setCoupon(true)
+                        }}
+                      >
+                        適用
+                      </Button>
+                    </Stack>
                   </Stack>
                 )}
               </Stack>
@@ -974,8 +1030,10 @@ const PaymentInfo = ({
             buttonText="購入する"
             showChange
             // コードを入力したまま適用していないと確認が出る（AssertCouponUnapplyDialog）
+            // 送ると購入中（InSubmitDialog）の後、カードなら /home、PayPay なら PayPay の決済ページへ（payment-info/hooks.ts）
             onSubmit={() => {
               if (couponDraft && !coupon) setAskCoupon(true)
+              else navigate('home')
             }}
           />
         </GridItem>
@@ -988,7 +1046,13 @@ const PaymentInfo = ({
           <Button appearance="transparent" onPress={() => setAskCoupon(false)}>
             閉じる
           </Button>
-          <Button appearance="outlined" onPress={() => setAskCoupon(false)}>
+          <Button
+            appearance="outlined"
+            onPress={() => {
+              setAskCoupon(false)
+              navigate('home')
+            }}
+          >
             購入する
           </Button>
         </DialogFooter>
@@ -1002,60 +1066,78 @@ const PaymentInfo = ({
 // ─── 売り切れ・メンテナンス ───
 
 /** servers/new/_components/SoldOut（ServerSoldWrapper が isServerSoldOut を見て差し替える） */
-const SoldOut = () => (
-  <NoticeCard>
-    <Typography size="xxl" fontWeight="bold" component="h1">
-      売り切れ
-    </Typography>
-    {/* 実物は 12em 角。HTML の width / height は em を取れないので 16px 換算の 192 にしている */}
-    <Stack alignItems="center">
-      <img src={soldOutImage} alt="クリスマスプレゼントのイラスト" width={192} height={192} />
-    </Stack>
-    <Stack gap="xs">
-      <Typography>サーバーが売り切れているため購入することができません</Typography>
-      <Typography>再入荷までお待ちください</Typography>
-    </Stack>
-    <Button color="interactive" size="l" width="full">
-      ホームへ
-    </Button>
-  </NoticeCard>
-)
+const SoldOut = () => {
+  const navigate = useGamersNavigate()
+  return (
+    // 実物の Paper は p 8
+    <NoticeCard padding="xxl">
+      <Typography size="xxl" fontWeight="bold" component="h1">
+        売り切れ
+      </Typography>
+      {/* 実物は 12em 角。HTML の width / height は em を取れないので 16px 換算の 192 にしている */}
+      <Stack alignItems="center">
+        <img src={soldOutImage} alt="クリスマスプレゼントのイラスト" width={192} height={192} />
+      </Stack>
+      <Stack gap="xs">
+        <Typography>サーバーが売り切れているため購入することができません</Typography>
+        <Typography>再入荷までお待ちください</Typography>
+      </Stack>
+      {/* href='/home' */}
+      <Button color="interactive" size="l" width="full" onPress={() => navigate('home')}>
+        ホームへ
+      </Button>
+    </NoticeCard>
+  )
+}
 
-/** components/PurchaseMaintenance。実物はログイン前の GlobalHeader（isLogin=false）で、アカウントのメニューが無い */
-const PurchaseMaintenance = () => (
-  <NoticeCard>
-    <Stack alignItems="center">
-      <img src={maintenanceImage} alt="メンテナンス" width={250} height={250} />
-    </Stack>
-    {/* GAP-NEW: Typography に文字揃え（text-align）が無い。実物は Paper 全体が中央揃えで、2 行の本文も行ごとに中央に揃う */}
-    <Stack gap="xs" alignItems="center">
-      <Typography size="xl" fontWeight="bold" component="h1">
-        おっと！今は準備中みたいです。
-      </Typography>
-      <Typography>
-        再開までしばらくお待ちください。
-        <br />
-        くわしくはお知らせをご覧ください。
-      </Typography>
-    </Stack>
-    <Stack gap="s">
-      <Button color="interactive" size="l" width="full">
-        お知らせへ
-      </Button>
-      <Button appearance="outlined" size="l" width="full">
-        トップ画面へ
-      </Button>
-    </Stack>
-  </NoticeCard>
-)
+/**
+ * components/PurchaseMaintenance。servers/new/layout.tsx がフラグ gamers_purchase-maintenance-mode を見て、
+ * 申し込みの全段をこれに差し替える。中で GlobalHeader（isLogin=false）を出し直すので、ユーザーメニューの無い
+ * ロゴだけのヘッダーが (private) のヘッダーに重なる。その下に Container maxWidth='sm'（mt 8）
+ */
+const PurchaseMaintenance = () => {
+  const navigate = useGamersNavigate()
+  return (
+    // 実物の Paper は p 4（xs）/ 8（sm 以上）
+    <NoticeCard padding={{ xxs: 'xl', s: 'xxl' }}>
+      <Stack alignItems="center">
+        <img src={maintenanceImage} alt="メンテナンス" width={250} height={250} />
+      </Stack>
+      {/* GAP-NEW: Typography に文字揃え（text-align）が無い。実物は Paper 全体が中央揃えで、2 行の本文も行ごとに中央に揃う */}
+      <Stack gap="xs" alignItems="center">
+        <Typography size="xl" fontWeight="bold" component="h1">
+          おっと！今は準備中みたいです。
+        </Typography>
+        <Typography>
+          再開までしばらくお待ちください。
+          <br />
+          くわしくはお知らせをご覧ください。
+        </Typography>
+      </Stack>
+      <Stack gap="s">
+        {/* サポートサイトのお知らせ（support.server.lolipop.jp） */}
+        <Button color="interactive" size="l" width="full" onPress={() => navigate('external')}>
+          お知らせへ
+        </Button>
+        {/* サービスサイト（gamers.lolipop.jp） */}
+        <Button appearance="outlined" size="l" width="full" onPress={() => navigate('external')}>
+          トップ画面へ
+        </Button>
+      </Stack>
+    </NoticeCard>
+  )
+}
 
 // ─── ストーリー ───
 
-/** 申し込みの間はサイドナビが無い */
+/**
+ * (private)/layout.tsx の GlobalHeader の下に、servers/new/layout.tsx の Container（mt 3・pb 5）。
+ * 売り切れのときは ServerSoldWrapper がこの Container ごと SoldOut（Container maxWidth='sm'）に差し替える
+ */
 const Screen = ({ children }: { children: ReactNode }) => (
-  <AppShell active="home" nav={false}>
-    {children}
-  </AppShell>
+  <GamersShell>
+    <GamersPageContainer maxWidth="lg">{children}</GamersPageContainer>
+  </GamersShell>
 )
 
 /**
@@ -1138,9 +1220,9 @@ export const CouponUnapplied: Story = {
 export const SoldOutStep: Story = {
   name: 'SoldOut',
   render: () => (
-    <Screen>
+    <GamersShell>
       <SoldOut />
-    </Screen>
+    </GamersShell>
   ),
 }
 
@@ -1151,9 +1233,9 @@ export const SoldOutStep: Story = {
  */
 export const Maintenance: Story = {
   render: () => (
-    <Screen>
+    <GamersPublicShell>
       <PurchaseMaintenance />
-    </Screen>
+    </GamersPublicShell>
   ),
 }
 

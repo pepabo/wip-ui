@@ -27,7 +27,7 @@ import type { RadioGroupProps } from '../../Radio'
 //       → ログインの「または」は線と文字を分けて組んでいる。
 // GAP-5 アイコンセットに Google が無い。→ launch で代用している（Auth の外部アカウント）。
 // GAP-6 Avatar が img 固定でアイコンや頭文字を入れられない。
-//       → AppShell の initialAvatar が SVG のデータ URI を作っている。
+//       → アバターはアイコンボタンなどで代用している。
 //         この SVG の 2 色だけはトークンではなく生の hex で、テンプレート層で唯一の例外。
 // GAP-7 RadioGroup に label / caption が無い（Select・Switch・TextField にはある）。
 //       → RadioField が Typography でラベルを描き、aria-label と二重に文字列を持っている。
@@ -37,9 +37,9 @@ import type { RadioGroupProps } from '../../Radio'
 // GAP-10 Tab が TabPanel を再エクスポートしていないため、react-aria-components から直接 import している。
 // GAP-11 （解消）SideNavigation の isCurrent で現在地を示している。
 // GAP-12 AppBar appearance="filled" の上でボタンを白くする知識が AppBar 側に無い。
-//        → AppShell が呼び出し側で appearance を出し分けている。
+//        → 呼び出し側で appearance を出し分けている。
 // GAP-13 Container の最大幅が xl（1440px）止まりで「幅制限なし」が無く、Stack にも padding が無い。
-//        inline style を当てない方針のため未対応。AppShell の width="wide" は本文が画面の端に接する。
+//        inline style を当てない方針のため未対応。全幅の画面は本文が画面の端に接する。
 // GAP-14 Drawer が無く、SideNavigation に狭い画面での切り替えも無い。
 //        → モバイル幅でサイドナビが本文の上に積まれる（Mobile ストーリーで確認できる）。
 // GAP-15 アイコンセットにファイル種別（PHP / 画像 / 書庫）のアイコンが無い。

@@ -3,20 +3,19 @@ import { useState } from 'react'
 import { Button, LinkButton } from '../../Button'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
-import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Paper } from '../../Paper'
-import { SideNavigation, SideNavigationItem } from '../../SideNavigation'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
+import { DeployNowShell, DeveloperSettingsLayout, useDeployNowNavigate } from './deployNowShell'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 import type { StickerColor } from '../../Sticker'
 import type { TypographyColor } from '../../Typography'
+import type { DeveloperSettingsPage } from './deployNowShell'
 
 /**
  * デプロイナウ（hosting-deploy-now/frontend）のデベロッパー設定を、ホスティング管理画面の中に写したもの。
@@ -24,11 +23,12 @@ import type { TypographyColor } from '../../Typography'
  *   components/SettingsNav・components/GitHubDisconnectDialog）
  * - セッション（/settings/developer/sessions）: features/DeveloperSettings/features/SessionSettings
  *   （index.tsx・model.ts・SessionDeleteDialog・SessionLogoutDialog）
- * 実物はアカウントメニューの「デベロッパー設定」から入る。ここでは AppShell の「アカウント」に置いている。
+ * 実物はアカウントメニューの「デベロッパー設定」から入る。枠は DeployNowShell と DeveloperSettingsLayout
+ * （見出しと左のメニュー）。
  */
 
 const meta = {
-  title: 'Templates/DeveloperSettings',
+  title: 'Templates/DeployNow/DeveloperSettings',
   parameters: {
     layout: 'fullscreen',
   },
@@ -107,48 +107,7 @@ const InlineFields = ({ fields }: { fields: { label: string; value: string }[] }
   </Stack>
 )
 
-// ─── 画面の枠（DeveloperSettings / SessionSettings の見出し + SettingsNav） ───
-
-type SettingsPage = 'github' | 'sessions'
-
-const NAV_ITEMS: { page: SettingsPage; label: string }[] = [
-  { page: 'github', label: 'GitHub 連携' },
-  { page: 'sessions', label: 'セッション' },
-]
-
-const SettingsLayout = ({
-  current,
-  onNavigate,
-  children,
-}: {
-  current: SettingsPage
-  onNavigate: (page: SettingsPage) => void
-  children: ReactNode
-}) => (
-  <Stack gap="l">
-    <Typography component="h1" size="xl" fontWeight="bold">
-      デベロッパー設定
-    </Typography>
-    <Grid spacing="l">
-      <GridItem size={{ xxs: 12, m: 3 }}>
-        {/* components/SettingsNav。実物は next/link で各ページへ移動する */}
-        <SideNavigation aria-label="デベロッパー設定">
-          {NAV_ITEMS.map((item) => (
-            <SideNavigationItem
-              key={item.page}
-              href="#"
-              isCurrent={item.page === current}
-              onPress={() => onNavigate(item.page)}
-            >
-              {item.label}
-            </SideNavigationItem>
-          ))}
-        </SideNavigation>
-      </GridItem>
-      <GridItem size={{ xxs: 12, m: 9 }}>{children}</GridItem>
-    </Grid>
-  </Stack>
-)
+type SettingsPage = DeveloperSettingsPage
 
 // ─── GitHub 連携（features/DeveloperSettings） ───
 
@@ -173,6 +132,7 @@ const GitHubConnectionBody = ({
   authorization: Authorization | null
   onDisconnect: () => void
 }) => {
+  const navigate = useDeployNowNavigate()
   if (query === 'loading') return <LoadingBody />
   if (query === 'unimplemented')
     return <CenteredMessage message="GitHub 連携は現在利用できません。" />
@@ -192,7 +152,10 @@ const GitHubConnectionBody = ({
             GitHub と接続すると、リポジトリからプロジェクトを作成できます。
           </Typography>
         </Stack>
-        <LinkButton href="#">GitHub と接続</LinkButton>
+        {/* 実物は OAuth の往復のあと /projects/new/github（GitHub リポジトリをインポート）に戻る */}
+        <LinkButton href="#" onPress={() => navigate('new-project-github')}>
+          GitHub と接続
+        </LinkButton>
       </Stack>
     )
   }
@@ -353,23 +316,34 @@ const SessionDeleteDialog = ({ session, onClose }: { session: Session; onClose: 
   </Dialog>
 )
 
-const SessionLogoutDialog = ({ onClose }: { onClose: () => void }) => (
-  <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
-    <DialogHeader>
-      <DialogTitle>ログアウトしますか？</DialogTitle>
-    </DialogHeader>
-    <DialogDescription>現在のセッションを失効させ、ログイン画面に戻ります。</DialogDescription>
-    <DialogFooter>
-      <Button appearance="outlined" color="neutral" size="m" onPress={onClose}>
-        キャンセル
-      </Button>
-      {/* 実物は form POST（/api/auth/logout）でログイン画面へ戻る */}
-      <Button appearance="flat" color="negative" size="m" onPress={onClose}>
-        ログアウトする
-      </Button>
-    </DialogFooter>
-  </Dialog>
-)
+const SessionLogoutDialog = ({ onClose }: { onClose: () => void }) => {
+  const navigate = useDeployNowNavigate()
+  return (
+    <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+      <DialogHeader>
+        <DialogTitle>ログアウトしますか？</DialogTitle>
+      </DialogHeader>
+      <DialogDescription>現在のセッションを失効させ、ログイン画面に戻ります。</DialogDescription>
+      <DialogFooter>
+        <Button appearance="outlined" color="neutral" size="m" onPress={onClose}>
+          キャンセル
+        </Button>
+        {/* 実物は form POST（/api/auth/logout）でログイン画面へ戻る */}
+        <Button
+          appearance="flat"
+          color="negative"
+          size="m"
+          onPress={() => {
+            onClose()
+            navigate('logout')
+          }}
+        >
+          ログアウトする
+        </Button>
+      </DialogFooter>
+    </Dialog>
+  )
+}
 
 const SessionRow = ({
   session,
@@ -485,13 +459,15 @@ const DeveloperSettingsScreen = ({
   const [page, setPage] = useState(initialPage)
   // ストーリーで指定したダイアログの段は最初の表示だけに使い、ページを行き来したら閉じた状態にする
   const [navigated, setNavigated] = useState(false)
+  const go = useDeployNowNavigate()
   const navigate = (next: SettingsPage) => {
     setNavigated(true)
     setPage(next)
+    go(next === 'github' ? 'developer-github' : 'developer-sessions')
   }
   return (
-    <AppShell active="account">
-      <SettingsLayout current={page} onNavigate={navigate}>
+    <DeployNowShell>
+      <DeveloperSettingsLayout current={page} onSelectPage={navigate}>
         {page === 'github' ? (
           <GitHubSettings
             query={githubQuery}
@@ -504,8 +480,8 @@ const DeveloperSettingsScreen = ({
             initialDialog={navigated ? { kind: 'none' } : sessionDialog}
           />
         )}
-      </SettingsLayout>
-    </AppShell>
+      </DeveloperSettingsLayout>
+    </DeployNowShell>
   )
 }
 

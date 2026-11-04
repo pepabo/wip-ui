@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useState } from 'react'
 
 import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
 import { Button, LinkButton } from '../../Button'
@@ -10,14 +10,14 @@ import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
-import { Sticker } from '../../Sticker'
 import { Typography } from '../../Typography'
-import { AppNavigationContext, AppShell } from './AppShell'
+import { DeployNowShell, ProjectDetailLayout, useDeployNowNavigate } from './deployNowShell'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 import type { StickerColor } from '../../Sticker'
 import type { TypographyColor } from '../../Typography'
+import type { ProjectHeroData } from './deployNowShell'
 
 /**
  * デプロイナウ（hosting-deploy-now/frontend）のデプロイまわりを、ホスティング管理画面の中に写したもの。
@@ -26,12 +26,12 @@ import type { TypographyColor } from '../../Typography'
  * - デプロイ詳細: features/Project/features/ProjectDeploy（model.ts の段階の出し分け・DeployGitLine・
  *   BuildLogTerminal・RedeployDialog）
  * 新規作成（/projects/new・/projects/new/github・/projects/[id]/deployment/new）は NewProject.stories.tsx にある。
- * 実物はプロジェクト詳細のタブ（デプロイ / 環境変数 / ドメイン / 設定）で切り替えるが、
- * ここではタブを AppShell のサイドナビ（デプロイ / ドメイン / 設定）に置き換えている。
+ * 一覧はプロジェクト詳細（ProjectDetailLayout）の「デプロイ」タブの中身。デプロイ詳細は別のページで、
+ * タブを持たず DeployNowShell の中に直接置く。
  */
 
 const meta = {
-  title: 'Templates/Deploys',
+  title: 'Templates/DeployNow/Deploys',
   parameters: {
     layout: 'fullscreen',
   },
@@ -302,25 +302,24 @@ const landing: Project = {
 
 const servingOf = (p: Project) => p.deploys.find((d) => d.id === p.servingDeployId)
 
-// ─── ヘッダー（features/Project/index.tsx のパンくず + ProjectHero） ───
+// ─── ヘッダー（ProjectHero の値。枠は deployNowShell の ProjectDetailLayout） ───
 
-/** ProjectHero の ServingSourceLine。ブランチと短縮 SHA を「·」でつなぎ、コミット件名をリンクにする。 */
-const ServingSourceLine = ({ deploy }: { deploy: Deploy }) =>
-  deploy.git ? (
-    <Stack flexDirection="row" gap="xs" alignItems="center">
-      <Typography component="span" size="s" color="medium_emphasis">
-        <Icon name="github" size="s" color="currentColor" aria-hidden />
-      </Typography>
-      <Typography component="span" size="s" color="medium_emphasis">
-        {`${deploy.git.branch} · ${deploy.git.shortSha}`}
-      </Typography>
-      <TextLink href="#" external>
-        {deploy.git.commitMessage || deploy.git.shortSha}
-      </TextLink>
-    </Stack>
-  ) : (
-    <UploadSource />
-  )
+const heroOf = (p: Project): ProjectHeroData => {
+  const latest = p.deploys[0]
+  const serving = servingOf(p)
+  return {
+    name: p.name,
+    domain: p.domain,
+    lastDeployedAt: latest ? latest.startedAt : '—',
+    latestDeployId: latest?.id,
+    githubRepository: p.repository,
+    serving: serving && {
+      deployId: serving.id,
+      deployedAt: serving.startedAt,
+      source: serving.git ? { kind: 'git', ...serving.git } : { kind: 'upload' },
+    },
+  }
+}
 
 const UploadSource = () => (
   <Stack flexDirection="row" gap="xxs" alignItems="center">
@@ -330,77 +329,6 @@ const UploadSource = () => (
     </Typography>
   </Stack>
 )
-
-const ProjectHero = ({
-  project,
-  onOpenDeploy,
-}: {
-  project: Project
-  onOpenDeploy: (id: string) => void
-}) => {
-  const latest = project.deploys[0]
-  const serving = servingOf(project)
-  return (
-    // 実物（Figma 準拠）: hero はカード枠を持たず地に直接置く
-    <Stack gap="m">
-      <Stack gap="xs">
-        <Stack flexDirection="row" gap="s" alignItems="center">
-          <Typography size="xxl" fontWeight="bold" component="h1">
-            {project.name}
-          </Typography>
-          <Sticker color={serving ? 'positive' : 'neutral'} size="s">
-            {serving ? '稼働中' : '未公開'}
-          </Sticker>
-        </Stack>
-        {project.domain ? (
-          <Stack flexDirection="row">
-            <TextLink href={`https://${project.domain}`} external>
-              {project.domain}
-            </TextLink>
-          </Stack>
-        ) : (
-          <Typography component="div" size="s" color="low_emphasis">
-            ドメイン未発行
-          </Typography>
-        )}
-      </Stack>
-      <Stack gap="m">
-        <MetaRow label="最終デプロイ">
-          {latest ? (
-            <Stack flexDirection="row">
-              <TextLink onPress={() => onOpenDeploy(latest.id)}>{latest.startedAt}</TextLink>
-            </Stack>
-          ) : (
-            <Typography component="div" size="s">
-              —
-            </Typography>
-          )}
-        </MetaRow>
-        {project.repository && (
-          <MetaRow label="GitHub リポジトリ">
-            <Stack flexDirection="row">
-              <TextLink href="#" external>
-                {project.repository}
-              </TextLink>
-            </Stack>
-          </MetaRow>
-        )}
-        {serving && (
-          <>
-            <MetaRow label="公開日時">
-              <Stack flexDirection="row">
-                <TextLink onPress={() => onOpenDeploy(serving.id)}>{serving.startedAt}</TextLink>
-              </Stack>
-            </MetaRow>
-            <MetaRow label="ソース">
-              <ServingSourceLine deploy={serving} />
-            </MetaRow>
-          </>
-        )}
-      </Stack>
-    </Stack>
-  )
-}
 
 // ─── デプロイ一覧（features/Project/features/ProjectDeploys） ───
 
@@ -443,85 +371,94 @@ const DeployList = ({
 }: {
   project: Project
   onOpenDeploy: (id: string) => void
-}) => (
-  <Stack gap="s">
-    <Stack alignItems="flex-end">
-      {/* 遷移先は /projects/[id]/deployment/new。NewProject.stories.tsx の ProjectDeployment ストーリーにあたる */}
-      <LinkButton href="#" appearance="flat" color="neutral" size="s">
-        新しいバージョンをデプロイ
-      </LinkButton>
-    </Stack>
-    {project.deploys.length === 0 ? (
-      <Paper elevation={0} outlined>
-        <Stack gap="xxs" alignItems="center">
-          <Typography component="div" size="m" fontWeight="bold">
-            デプロイはまだありません
-          </Typography>
-          <Typography component="div" size="s" color="medium_emphasis">
-            <Typography component="span" size="s" fontWeight="bold">
-              lolipop deploy
-            </Typography>{' '}
-            を実行すると、ここにデプロイ履歴が表示されます
-          </Typography>
-        </Stack>
-      </Paper>
-    ) : (
-      <Paper padding="none" elevation={0} outlined>
-        {/* GAP-NEW: 表示/非表示のレスポンシブ指定が無い。実物は md 未満で列見出しを隠す */}
-        <Paper padding="m" elevation={0}>
-          <Grid spacing="s">
-            <GridItem size={{ xxs: 8, m: 9 }}>
-              <Typography component="span" size="xs" color="medium_emphasis">
-                デプロイ
-              </Typography>
-            </GridItem>
-            <GridItem size={{ xxs: 4, m: 3 }}>
-              <Stack flexDirection="row" justifyContent="space-between">
-                <Typography component="span" size="xs" color="medium_emphasis">
-                  状態
-                </Typography>
-                <Typography component="span" size="xs" color="medium_emphasis">
-                  最終デプロイ
-                </Typography>
-              </Stack>
-            </GridItem>
-          </Grid>
-        </Paper>
-        {project.deploys.map((d) => (
-          <Stack key={d.id}>
-            <Divider />
-            <RowLink
-              label={`${d.git?.commitMessage ?? 'アップロード'} の詳細`}
-              onOpen={() => onOpenDeploy(d.id)}
-            >
-              {/* GAP-NEW: Grid に alignItems が無く、右列を左列の縦中央にそろえられない */}
-              <Grid spacing="s" alignContent="center">
-                <GridItem size={{ xxs: 8, m: 9 }}>
-                  <DeployRowSummary deploy={d} />
-                </GridItem>
-                <GridItem size={{ xxs: 4, m: 3 }}>
-                  {/* GAP-17: 実物は md 未満で右寄せの縦積み、md 以上で横並び。alignItems がレスポンシブにできない */}
-                  <Stack
-                    flexDirection={{ xxs: 'column', m: 'row' }}
-                    gap="xxs"
-                    justifyContent="space-between"
-                  >
-                    <StatusIndicator color={statusColor(d.status)}>
-                      {statusLabel(d.status)}
-                    </StatusIndicator>
-                    <Typography component="div" size="s" color="medium_emphasis">
-                      {d.startedAt}
-                    </Typography>
-                  </Stack>
-                </GridItem>
-              </Grid>
-            </RowLink>
+}) => {
+  const navigate = useDeployNowNavigate()
+  return (
+    <Stack gap="s">
+      <Stack alignItems="flex-end">
+        {/* 遷移先は /projects/[id]/deployment/new。NewProject.stories.tsx の ProjectDeployment ストーリーにあたる */}
+        <LinkButton
+          href="#"
+          appearance="flat"
+          color="neutral"
+          size="s"
+          onPress={() => navigate('project-deployment-new')}
+        >
+          新しいバージョンをデプロイ
+        </LinkButton>
+      </Stack>
+      {project.deploys.length === 0 ? (
+        <Paper elevation={0} outlined>
+          <Stack gap="xxs" alignItems="center">
+            <Typography component="div" size="m" fontWeight="bold">
+              デプロイはまだありません
+            </Typography>
+            <Typography component="div" size="s" color="medium_emphasis">
+              <Typography component="span" size="s" fontWeight="bold">
+                lolipop deploy
+              </Typography>{' '}
+              を実行すると、ここにデプロイ履歴が表示されます
+            </Typography>
           </Stack>
-        ))}
-      </Paper>
-    )}
-  </Stack>
-)
+        </Paper>
+      ) : (
+        <Paper padding="none" elevation={0} outlined>
+          {/* GAP-NEW: 表示/非表示のレスポンシブ指定が無い。実物は md 未満で列見出しを隠す */}
+          <Paper padding="m" elevation={0}>
+            <Grid spacing="s">
+              <GridItem size={{ xxs: 8, m: 9 }}>
+                <Typography component="span" size="xs" color="medium_emphasis">
+                  デプロイ
+                </Typography>
+              </GridItem>
+              <GridItem size={{ xxs: 4, m: 3 }}>
+                <Stack flexDirection="row" justifyContent="space-between">
+                  <Typography component="span" size="xs" color="medium_emphasis">
+                    状態
+                  </Typography>
+                  <Typography component="span" size="xs" color="medium_emphasis">
+                    最終デプロイ
+                  </Typography>
+                </Stack>
+              </GridItem>
+            </Grid>
+          </Paper>
+          {project.deploys.map((d) => (
+            <Stack key={d.id}>
+              <Divider />
+              <RowLink
+                label={`${d.git?.commitMessage ?? 'アップロード'} の詳細`}
+                onOpen={() => onOpenDeploy(d.id)}
+              >
+                {/* GAP-NEW: Grid に alignItems が無く、右列を左列の縦中央にそろえられない */}
+                <Grid spacing="s" alignContent="center">
+                  <GridItem size={{ xxs: 8, m: 9 }}>
+                    <DeployRowSummary deploy={d} />
+                  </GridItem>
+                  <GridItem size={{ xxs: 4, m: 3 }}>
+                    {/* GAP-17: 実物は md 未満で右寄せの縦積み、md 以上で横並び。alignItems がレスポンシブにできない */}
+                    <Stack
+                      flexDirection={{ xxs: 'column', m: 'row' }}
+                      gap="xxs"
+                      justifyContent="space-between"
+                    >
+                      <StatusIndicator color={statusColor(d.status)}>
+                        {statusLabel(d.status)}
+                      </StatusIndicator>
+                      <Typography component="div" size="s" color="medium_emphasis">
+                        {d.startedAt}
+                      </Typography>
+                    </Stack>
+                  </GridItem>
+                </Grid>
+              </RowLink>
+            </Stack>
+          ))}
+        </Paper>
+      )}
+    </Stack>
+  )
+}
 
 // ─── デプロイ詳細（features/Project/features/ProjectDeploy） ───
 
@@ -693,9 +630,11 @@ const DeployGitLine = ({ deploy, repo }: { deploy: Deploy; repo?: string }) =>
 const RedeployDialog = ({
   willStopAutoDeploy,
   onClose,
+  onConfirm,
 }: {
   willStopAutoDeploy: boolean
   onClose: () => void
+  onConfirm: () => void
 }) => (
   <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
     {/* GAP-NEW: Dialog に幅の指定が無い。実物は w-[360px] に固定している */}
@@ -716,7 +655,8 @@ const RedeployDialog = ({
       <Button appearance="outlined" color="neutral" size="m" onPress={onClose}>
         キャンセル
       </Button>
-      <Button appearance="flat" color="interactive" size="m" onPress={onClose}>
+      {/* 実物は再デプロイの成功後、新しいデプロイの詳細へ移る */}
+      <Button appearance="flat" color="interactive" size="m" onPress={onConfirm}>
         再デプロイ
       </Button>
     </DialogFooter>
@@ -735,7 +675,7 @@ const DeployDetail = ({
   onBack: () => void
 }) => {
   const [dialogOpen, setDialogOpen] = useState(initialDialogOpen)
-  const navigate = useContext(AppNavigationContext)
+  const navigate = useDeployNowNavigate()
   const d = project.deploys.find((x) => x.id === deployId)
   if (!d) {
     return <DeployNotFound message="デプロイが見つかりません" onBack={onBack} />
@@ -746,7 +686,7 @@ const DeployDetail = ({
   return (
     <Stack gap="l">
       <Breadcrumbs>
-        <Breadcrumb href="#" onPress={() => navigate?.('projects')}>
+        <Breadcrumb href="#" onPress={() => navigate('projects')}>
           プロジェクト
         </Breadcrumb>
         <Breadcrumb href="#" onPress={onBack}>
@@ -845,24 +785,37 @@ const DeployDetail = ({
         <RedeployDialog
           willStopAutoDeploy={project.autoDeployEnabled}
           onClose={() => setDialogOpen(false)}
+          onConfirm={() => {
+            setDialogOpen(false)
+            navigate('deploy-detail')
+          }}
         />
       )}
     </Stack>
   )
 }
 
-const DeployNotFound = ({ message, onBack }: { message: string; onBack?: () => void }) => (
-  <Stack gap="m">
-    <Typography size="xl" fontWeight="bold" component="h1">
-      {message}
-    </Typography>
-    <Stack flexDirection="row">
-      <TextLink href={onBack ? undefined : '#'} onPress={onBack}>
-        ← プロジェクトに戻る
-      </TextLink>
+const DeployNotFound = ({ message, onBack }: { message: string; onBack?: () => void }) => {
+  const navigate = useDeployNowNavigate()
+  return (
+    <Stack gap="m">
+      <Typography size="xl" fontWeight="bold" component="h1">
+        {message}
+      </Typography>
+      <Stack flexDirection="row">
+        <TextLink
+          href="#"
+          onPress={() => {
+            onBack?.()
+            navigate('project-deploys')
+          }}
+        >
+          ← プロジェクトに戻る
+        </TextLink>
+      </Stack>
     </Stack>
-  </Stack>
-)
+  )
+}
 
 // ─── 画面 ───
 
@@ -878,32 +831,38 @@ const DeploysScreen = ({
   initialDialogOpen?: boolean
 }) => {
   const [route, setRoute] = useState<Route>(initialRoute)
-  const navigate = useContext(AppNavigationContext)
-  const openDeploy = (deployId: string) => setRoute({ name: 'deploy', deployId })
+  const navigate = useDeployNowNavigate()
+  // 実物はデプロイ詳細（/projects/[id]/deploys/[deployId]）へ移る。単体のストーリーでも見られるよう、
+  // ここでも詳細に切り替えたうえで deploy-detail を呼ぶ
+  const openDeploy = (deployId: string) => {
+    setRoute({ name: 'deploy', deployId })
+    navigate('deploy-detail')
+  }
 
   return (
-    <AppShell active="deploys">
+    <DeployNowShell>
       {route.name === 'deploy' ? (
         <DeployDetail
           key={route.deployId}
           project={project}
           deployId={route.deployId}
           initialDialogOpen={route === initialRoute && initialDialogOpen}
-          onBack={() => setRoute({ name: 'list' })}
+          onBack={() => {
+            setRoute({ name: 'list' })
+            navigate('project-deploys')
+          }}
         />
       ) : (
-        <Stack gap="l">
-          <Breadcrumbs>
-            <Breadcrumb href="#" onPress={() => navigate?.('projects')}>
-              プロジェクト
-            </Breadcrumb>
-            <Breadcrumb>{project.name}</Breadcrumb>
-          </Breadcrumbs>
-          <ProjectHero project={project} onOpenDeploy={openDeploy} />
+        <ProjectDetailLayout
+          hero={heroOf(project)}
+          activeTab="deploys"
+          autoDeployStopped={!!project.repository && !project.autoDeployEnabled}
+          onOpenDeploy={openDeploy}
+        >
           <DeployList project={project} onOpenDeploy={openDeploy} />
-        </Stack>
+        </ProjectDetailLayout>
       )}
-    </AppShell>
+    </DeployNowShell>
   )
 }
 
@@ -939,15 +898,15 @@ export const Empty: Story = {
 export const ProjectLoadingAndError: Story = {
   render: () => (
     <Stack gap="xxl">
-      <AppShell active="deploys">
+      <DeployNowShell>
         <LoadingBody />
-      </AppShell>
-      <AppShell active="deploys">
+      </DeployNowShell>
+      <DeployNowShell>
         <CenteredMessage message="プロジェクトが見つかりません。" />
-      </AppShell>
-      <AppShell active="deploys">
+      </DeployNowShell>
+      <DeployNowShell>
         <CenteredMessage message="プロジェクトの取得に失敗しました。時間をおいて再度お試しください。" />
-      </AppShell>
+      </DeployNowShell>
     </Stack>
   ),
 }
@@ -981,15 +940,15 @@ export const RedeployConfirm: Story = {
 export const DeployLoadingAndError: Story = {
   render: () => (
     <Stack gap="xxl">
-      <AppShell active="deploys">
+      <DeployNowShell>
         <LoadingBody />
-      </AppShell>
-      <AppShell active="deploys">
+      </DeployNowShell>
+      <DeployNowShell>
         <DeployNotFound message="デプロイが見つかりません" />
-      </AppShell>
-      <AppShell active="deploys">
+      </DeployNowShell>
+      <DeployNowShell>
         <DeployNotFound message="デプロイの取得に失敗しました。時間をおいて再度お試しください。" />
-      </AppShell>
+      </DeployNowShell>
     </Stack>
   ),
 }

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { TabPanel } from 'react-aria-components'
 
-import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
 import { Button, LinkButton } from '../../Button'
 import { Callout } from '../../Callout'
 import { Checkbox } from '../../Checkbox'
@@ -19,7 +18,7 @@ import { Switch } from '../../Switch'
 import { Tab, TabList, Tabs } from '../../Tab'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
+import { DeployNowShell, ProjectDetailLayout, useDeployNowNavigate } from './deployNowShell'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -31,13 +30,13 @@ import type { ReactNode } from 'react'
  *   ConnectionAddDialog・ConnectionBranchDialog・ConnectionDisconnectDialog / ProjectTags + TagAddDialog /
  *   プロジェクト削除 + components/ProjectDeleteDialog）
  * - 環境変数: features/Project/features/ProjectEnvVars（EnvVarFormDialog / EnvVarDeleteDialog / KebabMenu / EyeIcons）
- * 実物はプロジェクト詳細のタブで切り替えるが、ここではサイドナビの「設定」1 つにまとめ、
- * 設定と環境変数を別の画面（ストーリー）にしている。タブより上はパンくずだけを写している
- * （ProjectHero は Deploys で写している）。文言は shared/lib/schemas.ts と各コンポーネントの文字列のまま。
+ * どちらもプロジェクト詳細のタブの中身で、枠は DeployNowShell と ProjectDetailLayout（パンくず・ProjectHero・
+ * タブ。値は Deploys と同じ portfolio）。設定は「設定」タブ、環境変数は「環境変数」タブを選んだ状態。
+ * 文言は shared/lib/schemas.ts と各コンポーネントの文字列のまま。
  */
 
 const meta = {
-  title: 'Templates/SiteSettings',
+  title: 'Templates/DeployNow/SiteSettings',
   parameters: {
     layout: 'fullscreen',
   },
@@ -93,11 +92,13 @@ const ConfirmDialog = ({
   description,
   confirmLabel = '削除',
   onClose,
+  onConfirm = onClose,
 }: {
   title: string
   description: string
   confirmLabel?: string
   onClose: () => void
+  onConfirm?: () => void
 }) => (
   <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
     {/* GAP-NEW: Dialog に幅の指定が無い。実物は w-[360px] に固定している */}
@@ -112,12 +113,27 @@ const ConfirmDialog = ({
       <Button appearance="outlined" color="neutral" size="m" onPress={onClose}>
         キャンセル
       </Button>
-      <Button appearance="flat" color="negative" size="m" onPress={onClose}>
+      <Button appearance="flat" color="negative" size="m" onPress={onConfirm}>
         {confirmLabel}
       </Button>
     </DialogFooter>
   </Dialog>
 )
+
+/** GitHubRepositoryPicker の「リポジトリの選択を変更」。GitHub の App の設定画面へ移る */
+const ChangeRepositoryAccessLink = () => {
+  const navigate = useDeployNowNavigate()
+  return (
+    <LinkButton
+      href="#"
+      appearance="transparent"
+      size="s"
+      onPress={() => navigate('github-installation')}
+    >
+      リポジトリの選択を変更
+    </LinkButton>
+  )
+}
 
 // ─── データ（実物の view model と同じ形。値はダミー） ───
 
@@ -211,81 +227,6 @@ const envVars: EnvVar[] = [
 ]
 
 const existingTags = ['production', 'staging', 'Next.js', 'OpenAI', 'Claude']
-
-// 実物は features/Project/index.tsx のパンくず（プロジェクト / プロジェクト名）と components/ProjectHero が
-// タブの上に出る。値は Deploys と同じ portfolio。ProjectAutoDeployNotice（自動デプロイを止めているときだけ
-// 出る Callout）は、止めていない状態なので出さない。
-const ZONE = 'lolipop-now.app'
-
-// GAP-NEW: 文中のテキストリンクが無い（ExternalLink と同じ）。実物の ProjectHero は native a + text-sky-700。
-const HeroLink = ({ children, external = false }: { children: string; external?: boolean }) => (
-  <Stack flexDirection="row">
-    <LinkButton
-      appearance="transparent"
-      color="interactive"
-      size="s"
-      href="#"
-      target={external ? '_blank' : undefined}
-      rel={external ? 'noopener noreferrer' : undefined}
-      trailing={external ? <Icon name="launch" size="s" /> : undefined}
-    >
-      {children}
-    </LinkButton>
-  </Stack>
-)
-
-const MetaRow = ({ label, children }: { label: string; children: ReactNode }) => (
-  <Stack gap="xxs">
-    <Typography size="xs" color="medium_emphasis" component="span">
-      {label}
-    </Typography>
-    {children}
-  </Stack>
-)
-
-const ProjectHeader = () => (
-  <>
-    <Breadcrumbs>
-      <Breadcrumb href="#">プロジェクト</Breadcrumb>
-      <Breadcrumb>portfolio</Breadcrumb>
-    </Breadcrumbs>
-    <Stack gap="m">
-      <Stack gap="xs">
-        <Stack flexDirection="row" gap="s" alignItems="center">
-          <Typography size="xxl" fontWeight="bold" component="h1">
-            portfolio
-          </Typography>
-          <Sticker color="positive" size="s">
-            稼働中
-          </Sticker>
-        </Stack>
-        <HeroLink external>{`portfolio.${ZONE}`}</HeroLink>
-      </Stack>
-      <Stack gap="m">
-        <MetaRow label="最終デプロイ">
-          <HeroLink>3分前</HeroLink>
-        </MetaRow>
-        <MetaRow label="GitHub リポジトリ">
-          <HeroLink external>example-inc/portfolio</HeroLink>
-        </MetaRow>
-        <MetaRow label="公開日時">
-          <HeroLink>3分前</HeroLink>
-        </MetaRow>
-        <MetaRow label="ソース">
-          <Stack flexDirection="row" gap="xs" alignItems="center">
-            <Typography component="span" size="s" color="medium_emphasis">
-              <Icon name="github" size="s" color="currentColor" aria-hidden />
-            </Typography>
-            <Typography component="span" size="s" color="medium_emphasis">
-              main · 8f21a3c
-            </Typography>
-            <HeroLink external>画像の遅延読み込みを有効にする</HeroLink>
-          </Stack>
-        </MetaRow>
-      </Stack>
-    </Stack>
-  </>
-)
 
 // ─── 設定: ビルド設定（ProjectBuildConfig / BuildConfigForm） ───
 
@@ -683,9 +624,7 @@ const ConnectionAddDialog = ({
               <Typography component="span" size="s" color="medium_emphasis">
                 目的のリポジトリがありませんか？
               </Typography>
-              <LinkButton href="#" appearance="transparent" size="s">
-                リポジトリの選択を変更
-              </LinkButton>
+              <ChangeRepositoryAccessLink />
             </Stack>
           </>
         ) : (
@@ -940,53 +879,55 @@ const SettingsScreen = ({
   const [tags, setTags] = useState(['Next.js'])
   const [dialog, setDialog] = useState<SettingsDialog>(initialDialog)
   const close = () => setDialog({ kind: 'none' })
+  const navigate = useDeployNowNavigate()
   return (
-    <AppShell active="site">
-      <Stack gap="l">
-        <ProjectHeader />
-        <BuildConfigSection state={build} />
-        {gitLoad === 'loading' ? (
-          <SectionLoading />
-        ) : gitLoad === 'error' ? (
-          <Callout color="negative">
-            リポジトリ接続の取得に失敗しました。時間をおいて再度お試しください。
-          </Callout>
-        ) : (
-          <GitCard
-            connection={conn}
-            onChange={setConn}
-            onConnect={() => setDialog({ kind: 'connect' })}
-            onChangeBranch={() => setDialog({ kind: 'branch' })}
-            onDisconnect={() => setDialog({ kind: 'disconnect' })}
+    <DeployNowShell>
+      <ProjectDetailLayout activeTab="settings">
+        <Stack gap="l">
+          <BuildConfigSection state={build} />
+          {gitLoad === 'loading' ? (
+            <SectionLoading />
+          ) : gitLoad === 'error' ? (
+            <Callout color="negative">
+              リポジトリ接続の取得に失敗しました。時間をおいて再度お試しください。
+            </Callout>
+          ) : (
+            <GitCard
+              connection={conn}
+              onChange={setConn}
+              onConnect={() => setDialog({ kind: 'connect' })}
+              onChangeBranch={() => setDialog({ kind: 'branch' })}
+              onDisconnect={() => setDialog({ kind: 'disconnect' })}
+            />
+          )}
+          <TagsCard
+            tags={tags}
+            loadFailed={tagsLoadFailed}
+            onAdd={() => setDialog({ kind: 'tag' })}
+            onDetach={(t) => setTags(tags.filter((x) => x !== t))}
           />
-        )}
-        <TagsCard
-          tags={tags}
-          loadFailed={tagsLoadFailed}
-          onAdd={() => setDialog({ kind: 'tag' })}
-          onDetach={(t) => setTags(tags.filter((x) => x !== t))}
-        />
-        <Card outlined elevation={0}>
-          <Stack flexDirection="row" gap="m" alignItems="center" justifyContent="space-between">
-            <Stack gap="xxs">
-              <Typography component="h2" size="m" fontWeight="bold">
-                プロジェクト削除
-              </Typography>
-              <Typography component="div" size="s" color="medium_emphasis">
-                削除した場合、元に戻すことができません。
-              </Typography>
+          <Card outlined elevation={0}>
+            <Stack flexDirection="row" gap="m" alignItems="center" justifyContent="space-between">
+              <Stack gap="xxs">
+                <Typography component="h2" size="m" fontWeight="bold">
+                  プロジェクト削除
+                </Typography>
+                <Typography component="div" size="s" color="medium_emphasis">
+                  削除した場合、元に戻すことができません。
+                </Typography>
+              </Stack>
+              <Button
+                appearance="outlined"
+                color="negative"
+                size="s"
+                onPress={() => setDialog({ kind: 'delete' })}
+              >
+                削除
+              </Button>
             </Stack>
-            <Button
-              appearance="outlined"
-              color="negative"
-              size="s"
-              onPress={() => setDialog({ kind: 'delete' })}
-            >
-              削除
-            </Button>
-          </Stack>
-        </Card>
-      </Stack>
+          </Card>
+        </Stack>
+      </ProjectDetailLayout>
 
       {dialog.kind === 'connect' && (
         <ConnectionAddDialog
@@ -1031,9 +972,14 @@ const SettingsScreen = ({
           title="portfolio を削除しますか？"
           description="デプロイ・環境変数・ドメインを含むすべてのデータが削除され、元に戻せません。"
           onClose={close}
+          // 実物は削除に成功するとプロジェクト一覧へ移る
+          onConfirm={() => {
+            close()
+            navigate('projects')
+          }}
         />
       )}
-    </AppShell>
+    </DeployNowShell>
   )
 }
 
@@ -1365,9 +1311,8 @@ const EnvVarsScreen = ({
   // 読み込み中と取得失敗は、タブごと置き換わる
   if (load) {
     return (
-      <AppShell active="site">
-        <Stack gap="l">
-          <ProjectHeader />
+      <DeployNowShell>
+        <ProjectDetailLayout activeTab="env">
           {load === 'loading' ? (
             <SectionLoading />
           ) : (
@@ -1375,15 +1320,14 @@ const EnvVarsScreen = ({
               環境変数の取得に失敗しました。時間をおいて再度お試しください。
             </Callout>
           )}
-        </Stack>
-      </AppShell>
+        </ProjectDetailLayout>
+      </DeployNowShell>
     )
   }
 
   return (
-    <AppShell active="site">
-      <Stack gap="l">
-        <ProjectHeader />
+    <DeployNowShell>
+      <ProjectDetailLayout activeTab="env">
         <Tabs selectedKey={target} onSelectionChange={(k) => setTarget(k as EnvVar['target'])}>
           <TabList aria-label="環境変数の環境">
             <Tab id="production">本番</Tab>
@@ -1448,7 +1392,7 @@ const EnvVarsScreen = ({
             </TabPanel>
           ))}
         </Tabs>
-      </Stack>
+      </ProjectDetailLayout>
 
       {dialog.kind === 'form' && (
         <EnvVarFormDialog
@@ -1478,7 +1422,7 @@ const EnvVarsScreen = ({
           onClose={close}
         />
       )}
-    </AppShell>
+    </DeployNowShell>
   )
 }
 
