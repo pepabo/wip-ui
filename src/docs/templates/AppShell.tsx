@@ -1,3 +1,5 @@
+import { createContext, useContext } from 'react'
+
 import { AppBar, AppBarLeading, AppBarTrailing } from '../../AppBar'
 import { Avatar } from '../../Avatar'
 import { Button } from '../../Button'
@@ -20,7 +22,7 @@ import type { IconName } from '../../Icon'
  * トンマナを見直すときは、ここを変えれば全テンプレートに波及する。
  */
 
-type NavId =
+export type NavId =
   | 'home'
   | 'overview'
   | 'game'
@@ -111,25 +113,53 @@ const accountMenuGroups: string[][] = [
   ['ログアウト'],
 ]
 
-const AccountMenu = ({ onFilled, defaultOpen }: { onFilled: boolean; defaultOpen: boolean }) => (
-  <MenuTrigger defaultOpen={defaultOpen}>
-    {/* トリガーはデプロイナウの AccountMenu（アバター＋「アカウント」＋下向きの山）。ゲーマーズはアバターのみ */}
-    <Button
-      appearance={onFilled ? 'white' : 'transparent'}
-      size="s"
-      leading={<Avatar src={avatarSrc} alt="" size="xs" />}
-      trailing={<Icon name="chevron_down" size="s" />}
-    >
-      アカウント
-    </Button>
-    <Menu placement="bottom end">
-      {accountMenuGroups.flatMap((group, index) => [
-        ...(index > 0 ? [<MenuDivider key={`divider-${group[0]}`} />] : []),
-        ...group.map((label) => <MenuItem key={label}>{label}</MenuItem>),
-      ])}
-    </Menu>
-  </MenuTrigger>
-)
+/** 移動先。サイドナビの項目と、ユーザーメニューから行けるデベロッパー設定 */
+export type AppDestination = NavId | 'developer'
+
+/**
+ * Templates/App で画面を切り替えるための口。
+ * 置かれていない（各画面のストーリーを単体で開いた）ときは、押しても何もしない
+ */
+export const AppNavigationContext = createContext<((to: AppDestination) => void) | null>(null)
+
+// ユーザーメニューの項目のうち、テンプレートに画面があるもの
+const accountMenuDestinations: Record<string, AppDestination> = {
+  アカウント設定: 'account',
+  デベロッパー設定: 'developer',
+}
+
+const AccountMenu = ({ onFilled, defaultOpen }: { onFilled: boolean; defaultOpen: boolean }) => {
+  const navigate = useContext(AppNavigationContext)
+  return (
+    <MenuTrigger defaultOpen={defaultOpen}>
+      {/* トリガーはデプロイナウの AccountMenu（アバター＋「アカウント」＋下向きの山）。ゲーマーズはアバターのみ */}
+      <Button
+        appearance={onFilled ? 'white' : 'transparent'}
+        size="s"
+        leading={<Avatar src={avatarSrc} alt="" size="xs" />}
+        trailing={<Icon name="chevron_down" size="s" />}
+      >
+        アカウント
+      </Button>
+      <Menu placement="bottom end">
+        {accountMenuGroups.flatMap((group, index) => [
+          ...(index > 0 ? [<MenuDivider key={`divider-${group[0]}`} />] : []),
+          ...group.map((label) => (
+            <MenuItem
+              key={label}
+              onAction={() => {
+                const to = accountMenuDestinations[label]
+                if (to) navigate?.(to)
+              }}
+            >
+              {label}
+            </MenuItem>
+          )),
+        ])}
+      </Menu>
+    </MenuTrigger>
+  )
+}
 
 export const AppShell = ({
   active,
@@ -197,15 +227,19 @@ export const AppShell = ({
   </Stack>
 )
 
-const NavItem = ({ item, active }: { item: NavGroup['items'][number]; active: NavId }) => (
-  <SideNavigationItem
-    href="#"
-    isCurrent={item.id === active}
-    leading={<Icon name={item.icon} size="s" />}
-  >
-    {item.label}
-  </SideNavigationItem>
-)
+const NavItem = ({ item, active }: { item: NavGroup['items'][number]; active: NavId }) => {
+  const navigate = useContext(AppNavigationContext)
+  return (
+    <SideNavigationItem
+      href="#"
+      onPress={() => navigate?.(item.id)}
+      isCurrent={item.id === active}
+      leading={<Icon name={item.icon} size="s" />}
+    >
+      {item.label}
+    </SideNavigationItem>
+  )
+}
 
 const Main = ({ width, children }: { width: 'contained' | 'wide'; children: ReactNode }) =>
   width === 'wide' ? (

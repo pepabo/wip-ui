@@ -75,6 +75,7 @@ const preview: Preview = {
           'Templates',
           // 並びは利用者の導線順。テンプレートを追加したらここにも追記する
           [
+            'App',
             'Auth',
             'SystemPages',
             'Home',
