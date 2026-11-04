@@ -1,5 +1,6 @@
 // Master SCSS entry for flavor build - imports all component styles
 @use './base';
+@use './Accordion';
 @use './AppBar';
 @use './Avatar';
 @use './Breadcrumbs';
