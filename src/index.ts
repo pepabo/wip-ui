@@ -1,3 +1,5 @@
+// Accordion
+export * from './Accordion'
 // AppBar
 export * from './AppBar'
 // Avatar
