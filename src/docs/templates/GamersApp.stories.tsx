@@ -7,7 +7,11 @@ import * as AuthStories from './GamersAuth.stories'
 import * as PaymentStories from './GamersPayment.stories'
 import * as SystemPagesStories from './GamersSystemPages.stories'
 import * as GameSettingsStories from './GameSettings.stories'
-import { GamersNavigationProvider } from './gamersShell'
+import {
+  GamersNavigationProvider,
+  gamersStoryRoutes,
+  resolveGamersDestination,
+} from './gamersShell'
 import * as HomeStories from './Home.stories'
 import * as ModsStories from './Mods.stories'
 import * as OnboardingStories from './Onboarding.stories'
@@ -32,6 +36,8 @@ import type { GamersDestination } from './gamersShell'
 
 const meta = {
   title: 'Templates/Gamers/App',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },
@@ -44,38 +50,27 @@ type Story = StoryObj<typeof meta>
 // 各ストーリーファイルのストーリー。render を部品として描く
 type AnyStory = { render?: (...args: never[]) => unknown }
 
-const screens: Partial<Record<GamersDestination, AnyStory>> = {
-  // (public)
-  login: AuthStories.GamersLogin,
-  'login-authcode': AuthStories.GamersLoginAuthcode,
-  signup: AuthStories.GamersSignup,
-  'signup-authcode': AuthStories.GamersSignupAuthcode,
-  error: SystemPagesStories.GamersError,
-  // (private)
-  'signup-complete': AuthStories.GamersSignupComplete,
-  home: HomeStories.Default,
-  'home-backups': HomeStories.MyBackups,
-  account: AccountStories.Default,
-  'account-update-email': AccountStories.UpdateEmail,
-  'account-newsletter': AccountStories.NewsletterSettings,
-  // servers/[id]
-  server: OverviewStories.Default,
-  'server-game': GameSettingsStories.Default,
-  'server-mods': ModsStories.Default,
-  'server-files': FileManagerStories.Default,
-  backup: BackupStories.Default,
-  payment: PaymentStories.Default,
-  'payment-history': PaymentStories.History,
-  'payment-method-change': PaymentStories.ChangePaymentMethod,
-  // 購入・更新
-  'server-new': OnboardingStories.GameSelectStep,
-  'server-new-plan': OnboardingStories.PlanSelectStep,
-  'server-new-payment': OnboardingStories.PaymentInfoStep,
-  billing: RenewalStories.Default,
+// 行き先 → ストーリーの表は gamersShell.tsx の gamersStoryRoutes（画面ごとのストーリーの linkTo と共有）。
+// ここでは表の title から、そのストーリーファイルを引く
+const storyFiles: Record<string, Record<string, unknown>> = {
+  [AuthStories.default.title]: AuthStories,
+  [SystemPagesStories.default.title]: SystemPagesStories,
+  [HomeStories.default.title]: HomeStories,
+  [AccountStories.default.title]: AccountStories,
+  [OverviewStories.default.title]: OverviewStories,
+  [GameSettingsStories.default.title]: GameSettingsStories,
+  [ModsStories.default.title]: ModsStories,
+  [FileManagerStories.default.title]: FileManagerStories,
+  [BackupStories.default.title]: BackupStories,
+  [PaymentStories.default.title]: PaymentStories,
+  [OnboardingStories.default.title]: OnboardingStories,
+  [RenewalStories.default.title]: RenewalStories,
 }
 
-/** アプリの外へ出る行き先。押しても今の画面のまま */
-const stayDestinations: GamersDestination[] = ['contact', 'external']
+const screenOf = (to: GamersDestination): AnyStory | undefined => {
+  const route = gamersStoryRoutes[to]
+  return route && (storyFiles[route.title]?.[route.story] as AnyStory | undefined)
+}
 
 // ストーリーの render は引数を使わない。中で hook を使うものもあるので、行き先ごとに key で作り直す
 const StoryView = ({ story }: { story: AnyStory }) =>
@@ -84,14 +79,14 @@ const StoryView = ({ story }: { story: AnyStory }) =>
 const GamersApp = () => {
   const [current, setCurrent] = useState<GamersDestination>('login')
   const navigate = (to: GamersDestination) => {
-    if (stayDestinations.includes(to)) return
-    const next = to === 'logout' ? 'login' : to
-    if (screens[next]) {
+    const next = resolveGamersDestination(to)
+    // 画面が無い行き先（contact・external）は今の画面のまま
+    if (screenOf(next)) {
       setCurrent(next)
       window.scrollTo(0, 0)
     }
   }
-  const story = screens[current]
+  const story = screenOf(current)
   return (
     <GamersNavigationProvider onNavigate={navigate}>
       {story && <StoryView key={current} story={story} />}

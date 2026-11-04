@@ -15,9 +15,11 @@ import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { InviteDialog } from './aiGatewayInvite'
 import logo from './assets/ai-gateway/logo.svg'
+import { openStory, TemplateRouter } from './storyLink'
 
 import type { CSSProperties, ReactNode } from 'react'
 import type { IconName } from '../../Icon'
+import type { StoryRoute } from './storyLink'
 
 /**
  * AI ゲートウェイ（octane/admin-ui）の顧客コンソールの枠。
@@ -40,6 +42,8 @@ import type { IconName } from '../../Icon'
  *   / 'project-settings'（いずれも …/projects/:pid/<名前>）
  * - 'logout'（ログアウト。実物は認証のログアウト URL か / へ移り、アプリの外に出る）
  * - 各画面の中の行き先（'key-detail' など）は、それぞれのストーリーファイルの冒頭に書く
+ * - onNavigate を渡さない（画面ごとのストーリー）ときは、行き先の画面のストーリーへ Storybook の中で移る
+ *   （aiGatewayStoryRoutes）。画面が無い行き先は何もしない
  *
  * どの要素を押すとどこへ移るか（枠の中の分）:
  * | 押す要素 | 行き先 | 実物 |
@@ -109,6 +113,34 @@ export type AiGatewayDestination =
   | 'project-members'
   | 'project-settings'
   | 'logout'
+
+const AI_GATEWAY = 'Templates/AiGateway'
+
+/**
+ * 行き先 → その画面のストーリー（title と export 名）。表に無い行き先は、テンプレートに画面が無い。
+ * AiGatewayApp も、この表にある行き先の画面に切り替える（画面の描き方は AiGatewayApp の screens）
+ */
+export const aiGatewayStoryRoutes = {
+  usage: { title: `${AI_GATEWAY}/Usage`, story: 'Default' },
+  'project-usage': { title: `${AI_GATEWAY}/Usage`, story: 'ProjectUsageStory' },
+  members: { title: `${AI_GATEWAY}/Members`, story: 'Default' },
+  billing: { title: `${AI_GATEWAY}/Billing`, story: 'Default' },
+  'card-challenge-return': { title: `${AI_GATEWAY}/Billing`, story: 'CardChallengeReturn' },
+  keys: { title: `${AI_GATEWAY}/ApiKeys`, story: 'Default' },
+  'key-detail': { title: `${AI_GATEWAY}/ApiKeys`, story: 'KeyDetailPage' },
+  'key-limits': { title: `${AI_GATEWAY}/ApiKeys`, story: 'Limits' },
+  'key-models': { title: `${AI_GATEWAY}/ApiKeys`, story: 'Models' },
+  'key-guardrails': { title: `${AI_GATEWAY}/ApiKeys`, story: 'Guardrails' },
+} satisfies Record<string, StoryRoute>
+
+export type AiGatewayScreen = keyof typeof aiGatewayStoryRoutes
+
+/**
+ * onNavigate を渡さない（AiGatewayApp の外で画面ごとのストーリーを開いた）ときの既定。
+ * 行き先の画面のストーリーへ Storybook の中で移る。画面が無い行き先は何もしない
+ */
+export const navigateToAiGatewayStory = (to: string) =>
+  openStory(to in aiGatewayStoryRoutes ? aiGatewayStoryRoutes[to as AiGatewayScreen] : undefined)
 
 type NavItem = { to: AiGatewayDestination; label: string; icon: IconName }
 
@@ -661,7 +693,7 @@ export const AiGatewayShell = ({
   project,
   breadcrumbs = [],
   title,
-  onNavigate,
+  onNavigate = navigateToAiGatewayStory,
   children,
 }: {
   /** Sidebar で現在地にする項目 */
@@ -672,25 +704,27 @@ export const AiGatewayShell = ({
   breadcrumbs?: Crumb[]
   /** パンくずの末尾に出す現在のページ名（usePageTitle の title） */
   title?: string
-  /** サイドナビ・パンくず・メニューの項目を押したとき */
+  /** サイドナビ・パンくず・メニューの項目を押したとき。省略すると行き先の画面のストーリーへ移る */
   onNavigate?: (to: string) => void
   children: ReactNode
 }) => (
-  <div style={rootStyle}>
-    <Sidebar scope={project ? 'project' : 'account'} current={current} onNavigate={onNavigate} />
-    <div style={bodyStyle}>
-      <TopBar
-        project={project}
-        breadcrumbs={breadcrumbs}
-        title={title}
-        current={current}
-        onNavigate={onNavigate}
-      />
-      <main style={mainStyle} aria-labelledby="page-title">
-        {children}
-      </main>
+  <TemplateRouter>
+    <div style={rootStyle}>
+      <Sidebar scope={project ? 'project' : 'account'} current={current} onNavigate={onNavigate} />
+      <div style={bodyStyle}>
+        <TopBar
+          project={project}
+          breadcrumbs={breadcrumbs}
+          title={title}
+          current={current}
+          onNavigate={onNavigate}
+        />
+        <main style={mainStyle} aria-labelledby="page-title">
+          {children}
+        </main>
+      </div>
     </div>
-  </div>
+  </TemplateRouter>
 )
 
 // ─── 本文の部品 ───

@@ -15,7 +15,12 @@ import { Switch } from '../../Switch'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AiGatewayShell, PageContainer, PageHeader } from './aiGatewayShell'
+import {
+  AiGatewayShell,
+  navigateToAiGatewayStory,
+  PageContainer,
+  PageHeader,
+} from './aiGatewayShell'
 import complimentaryCreditGranted from './assets/ai-gateway/campaigns/complimentary-credit-granted.png'
 import welcomeCreditIllustration from './assets/ai-gateway/campaigns/welcome-credit-illustration.svg'
 import amexLogo from './assets/ai-gateway/card-brands/amex.svg'
@@ -54,6 +59,8 @@ import type { ReactNode } from 'react'
 
 const meta = {
   title: 'Templates/AiGateway/Billing',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },
@@ -802,6 +809,7 @@ const dialogs: Record<DialogName, (props: DialogProps) => ReactNode> = {
  * パスが /accounts の下に無いので、Sidebar に現在地は付かない
  */
 const CardChallengeReturnScreen = ({ onNavigate }: { onNavigate?: (to: string) => void }) => {
+  // すぐ戻すのは AiGatewayApp の中だけ。画面ごとのストーリーで開いたときは、この画面を見せるために戻さない
   useEffect(() => {
     onNavigate?.('billing')
   }, [onNavigate])
@@ -820,7 +828,7 @@ const CardChallengeReturnScreen = ({ onNavigate }: { onNavigate?: (to: string) =
 export const BillingScreen = ({
   view = 'success',
   dialog: initialDialog = null,
-  onNavigate,
+  onNavigate: onNavigateProp,
 }: {
   view?: CreditView
   /** 開いた状態で始めるダイアログ */
@@ -828,7 +836,10 @@ export const BillingScreen = ({
   onNavigate?: (to: string) => void
 }) => {
   const [dialog, setDialog] = useState<DialogName | null>(initialDialog)
-  if (view === 'cardChallengeReturn') return <CardChallengeReturnScreen onNavigate={onNavigate} />
+  if (view === 'cardChallengeReturn')
+    return <CardChallengeReturnScreen onNavigate={onNavigateProp} />
+  // 渡されない（画面ごとのストーリー）ときは、行き先の画面のストーリーへ移る
+  const onNavigate = onNavigateProp ?? navigateToAiGatewayStory
   const OpenDialogView = dialog ? dialogs[dialog] : null
   return (
     <AiGatewayShell current="billing" title="クレジット" onNavigate={onNavigate}>

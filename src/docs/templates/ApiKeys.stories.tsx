@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { Button, LinkButton } from '../../Button'
+import { Button } from '../../Button'
 import { Callout } from '../../Callout'
 import { Checkbox } from '../../Checkbox'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
@@ -16,11 +16,16 @@ import { Switch } from '../../Switch'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { AiGatewayShell, PageContainer, PageHeader } from './aiGatewayShell'
+import {
+  AiGatewayShell,
+  navigateToAiGatewayStory,
+  PageContainer,
+  PageHeader,
+} from './aiGatewayShell'
 import claudeLogo from './assets/ai-gateway/providers/claude.svg'
 import geminiLogo from './assets/ai-gateway/providers/gemini.svg'
 import openaiLogo from './assets/ai-gateway/providers/openai.svg'
-import { Card } from './parts'
+import { Card, TextLink } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -41,6 +46,8 @@ import type { StickerColor } from '../../Sticker'
 
 const meta = {
   title: 'Templates/AiGateway/ApiKeys',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },
@@ -235,13 +242,6 @@ const TwoLine = ({ primary, secondary }: { primary: ReactNode; secondary?: strin
       </Typography>
     ) : null}
   </Stack>
-)
-
-// GAP-NEW: 文中のテキストリンク（Link）が無い。LinkButton の transparent で代えるので、文字の前後に余白が付く
-const TextLink = ({ children, onPress }: { children: ReactNode; onPress?: () => void }) => (
-  <LinkButton appearance="transparent" color="interactive" size="s" href="#" onPress={onPress}>
-    {children}
-  </LinkButton>
 )
 
 // GAP-NEW: 項目名を左・値を右に置く設定行が無い（shared/ui/SettingField の SettingControlRow など）
@@ -703,7 +703,12 @@ const KeyDetail = ({
           <SettingRow label="適用中のルール">
             {rule ? (
               // 実装はルールの詳細（/rules/:ruleId）へ移る
-              <TextLink onPress={() => onNavigate?.('rule-detail')}>{rule}</TextLink>
+              <TextLink
+                href={`/accounts/example/projects/${project}/rules/${encodeURIComponent(rule)}`}
+                onPress={() => onNavigate?.('rule-detail')}
+              >
+                {rule}
+              </TextLink>
             ) : (
               <Typography size="s" color="medium_emphasis" component="div">
                 なし
@@ -1329,7 +1334,7 @@ export const ApiKeysScreen = ({
   page = 'list',
   initialIssue = false,
   initialConfirm = null,
-  onNavigate,
+  onNavigate = navigateToAiGatewayStory,
 }: {
   view?: ListView
   page?: Page

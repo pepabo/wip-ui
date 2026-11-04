@@ -13,6 +13,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 
 const meta = {
   title: 'Templates/DeployNow/SystemPages',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },

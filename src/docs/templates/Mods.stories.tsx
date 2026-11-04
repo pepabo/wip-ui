@@ -48,6 +48,8 @@ import type { Key, Selection } from 'react-aria-components'
  */
 const meta = {
   title: 'Templates/Gamers/Mods',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },

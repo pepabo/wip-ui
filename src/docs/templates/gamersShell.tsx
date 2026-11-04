@@ -14,10 +14,12 @@ import { Tab, TabList, Tabs } from '../../Tab'
 import { Typography } from '../../Typography'
 import gamersLogo from './assets/gamers/gamers-logo.svg'
 import { ServerDetailHeader, server } from './gameServer'
+import { openStory, TemplateRouter } from './storyLink'
 
 import type { ReactNode } from 'react'
 import type { IconName } from '../../Icon'
 import type { ServerStatus } from './gameServer'
+import type { StoryRoute } from './storyLink'
 
 /**
  * ゲーマーズ（apollo/frontend）の画面の枠。実物のレイアウトファイルの位置・順番・項目・文言を写している。
@@ -33,6 +35,8 @@ import type { ServerStatus } from './gameServer'
  *
  * 画面を切り替える口: 各シェルの onNavigate、または枠を描かない GamersNavigationProvider。
  * onNavigate を渡さないシェルは外側のものを引き継ぐ。画面の中からは useGamersNavigate() で呼ぶ。
+ * どこからも渡されない（App ストーリーの外で画面ごとのストーリーを開いた）ときは、
+ * 行き先の画面のストーリーへ Storybook の中で移る（gamersStoryRoutes）。画面が無い行き先は何もしない。
  *
  * 行き先の名前 → 表示する画面（ストーリー）:
  * - 'home'                 ホーム（Templates/Gamers/Home Default）
@@ -129,7 +133,50 @@ export type GamersDestination =
 
 type Navigate = (to: GamersDestination) => void
 
-const NavigateContext = createContext<Navigate | undefined>(undefined)
+const GAMERS = 'Templates/Gamers'
+
+/**
+ * 行き先 → その画面のストーリー（title と export 名）。GamersApp もこの表で画面を切り替える。
+ * 表に無い行き先（contact・external・logout）は画面が無い
+ */
+export const gamersStoryRoutes: Partial<Record<GamersDestination, StoryRoute>> = {
+  // (public)
+  login: { title: `${GAMERS}/Auth`, story: 'GamersLogin' },
+  'login-authcode': { title: `${GAMERS}/Auth`, story: 'GamersLoginAuthcode' },
+  signup: { title: `${GAMERS}/Auth`, story: 'GamersSignup' },
+  'signup-authcode': { title: `${GAMERS}/Auth`, story: 'GamersSignupAuthcode' },
+  error: { title: `${GAMERS}/SystemPages`, story: 'GamersError' },
+  // (private)
+  'signup-complete': { title: `${GAMERS}/Auth`, story: 'GamersSignupComplete' },
+  home: { title: `${GAMERS}/Home`, story: 'Default' },
+  'home-backups': { title: `${GAMERS}/Home`, story: 'MyBackups' },
+  account: { title: `${GAMERS}/Account`, story: 'Default' },
+  'account-update-email': { title: `${GAMERS}/Account`, story: 'UpdateEmail' },
+  'account-newsletter': { title: `${GAMERS}/Account`, story: 'NewsletterSettings' },
+  // servers/[id]
+  server: { title: `${GAMERS}/Overview`, story: 'Default' },
+  'server-game': { title: `${GAMERS}/GameSettings`, story: 'Default' },
+  'server-mods': { title: `${GAMERS}/Mods`, story: 'Default' },
+  'server-files': { title: `${GAMERS}/FileManager`, story: 'Default' },
+  backup: { title: `${GAMERS}/Backup`, story: 'Default' },
+  payment: { title: `${GAMERS}/Payment`, story: 'Default' },
+  'payment-history': { title: `${GAMERS}/Payment`, story: 'History' },
+  'payment-method-change': { title: `${GAMERS}/Payment`, story: 'ChangePaymentMethod' },
+  // 購入・更新
+  'server-new': { title: `${GAMERS}/Onboarding`, story: 'GameSelectStep' },
+  'server-new-plan': { title: `${GAMERS}/Onboarding`, story: 'PlanSelectStep' },
+  'server-new-payment': { title: `${GAMERS}/Onboarding`, story: 'PaymentInfoStep' },
+  billing: { title: `${GAMERS}/Renewal`, story: 'Default' },
+}
+
+/** ログアウトはログイン画面へ移る（実物は signOut のあと /login へ replace） */
+export const resolveGamersDestination = (to: GamersDestination): GamersDestination =>
+  to === 'logout' ? 'login' : to
+
+// App ストーリーの外（画面ごとのストーリー）では、行き先の画面のストーリーへ Storybook の中で移る
+const navigateToStory: Navigate = (to) => openStory(gamersStoryRoutes[resolveGamersDestination(to)])
+
+const NavigateContext = createContext<Navigate | undefined>(navigateToStory)
 const useNavigate = () => useContext(NavigateContext)
 
 // onNavigate を渡さなかったシェルは、外側（GamersNavigationProvider や外のシェル）の onNavigate を引き継ぐ
@@ -141,11 +188,15 @@ const NavigateScope = ({
   children: ReactNode
 }) => {
   const outer = useNavigate()
-  return <NavigateContext.Provider value={onNavigate ?? outer}>{children}</NavigateContext.Provider>
+  return (
+    <NavigateContext.Provider value={onNavigate ?? outer}>
+      <TemplateRouter>{children}</TemplateRouter>
+    </NavigateContext.Provider>
+  )
 }
 
 /**
- * 画面の中から onNavigate を呼ぶための口。シェルの外（単体のストーリー）では何もしない関数を返す
+ * 画面の中から onNavigate を呼ぶための口。シェルの外（App ストーリーの外）では、行き先のストーリーへ移る関数を返す
  */
 export const useGamersNavigate = (): Navigate => {
   const navigate = useNavigate()

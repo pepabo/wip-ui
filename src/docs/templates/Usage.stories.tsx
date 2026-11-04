@@ -10,7 +10,12 @@ import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { Typography } from '../../Typography'
-import { AiGatewayShell, PageContainer, PageHeader } from './aiGatewayShell'
+import {
+  AiGatewayShell,
+  navigateToAiGatewayStory,
+  PageContainer,
+  PageHeader,
+} from './aiGatewayShell'
 import claudeLogo from './assets/ai-gateway/providers/claude.svg'
 import geminiLogo from './assets/ai-gateway/providers/gemini.svg'
 import openaiLogo from './assets/ai-gateway/providers/openai.svg'
@@ -32,6 +37,8 @@ import type { SortDescriptor } from 'react-aria-components'
 
 const meta = {
   title: 'Templates/AiGateway/Usage',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },
@@ -811,39 +818,34 @@ const ProjectUsage = ({ project, onOpenKey }: { project: Entry; onOpenKey: () =>
 /**
  * 画面の移り先（onNavigate の名前）:
  * - 組織の内訳の行 → 'project-usage'（AccountUsage の onOpenProject：/projects/[id]/usage）。
- *   onNavigate が無い（このファイルのストーリーを単体で開いた）ときは、この画面の中でプロジェクトの使用状況に切り替える
+ *   onNavigate が無い（このファイルのストーリーを単体で開いた）ときは、ProjectUsage のストーリーへ移る
  * - プロジェクトの APIキー別内訳の行 → 'key-detail'（ProjectUsage の onOpenKey：/keys/[keyId]）
  * - 枠（サイドナビ・パンくず・切り替えメニュー）は aiGatewayShell の名前のまま
  */
 export const UsageScreen = ({
   view = 'success',
-  initialProject,
-  onNavigate,
+  initialProject: project,
+  onNavigate = navigateToAiGatewayStory,
 }: {
   view?: ViewState
   /** プロジェクトの使用状況から始める */
   initialProject?: Entry
   onNavigate?: (to: string) => void
-}) => {
-  const [project, setProject] = useState<Entry | undefined>(initialProject)
-  return project ? (
+}) =>
+  project ? (
     <AiGatewayShell
       project={project.label}
       current="project-usage"
       title="使用状況"
       onNavigate={onNavigate}
     >
-      <ProjectUsage project={project} onOpenKey={() => onNavigate?.('key-detail')} />
+      <ProjectUsage project={project} onOpenKey={() => onNavigate('key-detail')} />
     </AiGatewayShell>
   ) : (
     <AiGatewayShell current="usage" title="使用状況" onNavigate={onNavigate}>
-      <AccountUsage
-        view={view}
-        onOpenProject={(entry) => (onNavigate ? onNavigate('project-usage') : setProject(entry))}
-      />
+      <AccountUsage view={view} onOpenProject={() => onNavigate('project-usage')} />
     </AiGatewayShell>
   )
-}
 
 // ─── ストーリー ───
 

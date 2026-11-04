@@ -43,6 +43,8 @@ import type { ServerStatus } from './gameServer'
  */
 const meta = {
   title: 'Templates/Gamers/Overview',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },

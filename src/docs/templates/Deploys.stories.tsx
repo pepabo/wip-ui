@@ -12,6 +12,7 @@ import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { Typography } from '../../Typography'
 import { DeployNowShell, ProjectDetailLayout, useDeployNowNavigate } from './deployNowShell'
+import { TextLink } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -32,6 +33,8 @@ import type { ProjectHeroData } from './deployNowShell'
 
 const meta = {
   title: 'Templates/DeployNow/Deploys',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },
@@ -96,33 +99,6 @@ const StatusIndicator = ({ color, children }: { color: StickerColor; children: R
       {children}
     </Typography>
   </Stack>
-)
-
-// GAP-NEW: 文中のテキストリンクが無い。実物は native a + text-sky-700。
-// LinkButton の transparent で代えるので、文字の前後に余白が付いて左端がそろわない。
-const TextLink = ({
-  children,
-  href,
-  external = false,
-  onPress,
-}: {
-  children: ReactNode
-  href?: string
-  external?: boolean
-  onPress?: () => void
-}) => (
-  <LinkButton
-    appearance="transparent"
-    color="interactive"
-    size="s"
-    href={href}
-    onPress={onPress}
-    target={external ? '_blank' : undefined}
-    rel={external ? 'noopener noreferrer' : undefined}
-    trailing={external ? <Icon name="launch" size="s" /> : undefined}
-  >
-    {children}
-  </LinkButton>
 )
 
 const MetaRow = ({ label, children }: { label: string; children: ReactNode }) => (
@@ -615,11 +591,14 @@ const DeployGitLine = ({ deploy, repo }: { deploy: Deploy; repo?: string }) =>
       <Typography component="span" size="s" color="medium_emphasis">
         {deploy.git.branch}
       </Typography>
-      <TextLink href="#" external>
+      <TextLink href={`https://github.com/${repo}/commit/${deploy.git.shortSha}`} external>
         {deploy.git.shortSha}
       </TextLink>
       {deploy.preview && (
-        <TextLink href="#" external>
+        <TextLink
+          href={`https://github.com/${repo}/pull/${deploy.preview.pullRequestNumber}`}
+          external
+        >
           {`PR #${deploy.preview.pullRequestNumber}`}
         </TextLink>
       )}
@@ -805,7 +784,7 @@ const DeployNotFound = ({ message, onBack }: { message: string; onBack?: () => v
       </Typography>
       <Stack flexDirection="row">
         <TextLink
-          href="#"
+          href="/projects/portfolio"
           onPress={() => {
             onBack?.()
             navigate('project-deploys')

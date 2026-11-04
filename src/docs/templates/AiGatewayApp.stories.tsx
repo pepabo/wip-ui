@@ -7,6 +7,7 @@ import { productionUsage, UsageScreen } from './Usage.stories'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactElement } from 'react'
+import type { AiGatewayScreen } from './aiGatewayShell'
 
 /**
  * AI ゲートウェイ（octane/admin-ui）の顧客コンソールを 1 つのアプリとして動かす。
@@ -28,6 +29,8 @@ import type { ReactElement } from 'react'
 
 const meta = {
   title: 'Templates/AiGateway/App',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },
@@ -37,7 +40,9 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-const screens: Record<string, (navigate: (to: string) => void) => ReactElement> = {
+// 画面がある行き先は aiGatewayShell.tsx の aiGatewayStoryRoutes と同じ（画面ごとのストーリーの linkTo と共有）。
+// ここではそれぞれの画面を、App の中で切り替える navigate を渡して描く
+const screens: Record<AiGatewayScreen, (navigate: (to: string) => void) => ReactElement> = {
   usage: (navigate) => <UsageScreen onNavigate={navigate} />,
   'project-usage': (navigate) => (
     <UsageScreen initialProject={productionUsage} onNavigate={navigate} />
@@ -55,10 +60,10 @@ const screens: Record<string, (navigate: (to: string) => void) => ReactElement> 
 }
 
 const AiGatewayApp = () => {
-  const [current, setCurrent] = useState('usage')
+  const [current, setCurrent] = useState<AiGatewayScreen>('usage')
   // 画面が無い行き先は今の画面のまま
   const navigate = (to: string) => {
-    if (to in screens) setCurrent(to)
+    if (to in screens) setCurrent(to as AiGatewayScreen)
   }
   // 行き先が変わったら画面の中の状態（開いているダイアログなど）を初めからにする
   return <div key={current}>{screens[current](navigate)}</div>

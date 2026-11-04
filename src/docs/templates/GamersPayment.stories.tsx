@@ -46,6 +46,8 @@ import type { TypographyColor } from '../../Typography'
 
 const meta = {
   title: 'Templates/Gamers/Payment',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },

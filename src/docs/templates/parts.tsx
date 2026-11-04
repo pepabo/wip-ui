@@ -55,6 +55,53 @@ import type { RadioGroupProps } from '../../Radio'
 // GAP-20 等幅フォントのトークンが無い。API キーやコマンドを出す画面で必要。
 //        hosting-deploy-now は Tailwind の font-mono を 15 箇所で直書きしている。
 
+/**
+ * 文中のテキストリンク。実物は素の a（または next/link）に text-sm と青い文字（text-sky-700 など）、hover で下線。
+ * 素の a で包み、中に Typography と、別タブのときは launch のアイコンを並べる。左端は前後の文字とそろう。
+ * onPress を渡すと、押したとき href へは移らずに onPress を呼ぶ（テンプレートの中の画面遷移）。
+ * href には実物の URL を入れる。
+ * GAP: 文中のテキストリンクの部品が無い。素の a の既定の見た目が残る（下線が常に出て、下線の色は
+ *      ブラウザのリンクの色・訪問済みの色になる）。文字の色は Typography の informative で、実物の色とは違う。
+ *      a は置いた Stack の幅いっぱいに広がり、押せる範囲が文字より広くなる（実物は w-fit）
+ */
+export const TextLink = ({
+  children,
+  href,
+  external = false,
+  onPress,
+}: {
+  children: ReactNode
+  href: string
+  /** 別タブで開くリンク。末尾に launch のアイコンを出す */
+  external?: boolean
+  onPress?: () => void
+}) => (
+  <a
+    href={href}
+    target={external ? '_blank' : undefined}
+    rel={external ? 'noopener noreferrer' : undefined}
+    onClick={
+      onPress
+        ? (event) => {
+            event.preventDefault()
+            onPress()
+          }
+        : undefined
+    }
+  >
+    <Stack flexDirection="row" gap="xxs" alignItems="center">
+      <Typography component="span" size="s" color="informative">
+        {children}
+      </Typography>
+      {external && (
+        <Typography component="span" size="s" color="informative">
+          <Icon name="launch" size="s" color="currentColor" aria-hidden />
+        </Typography>
+      )}
+    </Stack>
+  </a>
+)
+
 export const Card = ({
   children,
   outlined = false,

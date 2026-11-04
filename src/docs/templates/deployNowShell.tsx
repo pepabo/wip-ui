@@ -15,8 +15,11 @@ import { Sticker } from '../../Sticker'
 import { Tab, TabList, Tabs } from '../../Tab'
 import { Typography } from '../../Typography'
 import deployNowLogo from './assets/deploy-now/logo.svg'
+import { TextLink } from './parts'
+import { openStory, TemplateRouter } from './storyLink'
 
 import type { ReactNode } from 'react'
+import type { StoryRoute } from './storyLink'
 
 /**
  * デプロイナウ（hosting-deploy-now/frontend）の画面の枠。実物のレイアウトをそのまま写す。
@@ -106,11 +109,43 @@ export type DeployNowDestination =
 
 type Navigate = (to: DeployNowDestination) => void
 
+const DEPLOY_NOW = 'Templates/DeployNow'
+
+/**
+ * 行き先 → その画面のストーリー（title と export 名）。上のコメントの一覧と同じで、DeployNowApp もこの表で画面を切り替える。
+ * 表に無い行き先は、テンプレートに画面が無い
+ */
+export const deployNowStoryRoutes: Partial<Record<DeployNowDestination, StoryRoute>> = {
+  projects: { title: `${DEPLOY_NOW}/Projects`, story: 'Default' },
+  'project-deploys': { title: `${DEPLOY_NOW}/Deploys`, story: 'Default' },
+  'project-env': { title: `${DEPLOY_NOW}/SiteSettings`, story: 'EnvVars' },
+  'project-domains': { title: `${DEPLOY_NOW}/Domains`, story: 'Default' },
+  'project-settings': { title: `${DEPLOY_NOW}/SiteSettings`, story: 'Default' },
+  'deploy-detail': { title: `${DEPLOY_NOW}/Deploys`, story: 'DeployDetailSucceeded' },
+  'new-project': { title: `${DEPLOY_NOW}/NewProject`, story: 'UploadProject' },
+  'new-project-github': { title: `${DEPLOY_NOW}/NewProject`, story: 'GitHubImport' },
+  'project-deployment-new': { title: `${DEPLOY_NOW}/NewProject`, story: 'ProjectDeployment' },
+  'developer-github': { title: `${DEPLOY_NOW}/DeveloperSettings`, story: 'Default' },
+  'developer-sessions': { title: `${DEPLOY_NOW}/DeveloperSettings`, story: 'Sessions' },
+  start: { title: `${DEPLOY_NOW}/NewProject`, story: 'Trial' },
+  login: { title: `${DEPLOY_NOW}/Auth`, story: 'DeployNowLogin' },
+  signup: { title: `${DEPLOY_NOW}/Auth`, story: 'DeployNowSignup' },
+}
+
+/** ログアウトするとログインの画面へ戻る */
+export const resolveDeployNowDestination = (to: DeployNowDestination): DeployNowDestination =>
+  to === 'logout' ? 'login' : to
+
+// App ストーリーの外（画面ごとのストーリー）では、行き先の画面のストーリーへ Storybook の中で移る
+const navigateToStory: Navigate = (to) =>
+  openStory(deployNowStoryRoutes[resolveDeployNowDestination(to)])
+
 /**
  * 画面を切り替える口。シェルの onNavigate を、シェルの中のレイアウト（タブ・左メニューなど）へ渡す。
- * App ストーリーからは、シェルの onNavigate か、この Provider のどちらで渡してもよい
+ * App ストーリーからは、シェルの onNavigate か、この Provider のどちらで渡してもよい。
+ * どちらも無い（画面ごとのストーリー）ときは、行き先の画面のストーリーへ移る
  */
-export const DeployNowNavigationContext = createContext<Navigate | null>(null)
+export const DeployNowNavigationContext = createContext<Navigate | null>(navigateToStory)
 
 export const useDeployNowNavigate = (): Navigate => {
   const navigate = useContext(DeployNowNavigationContext)
@@ -127,7 +162,7 @@ const NavigationScope = ({
   const outer = useContext(DeployNowNavigationContext)
   return (
     <DeployNowNavigationContext.Provider value={onNavigate ?? outer}>
-      {children}
+      <TemplateRouter>{children}</TemplateRouter>
     </DeployNowNavigationContext.Provider>
   )
 }
@@ -375,33 +410,6 @@ export const portfolioHero: ProjectHeroData = {
   },
 }
 
-// 実物の hero のリンクは native a / next/link + text-sm text-sky-700。
-// GAP: 文中のテキストリンクが無い。transparent の LinkButton で代えるので、文字の前後に余白が付いて左端がそろわない
-export const TextLink = ({
-  children,
-  external = false,
-  onPress,
-}: {
-  children: ReactNode
-  external?: boolean
-  onPress?: () => void
-}) => (
-  <Stack flexDirection="row">
-    <LinkButton
-      appearance="transparent"
-      color="interactive"
-      size="s"
-      href="#"
-      onPress={onPress}
-      target={external ? '_blank' : undefined}
-      rel={external ? 'noopener noreferrer' : undefined}
-      trailing={external ? <Icon name="launch" size="s" /> : undefined}
-    >
-      {children}
-    </LinkButton>
-  </Stack>
-)
-
 const MetaRow = ({ label, children }: { label: string; children: ReactNode }) => (
   <Stack gap="xxs">
     <Typography size="xs" color="medium_emphasis" component="span">
@@ -441,7 +449,9 @@ const ProjectHero = ({
           </Sticker>
         </Stack>
         {hero.domain ? (
-          <TextLink external>{hero.domain}</TextLink>
+          <TextLink href={`https://${hero.domain}`} external>
+            {hero.domain}
+          </TextLink>
         ) : (
           <Typography size="s" color="low_emphasis">
             ドメイン未発行
@@ -451,25 +461,35 @@ const ProjectHero = ({
       <Stack gap="m">
         <MetaRow label="最終デプロイ">
           {latestDeployId ? (
-            <TextLink onPress={() => onOpenDeploy(latestDeployId)}>{hero.lastDeployedAt}</TextLink>
+            <TextLink
+              href={`/projects/${hero.name}/deploys/${latestDeployId}`}
+              onPress={() => onOpenDeploy(latestDeployId)}
+            >
+              {hero.lastDeployedAt}
+            </TextLink>
           ) : (
             <Typography size="s">{hero.lastDeployedAt}</Typography>
           )}
         </MetaRow>
         {hero.githubRepository && (
           <MetaRow label="GitHub リポジトリ">
-            <TextLink external>{hero.githubRepository}</TextLink>
+            <TextLink href={`https://github.com/${hero.githubRepository}`} external>
+              {hero.githubRepository}
+            </TextLink>
           </MetaRow>
         )}
         {hero.serving && (
           <>
             <MetaRow label="公開日時">
-              <TextLink onPress={() => onOpenDeploy(hero.serving?.deployId ?? '')}>
+              <TextLink
+                href={`/projects/${hero.name}/deploys/${hero.serving.deployId}`}
+                onPress={() => onOpenDeploy(hero.serving?.deployId ?? '')}
+              >
                 {hero.serving.deployedAt}
               </TextLink>
             </MetaRow>
             <MetaRow label="ソース">
-              <ServingSourceLine source={hero.serving.source} />
+              <ServingSourceLine source={hero.serving.source} repository={hero.githubRepository} />
             </MetaRow>
           </>
         )}
@@ -481,8 +501,10 @@ const ProjectHero = ({
 /** ProjectHero の ServingSourceLine。ブランチと短縮 SHA を「·」でつなぎ、コミット件名をリンクにする */
 const ServingSourceLine = ({
   source,
+  repository,
 }: {
   source: NonNullable<ProjectHeroData['serving']>['source']
+  repository?: string
 }) =>
   source.kind === 'upload' ? (
     <Stack flexDirection="row" gap="xs" alignItems="center">
@@ -499,7 +521,9 @@ const ServingSourceLine = ({
       <Typography component="span" size="s" color="medium_emphasis">
         {`${source.branch} · ${source.shortSha}`}
       </Typography>
-      <TextLink external>{source.commitMessage || source.shortSha}</TextLink>
+      <TextLink href={`https://github.com/${repository}/commit/${source.shortSha}`} external>
+        {source.commitMessage || source.shortSha}
+      </TextLink>
     </Stack>
   )
 

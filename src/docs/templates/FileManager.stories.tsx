@@ -31,6 +31,8 @@ import type { IconName } from '../../Icon'
 
 const meta = {
   title: 'Templates/Gamers/FileManager',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },

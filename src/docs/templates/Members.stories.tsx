@@ -13,7 +13,12 @@ import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { InviteDialog } from './aiGatewayInvite'
-import { AiGatewayShell, PageContainer, PageHeader } from './aiGatewayShell'
+import {
+  AiGatewayShell,
+  navigateToAiGatewayStory,
+  PageContainer,
+  PageHeader,
+} from './aiGatewayShell'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -40,6 +45,8 @@ import type { ReactNode } from 'react'
 
 const meta = {
   title: 'Templates/AiGateway/Members',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },
@@ -636,7 +643,7 @@ export const MembersScreen = ({
   view = 'success',
   dialog,
   invite,
-  onNavigate,
+  onNavigate = navigateToAiGatewayStory,
 }: {
   view?: MembersView
   dialog?: ReactNode

@@ -24,6 +24,8 @@ import type { ReactNode } from 'react'
 
 const meta = {
   title: 'Templates/Gamers/Renewal',
+  // テンプレートはロリポップのトンマナを確かめる場所なので、フレーバーを lolipop に固定する
+  globals: { flavor: 'lolipop' },
   parameters: {
     layout: 'fullscreen',
   },
