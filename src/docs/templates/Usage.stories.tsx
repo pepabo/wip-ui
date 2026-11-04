@@ -5,8 +5,8 @@ import { Callout } from '../../Callout'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
+import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
-import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { Typography } from '../../Typography'
@@ -22,13 +22,13 @@ import type { SortDescriptor } from 'react-aria-components'
 import type { TypographyColor } from '../../Typography'
 
 /**
- * 使用状況。2 つの実画面を 1 ページに置いている。
- * - AI ゲートウェイの組織の「使用状況」：octane/admin-ui/src/features/AccountUsage と
+ * 使用状況。AI ゲートウェイの実画面を写している。
+ * - 組織の「使用状況」：octane/admin-ui/src/features/AccountUsage と
  *   shared/ui/UsageCharts・UsagePeriodFilter・RetryCallout。ページ見出し「使用状況」と説明・期間・CSV は実物のまま
- * - その下にデプロイナウの「使用量」：hosting-deploy-now/frontend/features/Projects/features/UsageSummary（view.tsx・model.ts）
- * - 内訳の表の行を押すと、AI ゲートウェイのプロジェクトの「使用状況」（features/ProjectUsage）に切り替わる
+ * - 内訳の表の行を押すと、プロジェクトの「使用状況」（features/ProjectUsage）に切り替わる
  *
- * 見出しは実物のものだけを使う。どちらのアプリも「使用状況」「使用量」をページの見出しにしている。
+ * デプロイナウの「使用量」（features/Projects/features/UsageSummary）は、実アプリではプロジェクト一覧の
+ * 上にしか無いので、Projects.stories.tsx に置いている。
  */
 
 const meta = {
@@ -50,103 +50,6 @@ type Story = StoryObj<typeof meta>
  * empty は success の中の場合（期間内の利用が無い）
  */
 type ViewState = 'success' | 'empty' | 'error'
-
-// ─── デプロイナウ：使用量（UsageSummary）───
-
-// ラベルは model.ts の toUsageViewModel と同じ。使用率は floor、残りは 100 - 使用率
-const deployMetrics = [
-  { label: '月間リクエスト数', ratio: 0.42 },
-  { label: '月間 CPU 実行時間', ratio: 0.78 },
-  { label: 'CDN 帯域', ratio: 0.12 },
-]
-
-// GAP-18: 進捗バーが無い。Typography の色を継承した div で代用している。
-// 実物は Tailwind の bg-neutral-800 / bg-amber-500 / bg-red-600 を直書きし、閾値は 75% / 90%。
-const meterTrackStyle = { height: 6, borderRadius: 3, background: 'currentColor', opacity: 0.15 }
-const DeployMeter = ({ ratio }: { ratio: number }) => {
-  const tone: TypographyColor =
-    ratio >= 0.9 ? 'negative' : ratio >= 0.75 ? 'notice' : 'high_emphasis'
-  return (
-    <Typography component="div" color={tone}>
-      <div style={meterTrackStyle} />
-      <div
-        style={{
-          height: 6,
-          borderRadius: 3,
-          marginTop: -6,
-          width: `${Math.min(ratio, 1) * 100}%`,
-          background: 'currentColor',
-        }}
-      />
-    </Typography>
-  )
-}
-
-const DeployUsageSummary = () => (
-  <Stack gap="s">
-    <Typography component="h2" size="xxl">
-      使用量
-    </Typography>
-    <Card outlined elevation={0}>
-      <Stack gap="m">
-        <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="s" justifyContent="space-between">
-          <Stack flexDirection="row" gap="s" alignItems="center">
-            <Typography component="div" size="l">
-              利用中のプラン：Free
-            </Typography>
-            <Typography component="div" size="s" color="medium_emphasis">
-              （2026/10/01 ~ 2026/10/31 ご利用分）
-            </Typography>
-          </Stack>
-          {/* 実物は lolipop-user の課金タブへの LinkButton（別タブ） */}
-          <Button
-            appearance="outlined"
-            color="neutral"
-            size="s"
-            trailing={<Icon name="launch" size="s" aria-hidden="true" />}
-          >
-            プラン管理
-          </Button>
-        </Stack>
-        {/* 実物は md 以上 3 カラム + 縦罫線、md 未満は横罫線。GAP-NEW: Grid に罫線（divide）の指定が無い */}
-        <Grid spacing="l">
-          {deployMetrics.map((metric) => {
-            const usedPercent = Math.floor(metric.ratio * 100)
-            return (
-              <GridItem key={metric.label} size={{ xxs: 12, m: 4 }}>
-                <Stack gap="xs">
-                  <Stack flexDirection="row" gap="xs" justifyContent="space-between">
-                    <Typography component="div" size="m" color="medium_emphasis">
-                      {metric.label}
-                    </Typography>
-                    <Typography
-                      component="div"
-                      size="xs"
-                      color={metric.ratio >= 0.9 ? 'negative' : 'medium_emphasis'}
-                    >
-                      残り {100 - usedPercent}%
-                    </Typography>
-                  </Stack>
-                  {/* GAP-NEW: 数字の桁をそろえる指定（tabular-nums）が無い */}
-                  <Typography component="div" size="xl" fontWeight="bold">
-                    {usedPercent}%
-                  </Typography>
-                  <DeployMeter ratio={metric.ratio} />
-                </Stack>
-              </GridItem>
-            )
-          })}
-        </Grid>
-      </Stack>
-    </Card>
-    {/* GAP-17: 実物は md 以上で右寄せ（md:text-right）。alignItems がレスポンシブにできない */}
-    <Stack alignItems="flex-end">
-      <Typography component="div" size="xs" color="medium_emphasis">
-        ※上限に達すると、すべてのプロジェクトが一時停止されます。
-      </Typography>
-    </Stack>
-  </Stack>
-)
 
 // ─── AI ゲートウェイ：データ（形は shared/lib/usageDashboard の UsageTotals。値はダミー）───
 
@@ -747,16 +650,52 @@ const KeyBreakdownSection = ({ entries }: { entries: typeof keyEntries }) => {
   )
 }
 
-/** 期間（shared/ui/UsagePeriodFilter。既定は 7日） */
-const UsagePeriodFilter = () => (
-  // GAP-NEW: 実物は暦のアイコン付きのメニュー（ListFilterMenu）。Menu が無いので Select で代用し、アイコンも差せない
-  <Select aria-label="期間" size="s" defaultSelectedKey="7d">
-    <SelectItem id="24h">24時間</SelectItem>
-    <SelectItem id="7d">7日</SelectItem>
-    <SelectItem id="14d">14日</SelectItem>
-    <SelectItem id="30d">30日</SelectItem>
-  </Select>
-)
+/** shared/lib/usagePeriod の periodChoices */
+const periodOptions = [
+  { id: '24h', label: '24時間' },
+  { id: '7d', label: '7日' },
+  { id: '14d', label: '14日' },
+  { id: '30d', label: '30日' },
+]
+
+/**
+ * 期間（shared/ui/UsagePeriodFilter → ListFilterMenu の toggle。既定は 7日）。
+ * 閉じたボタンには暦のアイコンと選んでいる期間を出す
+ */
+const UsagePeriodFilter = () => {
+  const [period, setPeriod] = useState('7d')
+  const selected = periodOptions.find((o) => o.id === period) ?? periodOptions[1]
+  return (
+    <MenuTrigger>
+      <Button
+        appearance="outlined"
+        color="neutral"
+        size="s"
+        aria-label={`期間: ${selected.label}`}
+        leading={<Icon name="calendar" size="s" aria-hidden="true" />}
+        trailing={<Icon name="chevron_down" size="s" />}
+      >
+        {selected.label}
+      </Button>
+      <Menu
+        placement="bottom start"
+        selectionMode="single"
+        selectedKeys={[selected.id]}
+        onSelectionChange={(keys) => {
+          const next = keys === 'all' ? undefined : [...keys][0]
+          // 選んでいるものをもう一度選んでも外さない（UsagePeriodFilter が undefined を捨てる）
+          if (next !== undefined) setPeriod(String(next))
+        }}
+      >
+        {periodOptions.map((o) => (
+          <MenuItem key={o.id} id={o.id}>
+            {o.label}
+          </MenuItem>
+        ))}
+      </Menu>
+    </MenuTrigger>
+  )
+}
 
 /** features/AccountUsage。読み込みに失敗すると、グラフも表も出さずに RetryCallout だけになる */
 const AccountUsage = ({
@@ -849,12 +788,7 @@ const UsageScreen = ({
       {project ? (
         <ProjectUsage project={project} />
       ) : (
-        <>
-          <AccountUsage view={view} onOpenProject={setProject} />
-          <Divider />
-          {/* デプロイナウの使用量は別の取得で、取得できたときだけ出る（Home の UsageError を参照） */}
-          <DeployUsageSummary />
-        </>
+        <AccountUsage view={view} onOpenProject={setProject} />
       )}
     </AppShell>
   )
@@ -863,16 +797,15 @@ const UsageScreen = ({
 // ─── ストーリー ───
 
 /**
- * AI ゲートウェイの組織の使用状況（期間・CSV・推移・プロジェクト別内訳）と、その下にデプロイナウの今月の使用量。
+ * AI ゲートウェイの組織の使用状況（期間・CSV・推移・プロジェクト別内訳）。
  *
  * - 推移の「モデル別 / プロジェクト別」で棒の積み方とカード下の上位 3 件が切り替わる。トークン数だけは常に種別で積む
  * - 内訳の表は利用額の多い順に上位 10 件で、「残りn件を表示する」で全部出る。列見出しを押すと並べ替わる
  * - 行を押すとそのプロジェクトの使用状況に移る（アカウント直下の行は移らない）
  *
- * 進捗バーと積み上げ棒グラフは wip-ui に無いため、Typography で色を継承した div で代用している
- * （GAP-18 / GAP-19）。
+ * 積み上げ棒グラフは wip-ui に無いため、Typography で色を継承した div で代用している（GAP-19）。
  *
- * @summary AI ゲートウェイとサイトの使用状況
+ * @summary 組織の使用状況
  */
 export const Default: Story = {
   render: () => <UsageScreen />,

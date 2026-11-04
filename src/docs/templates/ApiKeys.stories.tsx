@@ -21,7 +21,7 @@ import { AppShell } from './AppShell'
 import claudeLogo from './assets/ai-gateway/providers/claude.svg'
 import geminiLogo from './assets/ai-gateway/providers/gemini.svg'
 import openaiLogo from './assets/ai-gateway/providers/openai.svg'
-import { Card, PageHeader } from './parts'
+import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -222,14 +222,12 @@ const Meter = ({ ratio }: { ratio: number }) => (
   </Typography>
 )
 
-// GAP-NEW: Table のセルに 2 段目の補足（DataTableText tone="secondary"）を置く型が無い
+// GAP-NEW: Table のセルに 2 段目の補足（DataTableText tone="secondary"。14px・灰色）を置く型が無い
 const TwoLine = ({ primary, secondary }: { primary: ReactNode; secondary?: string }) => (
   <Stack gap="xxs">
-    <Typography size="s" fontWeight="bold" component="span">
-      {primary}
-    </Typography>
+    <Typography component="span">{primary}</Typography>
     {secondary ? (
-      <Typography size="xs" color="medium_emphasis" component="span">
+      <Typography size="s" color="medium_emphasis" component="span">
         {secondary}
       </Typography>
     ) : null}
@@ -376,10 +374,10 @@ const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey
   const loaded = view !== 'error'
   return (
     <>
-      <PageHeader
+      <KeyPageHeader
         breadcrumbs={[
-          { label: 'ホーム', href: '#' },
-          { label: project, href: '#' },
+          { label: 'ホーム', link: true },
+          { label: project, link: true },
           { label: 'APIキー' },
         ]}
         title="APIキー"
@@ -432,7 +430,8 @@ const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey
         </Callout>
       )}
       {loaded && (
-        <Card padding="none">
+        // shared/ui/DataTable は表を枠線の Paper（padding 0）に入れる。GAP-NEW: Table が幅 100% にならない（実物は CSS で width: 100%）
+        <Paper outlined padding="none">
           {/* 選択は react-aria の Table に任せ、Checkbox は slot="selection" で表に繋ぐ */}
           <Table
             aria-label="APIキー一覧"
@@ -487,7 +486,7 @@ const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey
                       <TwoLine primary={k.alias} secondary={project} />
                     </Cell>
                     <Cell>
-                      <Typography size="s" color="medium_emphasis" component="span">
+                      <Typography size="s" component="span">
                         {ruleName(k.ruleId) ?? '—'}
                       </Typography>
                     </Cell>
@@ -509,7 +508,7 @@ const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey
                       </Stack>
                     </Cell>
                     <Cell>
-                      <Typography size="s" color="medium_emphasis" component="span">
+                      <Typography size="s" component="span">
                         {k.expiresAt}
                       </Typography>
                     </Cell>
@@ -559,7 +558,7 @@ const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey
               })}
             </TableBody>
           </Table>
-        </Card>
+        </Paper>
       )}
     </>
   )
@@ -582,8 +581,9 @@ const subDescription: Record<KeySub, string> = {
 type Crumb = { label: string; link?: boolean }
 
 /**
- * shared/ui/PageHeader の back 付き。戻るはタイトルの左に置く iconOnly のボタンだけで、文字を出さない。
- * parts の PageHeader が戻る口を持たないので、ここで組み直している（共通化の候補）。
+ * shared/ui/PageHeader（xl の見出しと xs の説明）。back があれば、タイトルの左に iconOnly の戻るボタンだけを置く。
+ * parts の PageHeader は見出しが xxl で戻る口を持たないので、ここで組み直している（共通化の候補）。
+ * パンくずは実物では TopBar に出る（usePageTitle の breadcrumbs）。AppShell に口が無いのでここに置く。
  */
 const KeyPageHeader = ({
   breadcrumbs,
@@ -595,7 +595,7 @@ const KeyPageHeader = ({
   breadcrumbs: Crumb[]
   title: string
   description: string
-  back: string
+  back?: string
   actions?: ReactNode
 }) => (
   <Stack gap="s">
@@ -609,16 +609,18 @@ const KeyPageHeader = ({
     <Stack gap="xxs">
       <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
         <Stack flexDirection="row" gap="xs" alignItems="center">
-          <Button appearance="transparent" color="neutral" size="s" iconOnly aria-label={back}>
-            <Glyph name="chevron_left" />
-          </Button>
-          <Typography size="xxl" fontWeight="bold" component="h1">
+          {back && (
+            <Button appearance="transparent" color="neutral" size="s" iconOnly aria-label={back}>
+              <Glyph name="chevron_left" />
+            </Button>
+          )}
+          <Typography size="xl" fontWeight="bold" component="h1">
             {title}
           </Typography>
         </Stack>
         {actions}
       </Stack>
-      <Typography size="s" color="medium_emphasis">
+      <Typography size="xs" color="medium_emphasis">
         {description}
       </Typography>
     </Stack>

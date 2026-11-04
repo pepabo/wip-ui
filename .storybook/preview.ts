@@ -86,6 +86,7 @@ const preview: Preview = {
             'Mods',
             'FileManager',
             'Backup',
+            'Projects',
             'Deploys',
             'NewProject',
             'Domains',

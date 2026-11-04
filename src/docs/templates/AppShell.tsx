@@ -29,6 +29,7 @@ export type NavId =
   | 'mods'
   | 'files'
   | 'backup'
+  | 'projects'
   | 'deploys'
   | 'domains'
   | 'site'
@@ -56,6 +57,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'サイト',
     items: [
+      { id: 'projects', label: 'プロジェクト', icon: 'multi_pane' },
       { id: 'deploys', label: 'デプロイ', icon: 'upload' },
       { id: 'domains', label: 'ドメイン', icon: 'launch' },
       { id: 'site', label: '設定', icon: 'gear' },

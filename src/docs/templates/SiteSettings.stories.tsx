@@ -212,12 +212,79 @@ const envVars: EnvVar[] = [
 
 const existingTags = ['production', 'staging', 'Next.js', 'OpenAI', 'Claude']
 
-// 実物は features/Project/index.tsx のパンくず（プロジェクト / プロジェクト名）
-const ProjectBreadcrumbs = () => (
-  <Breadcrumbs>
-    <Breadcrumb href="#">プロジェクト</Breadcrumb>
-    <Breadcrumb>portfolio</Breadcrumb>
-  </Breadcrumbs>
+// 実物は features/Project/index.tsx のパンくず（プロジェクト / プロジェクト名）と components/ProjectHero が
+// タブの上に出る。値は Deploys と同じ portfolio。ProjectAutoDeployNotice（自動デプロイを止めているときだけ
+// 出る Callout）は、止めていない状態なので出さない。
+const ZONE = 'lolipop-now.app'
+
+// GAP-NEW: 文中のテキストリンクが無い（ExternalLink と同じ）。実物の ProjectHero は native a + text-sky-700。
+const HeroLink = ({ children, external = false }: { children: string; external?: boolean }) => (
+  <Stack flexDirection="row">
+    <LinkButton
+      appearance="transparent"
+      color="interactive"
+      size="s"
+      href="#"
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noopener noreferrer' : undefined}
+      trailing={external ? <Icon name="launch" size="s" /> : undefined}
+    >
+      {children}
+    </LinkButton>
+  </Stack>
+)
+
+const MetaRow = ({ label, children }: { label: string; children: ReactNode }) => (
+  <Stack gap="xxs">
+    <Typography size="xs" color="medium_emphasis" component="span">
+      {label}
+    </Typography>
+    {children}
+  </Stack>
+)
+
+const ProjectHeader = () => (
+  <>
+    <Breadcrumbs>
+      <Breadcrumb href="#">プロジェクト</Breadcrumb>
+      <Breadcrumb>portfolio</Breadcrumb>
+    </Breadcrumbs>
+    <Stack gap="m">
+      <Stack gap="xs">
+        <Stack flexDirection="row" gap="s" alignItems="center">
+          <Typography size="xxl" fontWeight="bold" component="h1">
+            portfolio
+          </Typography>
+          <Sticker color="positive" size="s">
+            稼働中
+          </Sticker>
+        </Stack>
+        <HeroLink external>{`portfolio.${ZONE}`}</HeroLink>
+      </Stack>
+      <Stack gap="m">
+        <MetaRow label="最終デプロイ">
+          <HeroLink>3分前</HeroLink>
+        </MetaRow>
+        <MetaRow label="GitHub リポジトリ">
+          <HeroLink external>example-inc/portfolio</HeroLink>
+        </MetaRow>
+        <MetaRow label="公開日時">
+          <HeroLink>3分前</HeroLink>
+        </MetaRow>
+        <MetaRow label="ソース">
+          <Stack flexDirection="row" gap="xs" alignItems="center">
+            <Typography component="span" size="s" color="medium_emphasis">
+              <Icon name="github" size="s" color="currentColor" aria-hidden />
+            </Typography>
+            <Typography component="span" size="s" color="medium_emphasis">
+              main · 8f21a3c
+            </Typography>
+            <HeroLink external>画像の遅延読み込みを有効にする</HeroLink>
+          </Stack>
+        </MetaRow>
+      </Stack>
+    </Stack>
+  </>
 )
 
 // ─── 設定: ビルド設定（ProjectBuildConfig / BuildConfigForm） ───
@@ -549,10 +616,19 @@ const ConnectionAddDialog = ({
               <GridItem size={{ xxs: 12, s: 5 }}>
                 <Select aria-label="アカウント" width="full" defaultSelectedKey="1001">
                   <SelectItem id="1001" textValue="example-inc">
-                    example-inc
+                    <Stack flexDirection="row" gap="xs" alignItems="center">
+                      <Icon name="github" size="s" />
+                      example-inc
+                      <Typography component="span" size="xs" color="medium_emphasis">
+                        Organization
+                      </Typography>
+                    </Stack>
                   </SelectItem>
                   <SelectItem id="install-new-account" textValue="アカウント追加">
-                    + アカウント追加
+                    <Stack flexDirection="row" gap="xs" alignItems="center">
+                      <Icon name="plus" size="s" />
+                      アカウント追加
+                    </Stack>
                   </SelectItem>
                 </Select>
               </GridItem>
@@ -602,6 +678,15 @@ const ConnectionAddDialog = ({
                 ))
               )}
             </Paper>
+            {/* 実物の GitHubRepositoryPicker の末尾（GitHub 側でアクセスを許可するリポジトリを変える導線） */}
+            <Stack flexDirection="row" gap="xs" alignItems="center">
+              <Typography component="span" size="s" color="medium_emphasis">
+                目的のリポジトリがありませんか？
+              </Typography>
+              <LinkButton href="#" appearance="transparent" size="s">
+                リポジトリの選択を変更
+              </LinkButton>
+            </Stack>
           </>
         ) : (
           <>
@@ -858,7 +943,7 @@ const SettingsScreen = ({
   return (
     <AppShell active="site">
       <Stack gap="l">
-        <ProjectBreadcrumbs />
+        <ProjectHeader />
         <BuildConfigSection state={build} />
         {gitLoad === 'loading' ? (
           <SectionLoading />
@@ -1282,7 +1367,7 @@ const EnvVarsScreen = ({
     return (
       <AppShell active="site">
         <Stack gap="l">
-          <ProjectBreadcrumbs />
+          <ProjectHeader />
           {load === 'loading' ? (
             <SectionLoading />
           ) : (
@@ -1298,7 +1383,7 @@ const EnvVarsScreen = ({
   return (
     <AppShell active="site">
       <Stack gap="l">
-        <ProjectBreadcrumbs />
+        <ProjectHeader />
         <Tabs selectedKey={target} onSelectionChange={(k) => setTarget(k as EnvVar['target'])}>
           <TabList aria-label="環境変数の環境">
             <Tab id="production">本番</Tab>
@@ -1342,9 +1427,8 @@ const EnvVarsScreen = ({
                       <Typography component="div" size="xs" color="medium_emphasis">
                         ロリポップ！AIゲートウェイは、Claude・GPT・Gemini
                         などのAIモデルをひとつのAPIキーで呼び出せるサービスです。
-                      </Typography>
-                      {/* GAP-20: 実物はキー名を font-mono の code チップで出している */}
-                      <Typography component="div" size="xs" color="medium_emphasis">
+                        <br />
+                        {/* GAP-20: 実物はキー名を font-mono の code チップで出している */}
                         発行したキーを{' '}
                         <Typography component="span" size="xs" fontWeight="bold">
                           {AI_GATEWAY_ENV_KEY}

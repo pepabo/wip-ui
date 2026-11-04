@@ -54,10 +54,11 @@ const Pending = () => <Loader size="s" />
 /** _components/PaymentInfoPaper ＋ PaymentMethodCard */
 const PaymentInfo = ({ loading }: { loading: boolean }) => (
   <Card>
-    <Stack gap="l">
+    <Stack gap="xl">
       <Typography size="xxl" fontWeight="bold" component="h1">
         支払い方法
       </Typography>
+      {/* GAP-NEW: Stack の alignItems にブレークポイントごとの値を渡せない。実物は縦並び（xs）のとき左揃え */}
       <Stack
         flexDirection={{ xxs: 'column', s: 'row' }}
         gap="s"

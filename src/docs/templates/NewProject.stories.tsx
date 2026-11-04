@@ -22,6 +22,7 @@ import type { ReactNode } from 'react'
 
 /**
  * デプロイナウ（hosting-deploy-now/frontend）の新規作成まわりを、ホスティング管理画面の中に写したもの。
+ * プロジェクトの作成（/projects/new 系）はサイドナビの「プロジェクト」、既存プロジェクトへのデプロイは「デプロイ」に置く。
  * - プロジェクトを作成（/projects/new）: features/NewUploadProject（DeployMethodCards・DeployGuide・
  *   NewUploadProjectForm・SelectedFilesCard・PublicUrlField・AdvancedSettingsFields）
  * - GitHub リポジトリをインポート（/projects/new/github）: features/NewGitHubProject と
@@ -220,24 +221,33 @@ const SelectedFilesCard = () => (
 
 // ─── プロジェクトを作成（features/NewUploadProject） ───
 
-const uploadFrameworks = [
+// backend/sql/seed.sql の frameworks（ListFrameworks は ORDER BY id で返す）
+const frameworks = [
   {
     id: 'next',
     name: 'next',
     displayName: 'Next.js',
-    install: 'npm install',
+    install: 'npm ci --ignore-scripts',
     build: 'npm run build',
-    out: '.next',
+    out: '.next/standalone',
   },
+  {
+    id: 'nuxt',
+    name: 'nuxt',
+    displayName: 'Nuxt',
+    install: 'npm ci --ignore-scripts',
+    build: 'npm run build',
+    out: '.output',
+  },
+  { id: 'static', name: 'static', displayName: '静的サイト', install: '', build: '', out: '.' },
   {
     id: 'astro',
     name: 'astro',
     displayName: 'Astro',
-    install: 'npm install',
+    install: 'npm ci --ignore-scripts',
     build: 'npm run build',
     out: 'dist',
   },
-  { id: 'static', name: 'static', displayName: '静的サイト', install: '', build: '', out: '.' },
 ]
 
 // フォルダ名（portfolio-site）から提案した公開URL と、内容から判定したフレームワーク
@@ -248,10 +258,10 @@ const UploadProjectScreen = ({ hasSelection = false }: { hasSelection?: boolean 
   const [domain, setDomain] = useState(hasSelection ? SUGGESTED_DOMAIN : '')
   const [frameworkId, setFrameworkId] = useState(DETECTED_FRAMEWORK)
   const [advanced, setAdvanced] = useState(false)
-  const framework = uploadFrameworks.find((f) => f.id === frameworkId)
+  const framework = frameworks.find((f) => f.id === frameworkId)
 
   return (
-    <AppShell active="deploys">
+    <AppShell active="projects">
       <PageTitle
         title="プロジェクトを作成"
         description="プロジェクトを作成してデプロイする方法を選んでください。"
@@ -273,7 +283,7 @@ const UploadProjectScreen = ({ hasSelection = false }: { hasSelection?: boolean 
                 selectedKey={frameworkId}
                 onSelectionChange={(key) => setFrameworkId(String(key))}
               >
-                {uploadFrameworks.map((f) => (
+                {frameworks.map((f) => (
                   <SelectItem key={f.id} id={f.id}>
                     {f.displayName}
                   </SelectItem>
@@ -579,41 +589,15 @@ const RepositoryPicker = ({ accountsEmpty = false }: { accountsEmpty?: boolean }
 
 // ─── 新しいプロジェクトのフォーム（features/NewGitHubProject の NewProjectSection + CreateForm） ───
 
-const githubFrameworks = [
-  {
-    id: 'next',
-    displayName: 'Next.js',
-    install: 'npm install',
-    build: 'npm run build',
-    out: '.next',
-  },
-  {
-    id: 'nuxt',
-    displayName: 'Nuxt',
-    install: 'npm install',
-    build: 'npm run build',
-    out: '.output',
-  },
-  {
-    id: 'astro',
-    displayName: 'Astro',
-    install: 'npm install',
-    build: 'npm run build',
-    out: 'dist',
-  },
-  { id: 'static', displayName: '静的サイト', install: '', build: '', out: '.' },
-]
-
 const NewProjectSection = ({
   repository,
-  initialFrameworkId = '',
 }: {
   repository: { fullName: string; name: string; defaultBranch: string }
-  initialFrameworkId?: string
 }) => {
-  const [frameworkId, setFrameworkId] = useState(initialFrameworkId)
+  // 実物はリポジトリを選んだ直後、フレームワークを未選択（EMPTY_FORM の frameworkId: ''）にする
+  const [frameworkId, setFrameworkId] = useState('')
   const [advanced, setAdvanced] = useState(false)
-  const fw = githubFrameworks.find((f) => f.id === frameworkId)
+  const fw = frameworks.find((f) => f.id === frameworkId)
 
   return (
     <Card outlined elevation={0}>
@@ -657,7 +641,7 @@ const NewProjectSection = ({
             selectedKey={frameworkId || null}
             onSelectionChange={(key) => setFrameworkId(key === null ? '' : String(key))}
           >
-            {githubFrameworks.map((f) => (
+            {frameworks.map((f) => (
               <SelectItem key={f.id} id={f.id}>
                 {f.displayName}
               </SelectItem>
@@ -737,14 +721,12 @@ const GitHubImportScreen = ({
   authorization = 'connected',
   accountsEmpty,
   repository = null,
-  initialFrameworkId,
 }: {
   authorization?: AuthorizationState
   accountsEmpty?: boolean
   repository?: { fullName: string; name: string; defaultBranch: string } | null
-  initialFrameworkId?: string
 }) => (
-  <AppShell active="deploys">
+  <AppShell active="projects">
     <Stack gap="m">
       <Typography size="xl" fontWeight="bold" component="h1">
         {repository === null ? 'GitHub リポジトリをインポート' : '新しいプロジェクト'}
@@ -760,7 +742,7 @@ const GitHubImportScreen = ({
       ) : repository === null ? (
         <RepositoryPicker accountsEmpty={accountsEmpty} />
       ) : (
-        <NewProjectSection repository={repository} initialFrameworkId={initialFrameworkId} />
+        <NewProjectSection repository={repository} />
       )}
     </Stack>
   </AppShell>
@@ -896,12 +878,17 @@ const TrialScreen = ({ dropped = false }: { dropped?: boolean }) => {
 // 実物は public/skills/lolipop-cli.md を取得して全文をそのまま出す（ここでは先頭のみ）
 const SKILL_MARKDOWN = `---
 name: lolipop-cli
-description: ロリポップ！デプロイナウの lolipop CLI でアプリをデプロイする手順。CLI の準備 → login → プロジェクト作成 → deploy までを通す。
+description: ロリポップ！デプロイナウの lolipop CLI でアプリをデプロイする手順。CLI の準備 → login → プロジェクト作成 → deploy までを通す。「lolipop でデプロイ」「デプロイナウにデプロイ」「lolipop CLI を使いたい」等で使う。
 ---
 
 # lolipop CLI でデプロイする
 
 ロリポップ！デプロイナウのコマンドラインツール \`lolipop\` で、ローカルのアプリを公開する手順。
+
+このスキルに無い詳細は Markdown で取得できるドキュメントを参照する:
+
+- https://deploy.lolipop.jp/docs.md — ロリポップ！デプロイナウのドキュメント全体
+- https://deploy.lolipop.jp/docs/cli.md — CLI リファレンス (全コマンド・オプションの詳細)
 
 ## 1. CLI を入れる
 
@@ -929,6 +916,7 @@ const CliSkillScreen = () => {
   return (
     <AppShell active="deploys">
       <Stack gap="xs">
+        {/* 実物は Typography の既定（p）で見出しになっていない。ページの見出しなので h1 にしている */}
         <Typography component="h1" size="xl" fontWeight="bold">
           lolipop CLI スキル
         </Typography>
@@ -1074,12 +1062,12 @@ export const GitHubNotConnected: Story = {
 
 /**
  * リポジトリを選んだあとのフォーム。プロジェクト名とサブドメインはリポジトリ名から、
- * ブランチはデフォルトブランチから入る。
+ * ブランチはデフォルトブランチから入る。フレームワークは未選択から選ぶ。
  *
  * @summary 新しいプロジェクトのフォーム
  */
 export const GitHubImportForm: Story = {
-  render: () => <GitHubImportScreen repository={portfolioRepository} initialFrameworkId="next" />,
+  render: () => <GitHubImportScreen repository={portfolioRepository} />,
 }
 
 /**

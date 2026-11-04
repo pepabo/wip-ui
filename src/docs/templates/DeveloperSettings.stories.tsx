@@ -224,12 +224,10 @@ const GitHubDisconnectDialog = ({
   <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
     {/* GAP-NEW: Dialog に幅の指定が無い。実物は w-[360px] に固定している */}
     <DialogHeader>
-      {/* 実物は見出しの前に ⚠️ の絵文字（aria-hidden）を置いている。アイコンで代える */}
+      {/* 実物は見出しの前に ⚠️ の絵文字（aria-hidden）を置いている。実物の右の余白（mr-2）は半角スペースで代える */}
       <DialogTitle>
-        <Stack flexDirection="row" gap="xs" alignItems="center">
-          <Icon name="exclamation_on_triangle" aria-hidden />
-          GitHub へのアクセスを取り消しますか？
-        </Stack>
+        <span aria-hidden>⚠️ </span>
+        GitHub へのアクセスを取り消しますか？
       </DialogTitle>
     </DialogHeader>
     <Stack gap="m">

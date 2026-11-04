@@ -266,7 +266,8 @@ const serverList = [
 const ServerListMenu = () => (
   <MenuTrigger>
     {/* GAP-NEW: UnfoldMore（上下の山）に当たるアイコンが無いので chevron_down で代用 */}
-    <Button appearance="outlined" size="s" trailing={<Icon name="chevron_down" size="s" />}>
+    {/* 実物は size='medium' */}
+    <Button appearance="outlined" trailing={<Icon name="chevron_down" size="s" />}>
       {server.name}
     </Button>
     <Menu>
@@ -287,27 +288,30 @@ type ServerDetailTab = '詳細' | 'ゲーム設定' | 'MOD' | 'ファイル管�
 type ServerDetailHeaderProps = {
   status: ServerStatus
   tab: ServerDetailTab
+  /** ゲームの表示名（GameDisplayNames）。省略すると server.game */
+  game?: string
 }
 
 /**
  * (server)/_components/ServerDetailHeader。サーバー名（xxxl）の下にステータスとゲーム、右に ServerSwitch。
  * 準備中・復元中はステータスと起動ボタンを出さない
  */
-export const ServerDetailHeader = ({ status }: ServerDetailHeaderProps) => (
+export const ServerDetailHeader = ({ status, game = server.game }: ServerDetailHeaderProps) => (
   <Stack gap="m">
     <Stack flexDirection="row">
       <ServerListMenu />
     </Stack>
     <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="l" justifyContent="space-between">
-      <Stack gap="s">
+      {/* 実物は Stack gap={2}（16px） */}
+      <Stack gap="m">
         <Typography size="xxxl" fontWeight="bold" component="h1">
           {server.name}
         </Typography>
-        <Stack flexDirection="row" gap="s" alignItems="center">
+        <Stack flexDirection="row" gap="m" alignItems="center">
           {!isServerPreparing(status) && <ServerStatusView status={status} />}
           {/* components/Sticker の spec='game-title' */}
           <Sticker color="informative" size="s">
-            {server.game}
+            {game}
           </Sticker>
         </Stack>
       </Stack>

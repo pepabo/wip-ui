@@ -12,20 +12,11 @@ import { Paper } from '../../Paper'
 import { Radio, RadioGroup } from '../../Radio'
 import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
-import { Sticker } from '../../Sticker'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
-import {
-  CalloutBody,
-  ConfigRow,
-  EmptyNotice,
-  PaperTitle,
-  ServerDetailHeader,
-  ServerStatusView,
-  server,
-} from './gameServer'
+import { CalloutBody, ConfigRow, EmptyNotice, ServerDetailHeader, server } from './gameServer'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -229,7 +220,7 @@ const minecraftJavaGroups: Group[] = [
       {
         id: 'resource-pack',
         label: 'リソースパックのURL',
-        description: 'リソースパックのURLを設定します。',
+        hint: 'リソースパックのURLを設定します。',
         kind: 'conditional',
         value: '',
         enableLabel: 'リソースパックのURLを設定する',
@@ -243,8 +234,7 @@ const minecraftJavaGroups: Group[] = [
       {
         id: 'level-type',
         label: 'マップのタイプ',
-        description:
-          'ワールドに生成されるマップのタイプを選択できます。新しいマップのタイプを適用するにはワールドの再生成を行ってください。',
+        hint: 'ワールドに生成されるマップのタイプを選択できます。新しいマップのタイプを適用するにはワールドの再生成を行ってください。',
         kind: 'select',
         value: 'minecraft:normal',
         options: [
@@ -505,7 +495,15 @@ const astroneerGroups: Group[] = [
         password: true,
         hint: 'サーバーコンソールへの接続に使用します。空にすると停止時にワールドが保存されなくなります',
       },
-      { id: 'max_players', label: '最大プレイヤー数', kind: 'slider', value: 8, min: 1, max: 8 },
+      {
+        id: 'max_players',
+        label: '最大プレイヤー数',
+        kind: 'slider',
+        value: 8,
+        min: 1,
+        max: 8,
+        step: 1,
+      },
     ],
   },
 ]
@@ -530,7 +528,15 @@ const windroseGroups: Group[] = [
         maxLength: 64,
         placeholder: 'My Windrose Server',
       },
-      { id: 'max_players', label: '最大プレイヤー数', kind: 'slider', value: 4, min: 1, max: 10 },
+      {
+        id: 'max_player_count',
+        label: '最大プレイヤー数',
+        kind: 'slider',
+        value: 4,
+        min: 1,
+        max: 10,
+        step: 1,
+      },
       {
         id: 'use_direct_connection',
         label: 'Direct IP接続を許可',
@@ -568,7 +574,7 @@ const windroseGroups: Group[] = [
         hint: 'ボス戦全体の難易度および敵の攻撃性を制御します',
       },
       {
-        id: 'mob_health',
+        id: 'mob_health_multiplier',
         label: '敵の体力倍率',
         kind: 'slider',
         value: 1,
@@ -578,7 +584,7 @@ const windroseGroups: Group[] = [
         hint: '敵の体力を設定します',
       },
       {
-        id: 'mob_damage',
+        id: 'mob_damage_multiplier',
         label: '敵のダメージ倍率',
         kind: 'slider',
         value: 1,
@@ -588,7 +594,7 @@ const windroseGroups: Group[] = [
         hint: '敵が与えるダメージ量を設定します',
       },
       {
-        id: 'ships_health',
+        id: 'ships_health_multiplier',
         label: '敵船の体力倍率',
         kind: 'slider',
         value: 1,
@@ -598,7 +604,7 @@ const windroseGroups: Group[] = [
         hint: '敵船の体力量を設定します',
       },
       {
-        id: 'ships_damage',
+        id: 'ships_damage_multiplier',
         label: '敵船のダメージ倍率',
         kind: 'slider',
         value: 1,
@@ -608,7 +614,7 @@ const windroseGroups: Group[] = [
         hint: '敵船が与えるダメージ量を設定します',
       },
       {
-        id: 'boarding',
+        id: 'boarding_difficulty_multiplier',
         label: '乗り込み戦の難易度倍率',
         kind: 'slider',
         value: 1,
@@ -618,7 +624,7 @@ const windroseGroups: Group[] = [
         hint: '乗り込み戦闘（ボーディングアクション）に勝利するために倒すべき敵船員の人数を設定します',
       },
       {
-        id: 'stats_correction',
+        id: 'stats_correction_modifier',
         label: 'プレイヤー数に応じた敵の体力の調整',
         kind: 'slider',
         value: 1,
@@ -628,7 +634,7 @@ const windroseGroups: Group[] = [
         hint: 'サーバー上のプレイヤー数に応じて、敵の体力および姿勢（ポスチャー）の低下量を調整します',
       },
       {
-        id: 'ship_stats_correction',
+        id: 'ship_stats_correction_modifier',
         label: 'プレイヤー数に応じた敵船の体力の調整',
         kind: 'slider',
         value: 0,
@@ -818,25 +824,25 @@ const InfoPaper = ({ title, children }: { title: string; children: ReactNode }) 
 
 /** 「設定」の Paper の見出し（変更 / リセット） */
 const SettingTitle = ({ onEdit, onReset }: { onEdit?: () => void; onReset: () => void }) => (
-  <PaperTitle
-    action={
-      <Stack flexDirection="row" gap="s">
-        <Button appearance="outlined" leading={<Icon name="pencil" size="s" />} onPress={onEdit}>
-          変更
-        </Button>
-        {/* GAP-NEW: RestartAltOutlined に当たるアイコンが無いので arrow_order で代用 */}
-        <Button
-          appearance="outlined"
-          leading={<Icon name="arrow_order" size="s" />}
-          onPress={onReset}
-        >
-          リセット
-        </Button>
-      </Stack>
-    }
-  >
-    設定
-  </PaperTitle>
+  // 実アプリは画面幅によらず見出しとボタンを横に並べる（PaperTitle は xxs で縦積みになるので使わない）
+  <Stack flexDirection="row" gap="s" alignItems="flex-start" justifyContent="space-between">
+    <Typography size="xxl" fontWeight="bold" component="h2">
+      設定
+    </Typography>
+    <Stack flexDirection="row" gap="s">
+      <Button appearance="outlined" leading={<Icon name="pencil" size="s" />} onPress={onEdit}>
+        変更
+      </Button>
+      {/* GAP-NEW: RestartAltOutlined に当たるアイコンが無いので arrow_order で代用 */}
+      <Button
+        appearance="outlined"
+        leading={<Icon name="arrow_order" size="s" />}
+        onPress={onReset}
+      >
+        リセット
+      </Button>
+    </Stack>
+  </Stack>
 )
 
 /** GameSettings/GameSettingsView。グループの間に Divider */
@@ -860,35 +866,6 @@ const SettingsView = ({ groups }: { groups: Group[] }) => (
       </Stack>
     ))}
   </>
-)
-
-/**
- * 「ゲーム設定」タブの上のヘッダー（Minecraft (Java版) 以外）。
- * 共通化の候補: gameServer.tsx の ServerDetailHeader がゲーム名を server.game に固定しているため、
- * 起動中のときと同じ形（停止 / 再起動）をここで組み直している。ServerDetailHeader に game を渡せれば不要
- */
-const GameHeader = ({ game }: { game: GameId }) => (
-  <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="l" justifyContent="space-between">
-    <Stack gap="s">
-      <Typography size="xxxl" fontWeight="bold" component="h1">
-        {server.name}
-      </Typography>
-      <Stack flexDirection="row" gap="s" alignItems="center">
-        <ServerStatusView status="RUNNING" />
-        <Sticker color="informative" size="s">
-          {gameNames[game]}
-        </Sticker>
-      </Stack>
-    </Stack>
-    <Stack flexDirection="row" gap="s" alignItems="flex-start">
-      <Button color="interactive" size="l" leading={<Icon name="minus_on_circle" size="m" />}>
-        停止
-      </Button>
-      <Button color="interactive" size="l" leading={<Icon name="arrow_order" size="m" />}>
-        再起動
-      </Button>
-    </Stack>
-  </Stack>
 )
 
 // ─── Minecraft (Java版) の設定 ───
@@ -1131,7 +1108,7 @@ const DynamicField = ({ field: f, onChange }: { field: Field; onChange: () => vo
     case 'select':
       return (
         <Stack gap="s">
-          <FieldLabel label={f.label} />
+          <FieldLabel label={f.label} description={f.description} />
           <Select
             aria-label={f.label}
             defaultSelectedKey={f.value}
@@ -1144,7 +1121,7 @@ const DynamicField = ({ field: f, onChange }: { field: Field; onChange: () => vo
               </SelectItem>
             ))}
           </Select>
-          <Hint>{f.description ?? f.hint}</Hint>
+          <Hint>{f.hint}</Hint>
         </Stack>
       )
     case 'radio':
@@ -1187,7 +1164,7 @@ const DynamicField = ({ field: f, onChange }: { field: Field; onChange: () => vo
       return (
         <Stack gap="s">
           <Stack gap="xs">
-            <FieldLabel label={f.label} />
+            <FieldLabel label={f.label} description={f.description} />
             <Checkbox
               isSelected={enabled}
               onChange={(v) => {
@@ -1221,7 +1198,8 @@ const DynamicField = ({ field: f, onChange }: { field: Field; onChange: () => vo
                 onChange={changed}
               />
             ))}
-          <Hint>{f.description}</Hint>
+          {/* 条件付き入力の config.description は、入力欄を出しているときだけその下に出る */}
+          {enabled && <Hint>{f.hint}</Hint>}
         </Stack>
       )
   }
@@ -1761,6 +1739,8 @@ const GameBody = ({
               </Button>
             }
           >
+            {/* GAP-NEW: 実アプリは左側を残りの幅いっぱいに広げ（Grid size='grow'）、その中を 2 列（各 6/12）に分ける。
+                ActionPaper の左側を広げる手段が無いので、2 つを横に並べるだけにしている */}
             <Stack flexDirection="row" gap="xxl">
               <ConfigRow label="サーバーの種類">{server.mod}</ConfigRow>
               <ConfigRow label="バージョン">{server.version}</ConfigRow>
@@ -1831,8 +1811,11 @@ const GameBody = ({
         <>
           <VersionUpPaper onOpen={() => open('versionUp')} />
           {/* WindroseManager/components/InviteCode */}
-          <InfoPaper title="招待コード">
+          <Card>
             <Stack gap="s">
+              <Typography size="l" fontWeight="bold" component="h2">
+                招待コード
+              </Typography>
               <Stack flexDirection="row" gap="s" justifyContent="space-between" alignItems="center">
                 <Typography size="s">{windroseInviteCode}</Typography>
                 <CopyButton />
@@ -1842,7 +1825,7 @@ const GameBody = ({
                 IP接続が有効な場合、招待コードでは参加できません。IPアドレスで直接接続してください。
               </Typography>
             </Stack>
-          </InfoPaper>
+          </Card>
           {settings}
         </>
       )
@@ -1918,20 +1901,15 @@ const GameSettingsScreen = ({
         editor
       ) : (
         <>
-          {game === 'minecraftJava' ? (
-            <ServerDetailHeader status={status} tab="ゲーム設定" />
-          ) : (
-            <GameHeader game={game} />
-          )}
+          <ServerDetailHeader status={status} tab="ゲーム設定" game={gameNames[game]} />
 
           {status !== 'RUNNING' ? (
-            // ServerDetailTabPanels。停止中はゲーム設定の中身を出さない（最小の高さ 200px の中央に 1 行）
-            <Card>
-              <EmptyNotice size="s">
-                😴
-                サーバー停止中のため非表示になっています。サーバーを起動後、最大30秒程度で表示されます。
-              </EmptyNotice>
-            </Card>
+            // ServerDetailTabPanels。停止中はゲーム設定の中身を出さず、Paper の無い面に 1 行だけ出す。
+            // GAP-NEW: 最小の高さ 200px の中で上下中央に置く指定ができないので、横の中央だけ
+            <EmptyNotice size="s">
+              😴
+              サーバー停止中のため非表示になっています。サーバーを起動後、最大30秒程度で表示されます。
+            </EmptyNotice>
           ) : view === 'polling' ? (
             // components/GameDataPollingAlert。GAP-NEW: Callout のアイコンを CircularProgress に差し替えられない
             <Callout color="informative">

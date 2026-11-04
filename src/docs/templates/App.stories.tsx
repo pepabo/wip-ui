@@ -14,6 +14,7 @@ import * as GameSettings from './GameSettings.stories'
 import * as Home from './Home.stories'
 import * as Mods from './Mods.stories'
 import * as Overview from './Overview.stories'
+import * as Projects from './Projects.stories'
 import * as SiteSettings from './SiteSettings.stories'
 import * as Usage from './Usage.stories'
 
@@ -40,6 +41,7 @@ const screens: Record<AppDestination, ComponentType> = {
   mods: composeStories(Mods).Default,
   files: composeStories(FileManager).Default,
   backup: composeStories(Backup).Default,
+  projects: composeStories(Projects).Default,
   deploys: composeStories(Deploys).Default,
   domains: composeStories(Domains).Default,
   site: composeStories(SiteSettings).Default,

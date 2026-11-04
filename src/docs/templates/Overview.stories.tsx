@@ -258,7 +258,10 @@ const ServerStatusPaper = ({ status }: { status: ServerStatus }) => {
   )
 }
 
-/** (server)/_components/ServerDetailPaper。項目の間に Divider */
+/**
+ * (server)/_components/ServerDetailPaper。項目の間に Divider。
+ * GAP-NEW: Stack の alignItems がレスポンシブを取らない。実アプリは md 以上でボタンを上下中央に揃える（xs は上揃え）
+ */
 const ServerDetailPaper = ({
   status,
   onSshKey,
@@ -389,6 +392,7 @@ const PlanItemBody = ({
         </Typography>
       </Stack>
       {d.months > 1 ? (
+        // GAP-NEW: Typography に打ち消し線が無い。実アプリは 1ヶ月の月額に line-through を引き、薄い色（secondary.light）で「→」と並べる
         <Stack gap="xxs">
           <Typography size="s" fontWeight="bold" component="span">
             月額 {yen(spec.monthly)} → {yen(unit)}
@@ -428,8 +432,16 @@ const ContractPaper = ({
   const [months, setMonths] = useState(contracted.months)
   const [isCancelOpen, setCancelOpen] = useState(cancelDialog)
 
-  const isChanged =
-    game !== contracted.game || memory !== contracted.memory || months !== contracted.months
+  // SubscriptionInPlaceModal/model の ChangePlanStatus。メモリーで上位・下位、同じなら期間で判定する
+  const changeStatus =
+    memory < contracted.memory
+      ? 'lower'
+      : memory > contracted.memory
+        ? 'higher'
+        : months !== contracted.months
+          ? 'duration'
+          : 'same'
+  const isChanged = game !== contracted.game || changeStatus !== 'same'
   const close = () => {
     setOpen(false)
     setGame(contracted.game)
@@ -526,9 +538,12 @@ const ContractPaper = ({
                       <SelectableRow
                         key={p.memory}
                         selected={p.memory === memory}
-                        isDisabled={isLower}
                         label={`${p.memory}GBを選択`}
-                        onPress={() => setMemory(p.memory)}
+                        onPress={() => {
+                          setMemory(p.memory)
+                          // スペックを変えると期間は契約中の期間に戻る（hooks の handleToggleGameSpec）
+                          if (p.memory !== contracted.memory) setMonths(contracted.months)
+                        }}
                       >
                         <PlanItemBody
                           spec={p}
@@ -554,37 +569,70 @@ const ContractPaper = ({
           </GridItem>
         </Grid>
 
+        {/* SubscriptionInPlaceModal は節の間に Divider を引く（ゲーム・プラン / 期間 / 料金 / ボタン） */}
+        {open && changeStatus !== 'lower' && (
+          <>
+            <Divider />
+            {/* 実アプリはプランの列の幅（calc(100% - 292px)）で右に寄せる */}
+            <Grid spacing="l">
+              <GridItem size={{ xxs: 12, l: 8 }} offset={{ xxs: 0, l: 4 }}>
+                <Stack gap="xs">
+                  <Typography size="s" fontWeight="bold" component="h3">
+                    期間
+                  </Typography>
+                  {/* 列数は ceil(件数/3)・ceil(件数/2)。6 件なら s で 2 列、m 以上で 3 列 */}
+                  <Grid spacing="xs">
+                    {durations.map((d) => (
+                      <GridItem key={d.months} size={{ xxs: 12, s: 6, m: 4 }}>
+                        <SelectableRow
+                          selected={d.months === months}
+                          // 上位プランを選んでいる間は期間を変えられない
+                          isDisabled={changeStatus === 'higher'}
+                          label={`${d.months}ヶ月を選択`}
+                          onPress={() => setMonths(d.months)}
+                        >
+                          <Stack flexDirection="row" gap="xs" alignItems="center">
+                            <Typography fontWeight="bold" component="span">
+                              {d.months}ヶ月
+                            </Typography>
+                            {d.months === contracted.months && <CurrentSticker />}
+                          </Stack>
+                        </SelectableRow>
+                      </GridItem>
+                    ))}
+                  </Grid>
+                  {changeStatus === 'higher' && (
+                    <Callout color="informative" appearance="outline">
+                      契約期間と上位プランへの同時変更は現在対応していません。契約期間を変更する場合は、現在のプランを選択してください。
+                    </Callout>
+                  )}
+                </Stack>
+              </GridItem>
+            </Grid>
+          </>
+        )}
+
+        {/* 実アプリは上位プラン・期間を変えると、ここに料金の内訳（ModifyGameSpecPrice / DurationChangePrice）が出る。
+            料金の計算は API の結果なので、テンプレートには入れていない */}
         {open && (
           <>
-            <Stack gap="xs">
-              <Typography size="s" fontWeight="bold" component="h3">
-                期間
-              </Typography>
-              <Grid spacing="xs">
-                {durations.map((d) => (
-                  <GridItem key={d.months} size={{ xxs: 12, s: 4 }}>
-                    <SelectableRow
-                      selected={d.months === months}
-                      label={`${d.months}ヶ月を選択`}
-                      onPress={() => setMonths(d.months)}
-                    >
-                      <Stack flexDirection="row" gap="xs" alignItems="center">
-                        <Typography fontWeight="bold" component="span">
-                          {d.months}ヶ月
-                        </Typography>
-                        {d.months === contracted.months && <CurrentSticker />}
-                      </Stack>
-                    </SelectableRow>
-                  </GridItem>
-                ))}
-              </Grid>
-            </Stack>
-
+            <Divider />
+            {changeStatus === 'lower' && (
+              <Stack alignItems="center">
+                <Typography size="s" color="negative">
+                  下位プランへの変更は現在対応していません
+                </Typography>
+              </Stack>
+            )}
             <Stack flexDirection="row" gap="s" justifyContent="center">
               <Button appearance="outlined" onPress={close}>
                 キャンセル
               </Button>
-              <Button color="interactive" isDisabled={!isChanged} onPress={close}>
+              <Button
+                color="interactive"
+                isDisabled={!isChanged || changeStatus === 'lower'}
+                onPress={close}
+              >
                 保存
               </Button>
             </Stack>
@@ -747,7 +795,6 @@ const ServerSchedulePaper = ({
                         編集
                       </MenuItem>
                       <MenuItem
-                        color="negative"
                         leading={<Icon name="garbage_can" size="s" />}
                         onAction={() => onDelete(s)}
                       >
@@ -1023,7 +1070,11 @@ const OverviewScreen = ({
           {/* RestartServerPaper。押すと RestartServerDialog（閉じられない進行表示）が開く */}
           <ActionPaper
             title="サーバーの再起動"
-            action={<Button appearance="outlined">再起動</Button>}
+            action={
+              <Button appearance="outlined" color="interactive">
+                再起動
+              </Button>
+            }
           >
             現在のゲームを停止し、サーバーを再起動します。
           </ActionPaper>

@@ -430,33 +430,40 @@ const InstalledMods = ({
           </Stack>
         </Card>
       ) : (
-        <Paper elevation={0} outlined>
-          {narrow ? (
-            // md 未満: 1 行目に「未選択」と small のアンインストール、2 行目にチップ
-            <Stack gap="s">
-              <Stack flexDirection="row" gap="m" justifyContent="space-between" alignItems="center">
-                {selectionLabel}
+        <Paper padding="none" elevation={0} outlined>
+          <Paper padding="m" elevation={0}>
+            {narrow ? (
+              // md 未満: 1 行目に「未選択」と small のアンインストール、2 行目にチップ
+              <Stack gap="s">
+                <Stack
+                  flexDirection="row"
+                  gap="m"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  {selectionLabel}
+                  <UninstallSelectedButton
+                    size="s"
+                    isDisabled={selected.size === 0}
+                    onPress={() => setTargets([...selected].map(String))}
+                  />
+                </Stack>
+                {chips}
+              </Stack>
+            ) : (
+              <Stack flexDirection="row" gap="s" justifyContent="space-between" alignItems="center">
+                <Stack flexDirection="row" gap="m" alignItems="center">
+                  {selectionLabel}
+                  {chips}
+                </Stack>
                 <UninstallSelectedButton
-                  size="s"
+                  size="m"
                   isDisabled={selected.size === 0}
                   onPress={() => setTargets([...selected].map(String))}
                 />
               </Stack>
-              {chips}
-            </Stack>
-          ) : (
-            <Stack flexDirection="row" gap="s" justifyContent="space-between" alignItems="center">
-              <Stack flexDirection="row" gap="m" alignItems="center">
-                {selectionLabel}
-                {chips}
-              </Stack>
-              <UninstallSelectedButton
-                size="m"
-                isDisabled={selected.size === 0}
-                onPress={() => setTargets([...selected].map(String))}
-              />
-            </Stack>
-          )}
+            )}
+          </Paper>
           <Divider />
           {/* 実アプリは MUI x の DataGrid（行の高さ 72px、列の並べ替え、チェックボックスでの選択） */}
           <Table
@@ -860,16 +867,22 @@ const AddMods = ({ initialQuery, onBack }: { initialQuery: string; onBack: () =>
                 onClose={() => setFilterOpen(false)}
               />
             )}
-            <Paper elevation={0} outlined>
+            <Paper padding="none" elevation={0} outlined>
               {results.length === 0 ? (
-                <Stack alignItems="center">
-                  <Typography color="medium_emphasis">検索結果がありません</Typography>
-                </Stack>
+                // 実アプリは上下 48px の余白
+                <Paper padding="xxl" elevation={0}>
+                  <Stack alignItems="center">
+                    <Typography color="medium_emphasis">検索結果がありません</Typography>
+                  </Stack>
+                </Paper>
               ) : (
                 results.map((mod, i) => (
                   <Stack key={mod.id}>
                     {i > 0 && <Divider />}
-                    <ModResultItem mod={mod} />
+                    {/* 1 件ごとに左右 24px・上下 16px の余白（スマートフォンでは 16px・12px） */}
+                    <Paper padding="m" elevation={0}>
+                      <ModResultItem mod={mod} />
+                    </Paper>
                   </Stack>
                 ))
               )}

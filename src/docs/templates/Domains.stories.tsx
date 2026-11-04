@@ -19,6 +19,7 @@ import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { ReactNode } from 'react'
 import type { StickerColor } from '../../Sticker'
 
 /**
@@ -26,7 +27,7 @@ import type { StickerColor } from '../../Sticker'
  * 元: features/Project/features/ProjectDomains（index.tsx / model.ts と
  * components/DomainAddDialog・DomainDeleteDialog・KebabMenu・MigrationSteps・VerificationMethodTabs）。
  * 実物はプロジェクト詳細（features/Project/index.tsx）の「ドメイン」タブ。ここではタブを AppShell のサイドナビに置き換え、
- * タブより上はパンくずだけを写している（ProjectHero は Deploys で写している）。
+ * タブより上のパンくずと ProjectHero も写している（Deploys と同じ portfolio）。
  * DNS 検証（customDomainDNSVerification）は release 済みとして、検証方法のタブを出している。
  */
 
@@ -556,14 +557,81 @@ const DomainDeleteDialog = ({ hostname, onClose }: { hostname: string; onClose: 
 
 // ─── 画面 ───
 
-// 実物はプロジェクト詳細（features/Project/index.tsx）の「ドメイン」タブ。
-// 見出しはパンくずとプロジェクト名（ProjectHero）だけで、ドメインのページ見出しは無い。
-// ProjectHero はデプロイの画面（Deploys）で写しているので、ここではパンくずだけを置く。
-const ProjectBreadcrumbs = () => (
-  <Breadcrumbs>
-    <Breadcrumb href="#">プロジェクト</Breadcrumb>
-    <Breadcrumb>portfolio</Breadcrumb>
-  </Breadcrumbs>
+// 実物はプロジェクト詳細（features/Project/index.tsx）の「ドメイン」タブ。タブの上にパンくずと
+// ProjectHero（プロジェクト名の h1・稼働状態・公開 URL・最終デプロイなど）が出る。値は Deploys と同じ portfolio。
+// 実物の ProjectHero と ProjectAutoDeployNotice（自動デプロイを止めているときだけ出る Callout）のうち、
+// 止めていない状態なので Callout は出さない。
+
+// GAP-NEW: 文中のテキストリンクが無い。実物は native a + text-sky-700。
+// LinkButton の transparent で代えるので、文字の前後に余白が付いて左端がそろわない。
+const TextLink = ({ children, external = false }: { children: string; external?: boolean }) => (
+  <Stack flexDirection="row">
+    <LinkButton
+      appearance="transparent"
+      color="interactive"
+      size="s"
+      href="#"
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noopener noreferrer' : undefined}
+      trailing={external ? <Icon name="launch" size="s" /> : undefined}
+    >
+      {children}
+    </LinkButton>
+  </Stack>
+)
+
+const MetaRow = ({ label, children }: { label: string; children: ReactNode }) => (
+  <Stack gap="xxs">
+    <Typography size="xs" color="medium_emphasis" component="span">
+      {label}
+    </Typography>
+    {children}
+  </Stack>
+)
+
+/** features/Project/index.tsx のパンくずと components/ProjectHero */
+const ProjectHeader = () => (
+  <>
+    <Breadcrumbs>
+      <Breadcrumb href="#">プロジェクト</Breadcrumb>
+      <Breadcrumb>portfolio</Breadcrumb>
+    </Breadcrumbs>
+    <Stack gap="m">
+      <Stack gap="xs">
+        <Stack flexDirection="row" gap="s" alignItems="center">
+          <Typography size="xxl" fontWeight="bold" component="h1">
+            portfolio
+          </Typography>
+          <Sticker color="positive" size="s">
+            稼働中
+          </Sticker>
+        </Stack>
+        <TextLink external>{`portfolio.${ZONE}`}</TextLink>
+      </Stack>
+      <Stack gap="m">
+        <MetaRow label="最終デプロイ">
+          <TextLink>3分前</TextLink>
+        </MetaRow>
+        <MetaRow label="GitHub リポジトリ">
+          <TextLink external>example-inc/portfolio</TextLink>
+        </MetaRow>
+        <MetaRow label="公開日時">
+          <TextLink>3分前</TextLink>
+        </MetaRow>
+        <MetaRow label="ソース">
+          <Stack flexDirection="row" gap="xs" alignItems="center">
+            <Typography component="span" size="s" color="medium_emphasis">
+              <Icon name="github" size="s" color="currentColor" aria-hidden />
+            </Typography>
+            <Typography component="span" size="s" color="medium_emphasis">
+              main · 8f21a3c
+            </Typography>
+            <TextLink external>画像の遅延読み込みを有効にする</TextLink>
+          </Stack>
+        </MetaRow>
+      </Stack>
+    </Stack>
+  </>
 )
 
 type DialogState = { kind: 'none' } | { kind: 'add' } | { kind: 'delete'; domain: Domain }
@@ -589,7 +657,7 @@ const DomainsScreen = ({
   return (
     <AppShell active="domains">
       <Stack gap="l">
-        <ProjectBreadcrumbs />
+        <ProjectHeader />
         <Stack gap="m">
           <Stack alignItems="flex-end">
             <Button

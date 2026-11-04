@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { TabPanel } from 'react-aria-components'
 
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
@@ -9,7 +8,6 @@ import { Icon } from '../../Icon'
 import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
-import { Tab, TabList, Tabs } from '../../Tab'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
@@ -23,7 +21,7 @@ import type { ReactNode } from 'react'
 /**
  * ロリポップ！for Gamers（apollo/frontend）のバックアップの再現。
  * - サーバーのバックアップ: app/(application)/(private)/servers/[id]/(server)/backup
- * - マイバックアップ（全ゲーム）: app/(application)/(private)/home の「マイバックアップ」タブ
+ * - マイバックアップ（全ゲーム）はホームのタブなので Templates/Home の MyBackups にある
  * - 共通の部品: components/BackupListTable・BackupUsage・CreateBackupDialog・DeleteBackupDialog
  *
  * 実アプリに自動バックアップの設定は無い（手動作成のみ）ので、ここにも置いていない。
@@ -424,53 +422,6 @@ const ServerBackupScreen = ({
   </AppShell>
 )
 
-// ─── マイバックアップ（home/page.tsx の「マイバックアップ」タブ）───
-
-const MyBackupsScreen = () => {
-  const backups = [...minecraftBackups, ...palworldBackups]
-  return (
-    <AppShell active="backup">
-      {/* home/_components/Tabs。GAP-10: TabPanel は react-aria-components から直接 import している */}
-      {/* GAP-NEW: DnsOutlined に当たるアイコンが無いので node で代用 */}
-      <Tabs defaultSelectedKey="myBackups">
-        <TabList aria-label="ホーム">
-          <Tab id="servers">
-            <Stack flexDirection="row" gap="xs" alignItems="center">
-              <Icon name="node" size="s" />
-              サーバー
-            </Stack>
-          </Tab>
-          <Tab id="myBackups">
-            <Stack flexDirection="row" gap="xs" alignItems="center">
-              <Icon name="person" size="s" />
-              マイバックアップ
-            </Stack>
-          </Tab>
-        </TabList>
-        <TabPanel id="servers" />
-        <TabPanel id="myBackups">
-          {/* home/_components/MyBackupPaper */}
-          <Card>
-            <Stack gap="xl">
-              <PaperTitle
-                action={
-                  <Button appearance="outlined" leading={<Icon name="upload" size="s" />}>
-                    バックアップ作成
-                  </Button>
-                }
-              >
-                マイバックアップ
-              </PaperTitle>
-              <BackupUsage usageBytes={usageOf(backups)} />
-              <BackupListTable backups={backups} />
-            </Stack>
-          </Card>
-        </TabPanel>
-      </Tabs>
-    </AppShell>
-  )
-}
-
 // ─── ストーリー ───
 
 /**
@@ -519,15 +470,6 @@ export const RestoreDialog: Story = {
  */
 export const DeleteDialog: Story = {
   render: () => <ServerBackupScreen dialog={<DeleteBackupDialog backup={minecraftBackups[1]} />} />,
-}
-
-/**
- * ホームの「マイバックアップ」タブ。全ゲームのバックアップを 1 つの表に出し、「ゲーム」列が加わる。
- *
- * @summary マイバックアップ（全ゲーム）
- */
-export const MyBackups: Story = {
-  render: () => <MyBackupsScreen />,
 }
 
 /**

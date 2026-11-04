@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 
 import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
 import { Button, LinkButton } from '../../Button'
@@ -12,7 +12,7 @@ import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Typography } from '../../Typography'
-import { AppShell } from './AppShell'
+import { AppNavigationContext, AppShell } from './AppShell'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -43,9 +43,10 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// 面の余白は Paper の padding で付ける（GAP-1 は解消）。一覧の面は既定の l、ビルドログの面は m。
-// GAP-NEW: 行ごとに余白をとる部品が無い。一覧の行（実物は px-6 py-4）は面の余白の内側に並ぶので、
-//          区切り線が面の端まで届かない。
+// 面の余白は Paper の padding で付ける（GAP-1 は解消）。一覧の面は none にして区切り線を面の端まで通し、
+// 行・列見出し・段階の行はそれぞれ padding="m" の入れ子の Paper で余白を付ける。ビルドログの面も m。
+// GAP-NEW: Paper の padding は上下左右で同じ値しか取れない。実物の行は px-6 py-4（列見出しは px-6 py-2、
+//          段階の行は pl-6 pr-5 min-h-[52px]）で、ここは 4 辺とも m（16px）になり左右が 8px 狭い。
 // GAP-NEW: 余白をとる部品が無い。読み込み中・取得失敗の案内（実物は px-6 py-16）の余白。
 //          inline style を当てない方針のため未対応。
 
@@ -61,7 +62,7 @@ const RowLink = ({
   children: ReactNode
 }) => (
   <Paper
-    padding="none"
+    padding="m"
     elevation={0}
     role="link"
     tabIndex={0}
@@ -465,25 +466,27 @@ const DeployList = ({
         </Stack>
       </Paper>
     ) : (
-      <Paper elevation={0} outlined>
+      <Paper padding="none" elevation={0} outlined>
         {/* GAP-NEW: 表示/非表示のレスポンシブ指定が無い。実物は md 未満で列見出しを隠す */}
-        <Grid spacing="s">
-          <GridItem size={{ xxs: 8, m: 9 }}>
-            <Typography component="span" size="xs" color="medium_emphasis">
-              デプロイ
-            </Typography>
-          </GridItem>
-          <GridItem size={{ xxs: 4, m: 3 }}>
-            <Stack flexDirection="row" justifyContent="space-between">
+        <Paper padding="m" elevation={0}>
+          <Grid spacing="s">
+            <GridItem size={{ xxs: 8, m: 9 }}>
               <Typography component="span" size="xs" color="medium_emphasis">
-                状態
+                デプロイ
               </Typography>
-              <Typography component="span" size="xs" color="medium_emphasis">
-                最終デプロイ
-              </Typography>
-            </Stack>
-          </GridItem>
-        </Grid>
+            </GridItem>
+            <GridItem size={{ xxs: 4, m: 3 }}>
+              <Stack flexDirection="row" justifyContent="space-between">
+                <Typography component="span" size="xs" color="medium_emphasis">
+                  状態
+                </Typography>
+                <Typography component="span" size="xs" color="medium_emphasis">
+                  最終デプロイ
+                </Typography>
+              </Stack>
+            </GridItem>
+          </Grid>
+        </Paper>
         {project.deploys.map((d) => (
           <Stack key={d.id}>
             <Divider />
@@ -732,6 +735,7 @@ const DeployDetail = ({
   onBack: () => void
 }) => {
   const [dialogOpen, setDialogOpen] = useState(initialDialogOpen)
+  const navigate = useContext(AppNavigationContext)
   const d = project.deploys.find((x) => x.id === deployId)
   if (!d) {
     return <DeployNotFound message="デプロイが見つかりません" onBack={onBack} />
@@ -742,7 +746,9 @@ const DeployDetail = ({
   return (
     <Stack gap="l">
       <Breadcrumbs>
-        <Breadcrumb href="#">プロジェクト</Breadcrumb>
+        <Breadcrumb href="#" onPress={() => navigate?.('projects')}>
+          プロジェクト
+        </Breadcrumb>
         <Breadcrumb href="#" onPress={onBack}>
           {project.name}
         </Breadcrumb>
@@ -803,32 +809,34 @@ const DeployDetail = ({
         </MetaRow>
       </Stack>
 
-      <Paper elevation={0} outlined>
+      <Paper padding="none" elevation={0} outlined>
         {stagesOf(d).map((stage, i) => (
           <Stack key={stage.key}>
             {i > 0 && <Divider />}
-            <Stack gap="s">
-              <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
-                <Stack flexDirection="row" gap="xs" alignItems="center">
-                  <StageGlyph state={stage.state} />
+            <Paper padding="m" elevation={0}>
+              <Stack gap="s">
+                <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
+                  <Stack flexDirection="row" gap="xs" alignItems="center">
+                    <StageGlyph state={stage.state} />
+                    <Typography
+                      component="span"
+                      size="s"
+                      color={stage.state === 'pending' ? 'low_emphasis' : 'high_emphasis'}
+                    >
+                      {stage.label}
+                    </Typography>
+                  </Stack>
                   <Typography
                     component="span"
                     size="s"
                     color={stage.state === 'pending' ? 'low_emphasis' : 'high_emphasis'}
                   >
-                    {stage.label}
+                    {stage.detail}
                   </Typography>
                 </Stack>
-                <Typography
-                  component="span"
-                  size="s"
-                  color={stage.state === 'pending' ? 'low_emphasis' : 'high_emphasis'}
-                >
-                  {stage.detail}
-                </Typography>
+                {stage.key === 'build' && d.log && <BuildLog lines={d.log} />}
               </Stack>
-              {stage.key === 'build' && d.log && <BuildLog lines={d.log} />}
-            </Stack>
+            </Paper>
           </Stack>
         ))}
       </Paper>
@@ -870,6 +878,7 @@ const DeploysScreen = ({
   initialDialogOpen?: boolean
 }) => {
   const [route, setRoute] = useState<Route>(initialRoute)
+  const navigate = useContext(AppNavigationContext)
   const openDeploy = (deployId: string) => setRoute({ name: 'deploy', deployId })
 
   return (
@@ -885,7 +894,9 @@ const DeploysScreen = ({
       ) : (
         <Stack gap="l">
           <Breadcrumbs>
-            <Breadcrumb href="#">プロジェクト</Breadcrumb>
+            <Breadcrumb href="#" onPress={() => navigate?.('projects')}>
+              プロジェクト
+            </Breadcrumb>
             <Breadcrumb>{project.name}</Breadcrumb>
           </Breadcrumbs>
           <ProjectHero project={project} onOpenDeploy={openDeploy} />

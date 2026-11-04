@@ -5,12 +5,10 @@ import { Button } from '../../Button'
 import { Callout } from '../../Callout'
 import { Container } from '../../Container'
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
-import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Menu, MenuItem, MenuTrigger } from '../../Menu'
-import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Tab, TabList, Tabs } from '../../Tab'
@@ -19,22 +17,17 @@ import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
 import buyImage from './assets/gamers/buy.svg'
-import { Card, PageHeader } from './parts'
+import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 import type { IconName } from '../../Icon'
-import type { StickerColor } from '../../Sticker'
 import type { TypographyColor } from '../../Typography'
 
 /**
- * ホーム。ゲーマーズのホーム（apollo/frontend の app/(application)/(private)/home）を主にし、
- * デプロイナウのプロジェクト一覧（hosting-deploy-now/frontend の features/Projects）を
- * 同じページの下に並べている。
- *
- * 文言・項目・状態は 2 つの実装から取っている。元にしたファイルは各部品のコメントに書いた。
- * 見出しは実物のものだけを使う。ゲーマーズはページ見出し「ホーム」の直下にタブ、デプロイナウは「使用量」と
- * 「プロジェクト」。階層だけは 1 ページにまとめるために変えている（実物は「ホーム」と「プロジェクト」がそれぞれ h1）。
+ * ホーム。ゲーマーズのホーム（apollo/frontend の app/(application)/(private)/home）の再現。
+ * ページ見出し「ホーム」の直下に「サーバー」「マイバックアップ」のタブ。元にしたファイルは各部品のコメントに書いた。
+ * デプロイナウのプロジェクト一覧は Templates/Projects にある。
  */
 
 const meta = {
@@ -55,12 +48,14 @@ type Story = StoryObj<typeof meta>
 // ─── GAP の回避策（inline style はここに集める） ───
 
 // GAP-18: 進捗バーが無い。Typography で色を継承させ、currentColor で塗っている。
-// 高さ・角丸・トラックの不透明度はトークンに出典が無い暫定値。
-const meterTrackStyle = { height: 6, borderRadius: 3, opacity: 0.15 }
-const meterFillStyle = { height: 6, borderRadius: 3, marginTop: -6 }
+// 高さ 20・角丸 8 は components/BackupUsage の LinearProgress。トラックの不透明度はトークンに出典が無い暫定値。
+// 90% 以上で赤（実アプリは pink[700]）。
+const meterTrackStyle = { height: 20, borderRadius: 8, opacity: 0.15 }
+const meterFillStyle = { height: 20, borderRadius: 8, marginTop: -20 }
 
-const Meter = ({ ratio, tone }: { ratio: number; tone: TypographyColor }) => (
-  <Typography component="div" color={tone}>
+// GAP-18: 役割（meter）も持てないので、数値は隣の文言で読ませる
+const Meter = ({ ratio }: { ratio: number }) => (
+  <Typography component="div" color={ratio >= 0.9 ? 'negative' : 'informative'}>
     <div style={{ ...meterTrackStyle, background: 'currentColor' }} />
     <div
       style={{
@@ -72,9 +67,6 @@ const Meter = ({ ratio, tone }: { ratio: number; tone: TypographyColor }) => (
   </Typography>
 )
 
-// 一覧の面は Paper の既定の padding（l）で余白を付ける（GAP-1 は解消）。
-// GAP-NEW: 行ごとに余白をとる部品が無い。一覧の行（実物は px-6 py-3.5）は面の余白の内側に並ぶので、
-// 区切り線が面の端まで届かない。
 // GAP-NEW: TabPanel に本文との間隔（実物は Grid の mt={2}・16px）が無い。inline style を当てない方針のため未対応で、
 // タブの下線に本文が接する。
 
@@ -161,18 +153,33 @@ type Backup = {
   id: string
   name: string
   game: GameId
-  size: string
+  /** バイト数。0 のとき一覧は '-' */
+  sizeBytes: number
+  /** formatCreatedAt の形（2022-02-22 22:22） */
   createdAt: string
   status: 'SUCCESS' | 'PENDING' | 'FAILED'
 }
 
-// 名前は CreateBackupDialog の既定値（サーバー名-yyyyMMdd-HHmm）、サイズと日時は formatBytes / formatCreatedAt と同じ形
+const GB = 1024 ** 3
+
+/** MyBackupPaper/view.tsx の LIMIT_BYTES（50GB） */
+const LIMIT_BYTES = 50 * GB
+
+/** utils/formatBytes */
+const formatBytes = (bytes: number) => {
+  if (bytes === 0) return '0Bytes'
+  const i = Math.max(0, Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), 4))
+  const units = [bytes === 1 ? 'Byte' : 'Bytes', 'KB', 'MB', 'GB', 'TB']
+  return `${Number.parseFloat((bytes / 1024 ** i).toFixed(2))}${units[i]}`
+}
+
+// 名前は CreateBackupDialog の既定値（サーバー名-yyyyMMdd-HHmm）。作成中・失敗はサイズが 0
 const backups: Backup[] = [
   {
     id: 'bk-04',
     name: 'パル島-20261030-0912',
     game: 'palworld',
-    size: '0.00B',
+    sizeBytes: 0,
     createdAt: '2026-10-30 09:12',
     status: 'PENDING',
   },
@@ -180,7 +187,7 @@ const backups: Backup[] = [
     id: 'bk-01',
     name: 'LOLIPOP-GAMERS-SERVER-20261028-0400',
     game: 'minecraft-je',
-    size: '1.23GB',
+    sizeBytes: 1.23 * GB,
     createdAt: '2026-10-28 04:00',
     status: 'SUCCESS',
   },
@@ -188,7 +195,7 @@ const backups: Backup[] = [
     id: 'bk-02',
     name: 'LOLIPOP-GAMERS-SERVER-20261021-2214',
     game: 'minecraft-je',
-    size: '1.17GB',
+    sizeBytes: 1.17 * GB,
     createdAt: '2026-10-21 22:14',
     status: 'SUCCESS',
   },
@@ -196,97 +203,10 @@ const backups: Backup[] = [
     id: 'bk-03',
     name: 'パル島-20261019-2301',
     game: 'palworld',
-    size: '0.00B',
+    sizeBytes: 0,
     createdAt: '2026-10-19 23:01',
     status: 'FAILED',
   },
-]
-
-/** MyBackupPaper/view.tsx の LIMIT_BYTES（50GB） */
-const BACKUP_LIMIT_GB = 50
-
-// ─── データ：サイト（hosting-deploy-now の ProjectListItem と同じ形。値はダミー）───
-
-const ZONE = 'lolipop-now.app'
-
-type ProjectStatus = '成功' | 'ビルド中' | '失敗' | 'キャンセル済み' | 'キャンセル中' | '未デプロイ'
-type ServingStatus = '稼働中' | '未公開'
-
-/** shared/lib/projectStatus.ts の PROJECT_STATUS_COLOR / SERVING_STATUS_COLOR */
-const PROJECT_STATUS_COLOR: Record<ProjectStatus, StickerColor> = {
-  成功: 'positive',
-  ビルド中: 'notice',
-  失敗: 'negative',
-  キャンセル済み: 'neutral',
-  キャンセル中: 'neutral',
-  未デプロイ: 'neutral',
-}
-const SERVING_STATUS_COLOR: Record<ServingStatus, StickerColor> = {
-  稼働中: 'positive',
-  未公開: 'neutral',
-}
-
-type Project = {
-  id: string
-  name: string
-  /** 空文字は「ドメイン未発行」 */
-  domain: string
-  servingStatus: ServingStatus
-  githubRepositoryFullName?: string
-  tags: string[]
-  status: ProjectStatus
-  /** toLastDeployedAt の結果（ビルド中は「進行中」、失敗と未デプロイは「—」） */
-  lastDeployedAt: string
-}
-
-const projects: Project[] = [
-  {
-    id: 'p1',
-    name: 'portfolio',
-    domain: `portfolio.${ZONE}`,
-    servingStatus: '稼働中',
-    githubRepositoryFullName: 'example-inc/portfolio',
-    tags: ['Next.js'],
-    status: '成功',
-    lastDeployedAt: '3分前',
-  },
-  {
-    id: 'p2',
-    name: 'shop-api',
-    domain: `shop-api.${ZONE}`,
-    servingStatus: '稼働中',
-    githubRepositoryFullName: 'example-inc/shop-api',
-    tags: ['production', 'OpenAI', 'stripe', 'beta'],
-    status: 'ビルド中',
-    lastDeployedAt: '進行中',
-  },
-  {
-    id: 'p3',
-    name: 'blog',
-    domain: `blog.${ZONE}`,
-    servingStatus: '稼働中',
-    tags: [],
-    status: '失敗',
-    lastDeployedAt: '—',
-  },
-  {
-    id: 'p4',
-    name: 'landing-2026',
-    domain: '',
-    servingStatus: '未公開',
-    tags: [],
-    status: '未デプロイ',
-    lastDeployedAt: '—',
-  },
-]
-
-/** features/Projects/features/UsageSummary/model.ts の UsageMetricViewModel（ラベルは公開 docs のプラン表と同じ） */
-type UsageMetric = { label: string; ratio: number }
-
-const usageMetrics: UsageMetric[] = [
-  { label: '月間リクエスト数', ratio: 0.42 },
-  { label: '月間 CPU 実行時間', ratio: 0.78 },
-  { label: 'CDN 帯域', ratio: 0.12 },
 ]
 
 // ─── ゲームサーバー：部品 ───
@@ -413,7 +333,7 @@ const ServerCardsList = ({
   </Grid>
 )
 
-/** home/_components/EmptyServersView（home/not-found.tsx）。契約が 0 件のときはタブごとこれに置き換わる */
+/** home/_components/EmptyServersView（home/not-found.tsx）。実物は Paper の高さ 400px・p={8}（GAP-NEW: 高さの指定が無い） */
 const EmptyServersView = () => (
   <Container size="s">
     <Card elevation={0}>
@@ -435,22 +355,20 @@ const EmptyServersView = () => (
 )
 
 /** components/BackupUsage */
-const BackupUsage = ({ usageGb }: { usageGb: number }) => (
+const BackupUsage = ({ usageBytes }: { usageBytes: number }) => (
   <Stack gap="s">
-    <Typography size="l" fontWeight="bold" component="h4">
+    <Typography size="l" fontWeight="bold" component="h3">
       容量使用状況
     </Typography>
     <Grid spacing="s">
+      {/* 実アプリのバーは最大 400px で、md 以上は文言と横に並ぶ */}
       <GridItem size={{ xxs: 12, m: 5 }}>
-        <Meter
-          ratio={usageGb / BACKUP_LIMIT_GB}
-          tone={usageGb >= BACKUP_LIMIT_GB * 0.9 ? 'negative' : 'informative'}
-        />
+        <Meter ratio={usageBytes / LIMIT_BYTES} />
       </GridItem>
       <GridItem size={{ xxs: 12, m: 7 }}>
         <Typography size="s" component="span">
-          {usageGb.toFixed(2)}GB / {BACKUP_LIMIT_GB}GB ({(BACKUP_LIMIT_GB - usageGb).toFixed(2)}GB
-          空き)
+          {formatBytes(usageBytes)} / {formatBytes(LIMIT_BYTES)} (
+          {formatBytes(Math.max(LIMIT_BYTES - usageBytes, 0))} 空き)
         </Typography>
       </GridItem>
     </Grid>
@@ -496,7 +414,7 @@ const BackupListTable = ({ items }: { items: Backup[] }) => (
               )}
             </Stack>
           </Cell>
-          <Cell>{b.size}</Cell>
+          <Cell>{b.sizeBytes > 0 ? formatBytes(b.sizeBytes) : '-'}</Cell>
           <Cell>{b.createdAt}</Cell>
           <Cell>{gameNames[b.game]}</Cell>
           <Cell>
@@ -555,18 +473,20 @@ const CalloutBody = ({ title, children }: { title: string; children: ReactNode }
 
 /** home/_components/MyBackupPaper */
 const MyBackupPaper = ({ items }: { items: Backup[] }) => {
-  const usageGb = items.reduce((sum, b) => sum + (Number.parseFloat(b.size) || 0), 0)
-  const isFull = usageGb >= BACKUP_LIMIT_GB
+  const usageBytes = items.reduce((sum, b) => sum + b.sizeBytes, 0)
+  const isFull = usageBytes >= LIMIT_BYTES
   return (
+    // 実アプリの Paper は p={{ xs: 3, md: 6 }}・中身の間隔は spacing={4}
     <Card>
-      <Stack gap="l">
+      <Stack gap="xl">
         <Stack
           flexDirection={{ xxs: 'column', s: 'row' }}
           gap="s"
           alignItems="flex-start"
           justifyContent="space-between"
         >
-          <Typography size="xxl" fontWeight="bold" component="h3">
+          {/* サーバーのバックアップ画面の見出しと違い、ここは太字にしていない */}
+          <Typography size="xxl" component="h2">
             マイバックアップ
           </Typography>
           {/* GAP-NEW: BackupOutlined（雲）に当たるアイコンが無いので upload で代用 */}
@@ -585,7 +505,7 @@ const MyBackupPaper = ({ items }: { items: Backup[] }) => {
             </CalloutBody>
           </Callout>
         )}
-        <BackupUsage usageGb={usageGb} />
+        <BackupUsage usageBytes={usageBytes} />
         <BackupListTable items={items} />
       </Stack>
     </Card>
@@ -626,8 +546,8 @@ const RenameDialog = ({ server, onClose }: { server: Server | null; onClose: () 
 
 type HomeTab = 'servers' | 'myBackups'
 
-/** home/_components/HomeContents ＋ Tabs */
-const GameServersSection = ({
+/** home/_components/HomeContents ＋ Tabs ＋ ChangeServerNameModal */
+const HomeContents = ({
   items,
   defaultTab = 'servers',
   initialRenaming = null,
@@ -638,398 +558,83 @@ const GameServersSection = ({
 }) => {
   const [renaming, setRenaming] = useState<Server | null>(initialRenaming)
   return (
-    <Stack gap="m">
-      {/* 実物（ゲーマーズ）のページ見出しは「ホーム」だけで、その直下にタブが来る */}
-      {items.length === 0 ? (
-        <EmptyServersView />
-      ) : (
-        <Tabs defaultSelectedKey={defaultTab}>
-          {/* 実物の aria-label は 'basic tabs example' のまま。ここでは内容に合わせる */}
-          <TabList aria-label="ゲームサーバー">
-            <Tab id="servers">
-              <Stack flexDirection="row" gap="xs" alignItems="center">
-                {/* GAP-NEW: DnsOutlined（ラックのサーバー）に当たるアイコンが無いので node で代用 */}
-                <Icon name="node" size="m" />
-                サーバー
-              </Stack>
-            </Tab>
-            <Tab id="myBackups">
-              <Stack flexDirection="row" gap="xs" alignItems="center">
-                <Icon name="person" size="m" />
-                マイバックアップ
-              </Stack>
-            </Tab>
-          </TabList>
-          {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
-          <TabPanel id="servers">
-            <ServerCardsList items={items} onRename={setRenaming} />
-          </TabPanel>
-          <TabPanel id="myBackups">
-            <MyBackupPaper items={backups} />
-          </TabPanel>
-        </Tabs>
-      )}
+    <>
+      <Tabs defaultSelectedKey={defaultTab}>
+        {/* 実物の aria-label は 'basic tabs example' のまま。ここでは内容に合わせる */}
+        <TabList aria-label="ホーム">
+          <Tab id="servers">
+            <Stack flexDirection="row" gap="xs" alignItems="center">
+              {/* GAP-NEW: DnsOutlined（ラックのサーバー）に当たるアイコンが無いので node で代用 */}
+              <Icon name="node" size="m" />
+              サーバー
+            </Stack>
+          </Tab>
+          <Tab id="myBackups">
+            <Stack flexDirection="row" gap="xs" alignItems="center">
+              <Icon name="person" size="m" />
+              マイバックアップ
+            </Stack>
+          </Tab>
+        </TabList>
+        {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
+        <TabPanel id="servers">
+          <ServerCardsList items={items} onRename={setRenaming} />
+        </TabPanel>
+        <TabPanel id="myBackups">
+          <MyBackupPaper items={backups} />
+        </TabPanel>
+      </Tabs>
       {/* key で開くたびに入力欄を現在の名前に戻す */}
       <RenameDialog
         key={renaming?.id ?? 'none'}
         server={renaming}
         onClose={() => setRenaming(null)}
       />
-    </Stack>
-  )
-}
-
-// ─── サイト：部品 ───
-
-const DOT_COLOR: Record<StickerColor, TypographyColor> = {
-  positive: 'positive',
-  negative: 'negative',
-  notice: 'notice',
-  informative: 'informative',
-  neutral: 'low_emphasis',
-  attention: 'notice',
-}
-
-// GAP-NEW: StatusIndicator（色ドット + ラベル）が無い。実物は shared/ui/StatusIndicator で
-// lolipop の solid 色を hex で持っている。ここは Icon の circle を Typography の色で塗って代える。
-const StatusIndicator = ({ color, children }: { color: StickerColor; children: ReactNode }) => (
-  <Stack flexDirection="row" gap="xxs" alignItems="center">
-    <Typography component="span" size="xs" color={DOT_COLOR[color]}>
-      <Icon name="circle" size="s" color="currentColor" aria-hidden />
-    </Typography>
-    <Typography component="span" size="s" color="medium_emphasis">
-      {children}
-    </Typography>
-  </Stack>
-)
-
-/** features/Projects/features/UsageSummary/view.tsx の UsageMetricCard */
-const UsageMetricCard = ({ metric }: { metric: UsageMetric }) => {
-  const { ratio } = metric
-  const isCritical = ratio >= 0.9
-  // model.ts：使用率は floor、残りは 100 - 使用率（0 未満にしない）
-  const usedPercent = Math.floor(ratio * 100)
-  return (
-    <Stack gap="xs">
-      <Stack flexDirection="row" gap="xs" justifyContent="space-between">
-        <Typography component="div" size="m" color="medium_emphasis">
-          {metric.label}
-        </Typography>
-        <Typography component="div" size="xs" color={isCritical ? 'negative' : 'medium_emphasis'}>
-          残り {Math.max(0, 100 - usedPercent)}%
-        </Typography>
-      </Stack>
-      <Typography component="div" size="xl" fontWeight="bold">
-        {usedPercent}%
-      </Typography>
-      {/* 実物の barColorClass：0.9 以上 red-600、0.75 以上 amber-500、それ未満 neutral-800 */}
-      <Meter
-        ratio={ratio}
-        tone={isCritical ? 'negative' : ratio >= 0.75 ? 'notice' : 'high_emphasis'}
-      />
-    </Stack>
-  )
-}
-
-/** features/Projects/features/UsageSummary/view.tsx */
-const UsageSummary = ({ metrics }: { metrics: UsageMetric[] }) => (
-  <Stack gap="s">
-    <Typography component="h2" size="xxl">
-      使用量
-    </Typography>
-    <Card outlined elevation={0}>
-      <Stack gap="m">
-        <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="s" justifyContent="space-between">
-          <Stack flexDirection="row" gap="s" alignItems="center">
-            <Typography component="div" size="l">
-              利用中のプラン：Free
-            </Typography>
-            <Typography component="div" size="s" color="medium_emphasis">
-              （2026/10/01 ~ 2026/10/31 ご利用分）
-            </Typography>
-          </Stack>
-          {/* 遷移先は lolipop-user のアカウント画面（課金タブ）で別タブ */}
-          <Button
-            appearance="outlined"
-            color="neutral"
-            size="s"
-            trailing={<Icon name="launch" size="s" />}
-          >
-            プラン管理
-          </Button>
-        </Stack>
-        {/* GAP-NEW: Grid に罫線の指定が無い。実物は md 以上 3 カラム + 縦罫線（divide-x）、md 未満は横罫線 */}
-        <Grid spacing="l">
-          {metrics.map((metric) => (
-            <GridItem key={metric.label} size={{ xxs: 12, m: 4 }}>
-              <UsageMetricCard metric={metric} />
-            </GridItem>
-          ))}
-        </Grid>
-      </Stack>
-    </Card>
-    {/* GAP-17: 実物は md 以上で右寄せ（md:text-right）。alignItems がレスポンシブにできない */}
-    <Stack alignItems="flex-end">
-      <Typography component="div" size="xs" color="medium_emphasis">
-        ※上限に達すると、すべてのプロジェクトが一時停止されます。
-      </Typography>
-    </Stack>
-  </Stack>
-)
-
-const MAX_VISIBLE_TAGS = 3
-
-/** features/Projects/view.tsx の ProjectRow */
-const ProjectRow = ({ project }: { project: Project }) => {
-  const visibleTags = project.tags.slice(0, MAX_VISIBLE_TAGS)
-  const hidden = project.tags.length - visibleTags.length
-  return (
-    // GAP-NEW: 行全体をリンクにする一覧（stretched link / GridList）が無い。
-    // 実物は行全体を覆う <Link className="absolute inset-0"> を敷き、ドメインだけ z-10 で前面に出している。
-    // ここでは行の面は押せず、プロジェクト名をボタンにしている。
-    <>
-      {/* GAP-NEW: Grid に alignItems が無く、右 2 列を名前ブロックの縦中央にそろえられない */}
-      <Grid spacing="s">
-        <GridItem size={{ xxs: 12, m: 8 }}>
-          <Stack gap="xxs">
-            <Stack flexDirection="row" gap="xs" alignItems="center">
-              <Button appearance="transparent" size="s" aria-label={`${project.name} の詳細`}>
-                <Typography size="m" fontWeight="bold" component="span">
-                  {project.name}
-                </Typography>
-              </Button>
-              {/* GAP-NEW: ラベルの無いドット（StatusDot）も無い。aria-label で状態を補う */}
-              <Typography
-                component="span"
-                color={DOT_COLOR[SERVING_STATUS_COLOR[project.servingStatus]]}
-              >
-                <Icon
-                  name="circle"
-                  size="s"
-                  color="currentColor"
-                  role="img"
-                  aria-label={project.servingStatus}
-                />
-              </Typography>
-            </Stack>
-            {project.domain ? (
-              // GAP-NEW: 文中のテキストリンクが無い。実物は native a + text-[#0b3893]（別タブ）
-              <Stack flexDirection="row">
-                <Button
-                  appearance="transparent"
-                  color="interactive"
-                  size="s"
-                  trailing={<Icon name="launch" size="s" />}
-                >
-                  {project.domain}
-                </Button>
-              </Stack>
-            ) : (
-              <Typography size="s" color="low_emphasis">
-                ドメイン未発行
-              </Typography>
-            )}
-            {project.githubRepositoryFullName && (
-              <Stack flexDirection="row" gap="xxs" alignItems="center">
-                <Typography component="span" size="xs" color="medium_emphasis">
-                  <Icon name="github" size="s" color="currentColor" aria-hidden />
-                </Typography>
-                <Typography component="span" size="xs" color="medium_emphasis">
-                  {project.githubRepositoryFullName}
-                </Typography>
-              </Stack>
-            )}
-            {visibleTags.length > 0 && (
-              <Stack flexDirection="row" gap="xs">
-                {visibleTags.map((tag) => (
-                  <Sticker key={tag} color="neutral" size="s">
-                    {tag}
-                  </Sticker>
-                ))}
-                {hidden > 0 && (
-                  <Sticker color="neutral" size="s">
-                    {`+${hidden}`}
-                  </Sticker>
-                )}
-              </Stack>
-            )}
-          </Stack>
-        </GridItem>
-        <GridItem size={{ xxs: 6, m: 2 }}>
-          <StatusIndicator color={PROJECT_STATUS_COLOR[project.status]}>
-            {project.status}
-          </StatusIndicator>
-        </GridItem>
-        <GridItem size={{ xxs: 6, m: 2 }}>
-          <Stack alignItems="flex-end">
-            <Typography component="div" size="s" color="medium_emphasis">
-              {project.lastDeployedAt}
-            </Typography>
-          </Stack>
-        </GridItem>
-      </Grid>
     </>
-  )
-}
-
-/** features/Projects/view.tsx の ProjectsBody */
-const ProjectsBody = ({ items }: { items: Project[] }) => {
-  if (items.length === 0) {
-    return (
-      <Stack gap="m" alignItems="center">
-        <Stack gap="xs" alignItems="center">
-          <Typography size="m" fontWeight="bold">
-            まだプロジェクトがありません
-          </Typography>
-          <Typography size="s" color="medium_emphasis">
-            プロジェクトを作成し、アプリケーションをデプロイ
-          </Typography>
-        </Stack>
-        <Button appearance="flat" color="neutral" size="s">
-          プロジェクトを作成
-        </Button>
-      </Stack>
-    )
-  }
-  return (
-    <Stack gap="xxs">
-      {/* GAP-NEW: 表示/非表示のレスポンシブ指定が無い。実物は md 未満で列見出しを隠す */}
-      <Grid spacing="s">
-        <GridItem size={{ xxs: 12, m: 8 }}>
-          <Typography component="span" size="xs" color="medium_emphasis">
-            プロジェクト名
-          </Typography>
-        </GridItem>
-        <GridItem size={{ xxs: 6, m: 2 }}>
-          <Typography component="span" size="xs" color="medium_emphasis">
-            デプロイ状態
-          </Typography>
-        </GridItem>
-        <GridItem size={{ xxs: 6, m: 2 }}>
-          <Stack alignItems="flex-end">
-            <Typography component="span" size="xs" color="medium_emphasis">
-              最終デプロイ
-            </Typography>
-          </Stack>
-        </GridItem>
-      </Grid>
-      {items.map((p) => (
-        <Stack key={p.id} gap="xxs">
-          <Divider />
-          <ProjectRow project={p} />
-        </Stack>
-      ))}
-    </Stack>
-  )
-}
-
-/**
- * features/Projects/components/Pager。backend が cursor ページングなので、番号は読み込み済みのページだけ。
- * GAP-16: Pagination が無い。実物も同じ形を手組みしている。
- */
-const Pager = () => {
-  const [page, setPage] = useState(1)
-  const loadedPageCount = 2
-  return (
-    <Stack flexDirection="row" gap="xs" alignItems="center" justifyContent="center">
-      <Button
-        appearance="outlined"
-        size="s"
-        iconOnly
-        aria-label="前のページ"
-        isDisabled={page === 1}
-        onPress={() => setPage(page - 1)}
-      >
-        <Icon name="chevron_left" size="s" />
-      </Button>
-      {Array.from({ length: loadedPageCount }, (_, i) => i + 1).map((n) => (
-        <Button
-          key={n}
-          appearance={n === page ? 'flat' : 'outlined'}
-          size="s"
-          onPress={() => setPage(n)}
-        >
-          {n}
-        </Button>
-      ))}
-      {/* hasMore のときだけ出る */}
-      <Typography component="span" size="s" color="low_emphasis">
-        …
-      </Typography>
-      <Button
-        appearance="outlined"
-        size="s"
-        iconOnly
-        aria-label="次のページ"
-        onPress={() => setPage(page + 1)}
-      >
-        <Icon name="chevron_right" size="s" />
-      </Button>
-    </Stack>
-  )
-}
-
-/** features/Projects/view.tsx の ProjectsView */
-const SitesSection = ({ items }: { items: Project[] }) => {
-  // 0 件のときは empty state の「プロジェクトを作成」だけを導線にする（同じ遷移先のボタンを 2 つ並べない）
-  const showCreate = items.length > 0
-  return (
-    <Stack gap="m">
-      {/* 実物はこの上に期間限定のコンテスト告知（ContestNotice）が出る。期間外は出ないので省略 */}
-      <UsageSummary metrics={usageMetrics} />
-      <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
-        {/* 実物はこの「プロジェクト」がページの h1。ここではホームの h1 の下に置くので h2 にしている */}
-        <Typography size="xxl" component="h2">
-          プロジェクト
-        </Typography>
-        {showCreate && (
-          <Button appearance="flat" color="neutral" size="s">
-            + 新規作成
-          </Button>
-        )}
-      </Stack>
-      <Paper elevation={0} outlined>
-        <ProjectsBody items={items} />
-      </Paper>
-      {items.length > 0 && <Pager />}
-    </Stack>
   )
 }
 
 // ─── 画面 ───
 
+/**
+ * home/page.tsx。見出し「ホーム」（HomeHeader）の直下にタブ。パンくずは無い。
+ * 契約が 0 件のときは notFound() で home/not-found.tsx（EmptyServersView）に置き換わり、見出しも出ない
+ */
 const HomeScreen = ({
   serverItems = servers,
-  projectItems = projects,
   defaultTab,
   renaming,
   accountMenuOpen,
 }: {
   serverItems?: Server[]
-  projectItems?: Project[]
   defaultTab?: HomeTab
   renaming?: Server
   accountMenuOpen?: boolean
 }) => (
   <AppShell active="home" defaultAccountMenuOpen={accountMenuOpen}>
-    <PageHeader breadcrumbs={[{ label: 'ホーム' }]} title="ホーム" />
-    <GameServersSection items={serverItems} defaultTab={defaultTab} initialRenaming={renaming} />
-    <Divider />
-    <SitesSection items={projectItems} />
+    {serverItems.length === 0 ? (
+      <EmptyServersView />
+    ) : (
+      <Stack gap="m">
+        {/* HomeHeader。実物は variant='xxxl_comfort' の太字 */}
+        <Typography size="xxxl" fontWeight="bold" component="h1">
+          ホーム
+        </Typography>
+        <HomeContents items={serverItems} defaultTab={defaultTab} initialRenaming={renaming} />
+      </Stack>
+    )}
   </AppShell>
 )
 
 // ─── ストーリー ───
 
 /**
- * ログイン直後のホーム。上がゲームサーバー、下がサイト（デプロイナウのプロジェクト）。
+ * ログイン直後のホーム。契約中のサーバーのカードを並べる。
  *
  * - サーバーのカードは 起動中・起動処理中・停止中・決済失敗・準備中（バックアップ中など）の 5 状態。最後に「サーバーを追加」のカード
  * - 鉛筆のボタンでサーバーネーム変更のダイアログが開く
- * - サイトは使用量のカードとプロジェクトの一覧。名前の横の稼働状態のドットと「デプロイ状態」は別の軸
- * - 読み込み済みのページより先があるときはページ送りに「…」が出る
  *
- * @summary ゲームサーバーとサイトの一覧
+ * @summary 契約中のゲームサーバーの一覧
  */
 export const Default: Story = {
   render: () => <HomeScreen />,
@@ -1046,7 +651,7 @@ export const AccountMenuOpen: Story = {
 }
 
 /**
- * ゲームサーバーの「マイバックアップ」タブ。サーバーをまたいだバックアップの一覧と、容量 50GB の使用状況。
+ * 「マイバックアップ」タブ。サーバーをまたいだバックアップの一覧と、容量 50GB の使用状況。
  * 作成中はスピナー、失敗は × だけが出る。
  *
  * @summary マイバックアップのタブ
@@ -1065,18 +670,16 @@ export const RenameServer: Story = {
 }
 
 /**
- * 契約が 1 つも無い状態。ゲームサーバーはタブごと EmptyServersView に置き換わり、
- * サイトは見出し脇の「+ 新規作成」が消えて empty state の「プロジェクトを作成」だけが導線になる。
+ * 契約が 1 つも無い状態（home/not-found.tsx）。見出しとタブごと EmptyServersView に置き換わる。
  *
- * @summary サーバーもプロジェクトも無い状態
+ * @summary 契約中のサーバーが無い状態
  */
 export const Empty: Story = {
-  render: () => <HomeScreen serverItems={[]} projectItems={[]} />,
+  render: () => <HomeScreen serverItems={[]} />,
 }
 
 /**
- * ホームをスマートフォン幅で見た状態。サーバーのカードは 1 カラムに落ち、
- * プロジェクトの行は状態と最終デプロイが名前の下の 1 行に並ぶ。
+ * スマートフォン幅。サーバーのカードは 1 カラムに落ちる。
  * サイドナビが本文の上に積まれる問題（GAP-14）もここで見える。
  *
  * @summary スマートフォン幅でのホーム

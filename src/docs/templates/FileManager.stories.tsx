@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 
 import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
 import { Button } from '../../Button'
@@ -200,6 +200,26 @@ const targetText = (paths: string[]) =>
 
 // ─── 部品 ───
 
+/**
+ * MUI のブレークポイント未満かどうか。実アプリは sx の display と useMediaQuery で出し分けている。
+ * GAP-NEW: ブレークポイントで要素を出し分ける口（display のレスポンシブ指定）が無いので、
+ * matchMedia で判定して描き分けている（Mods と同じ）
+ */
+const useBelow = (query: string) => {
+  const [below, setBelow] = useState(() => window.matchMedia(query).matches)
+  useEffect(() => {
+    const mql = window.matchMedia(query)
+    const onChange = () => setBelow(mql.matches)
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [query])
+  return below
+}
+/** MUI の lg（1200px）未満。ツリーを出さない */
+const belowLg = '(max-width: 1199.95px)'
+/** MUI の sm（600px）未満。パンくずの省略の仕方と文字の大きさが変わる */
+const belowSm = '(max-width: 599.95px)'
+
 // GAP-NEW: TreeView が無い（実アプリは MUI x-tree-view の RichTreeView）。
 // 開閉の iconOnly ボタンとフォルダ名のボタンを並べ、階層の字下げを inline style で付けている。
 // 字下げ 22px は実アプリの itemChildrenIndentation。
@@ -276,7 +296,9 @@ const DirectoryTree = ({
 
 /**
  * FileBrowser/Header/Breadcrumbs。先頭は家のアイコン。
- * PC では 5 階層以上で後ろ 2 つを残して間を「…」にまとめる（実アプリは「…」でメニューが開く）。
+ * PC では 5 階層以上で後ろ 2 つ、スマートフォン（sm 未満）では 4 階層以上で後ろ 1 つを残して、
+ * 間を「…」にまとめる（実アプリは「…」でメニューが開く）。
+ * 名前は PC で xxl、スマートフォンで xl の太字
  */
 const PathBreadcrumbs = ({
   path,
@@ -286,12 +308,14 @@ const PathBreadcrumbs = ({
   onNavigate: (path: string) => void
 }) => {
   const [showAll, setShowAll] = useState(false)
+  const isMobile = useBelow(belowSm)
   const parts = path.split('/').filter(Boolean)
   const items = parts.map((label, i) => ({ label, path: `/${parts.slice(0, i + 1).join('/')}` }))
-  const collapse = !showAll && items.length > 4
+  const keep = isMobile ? 1 : 2
+  const collapse = !showAll && items.length > (isMobile ? 3 : 4)
   const [first, ...rest] = items
-  const middle = collapse ? rest.slice(0, -2) : []
-  const last = collapse ? rest.slice(-2) : rest
+  const middle = collapse ? rest.slice(0, -keep) : []
+  const last = collapse ? rest.slice(-keep) : rest
 
   return (
     <Breadcrumbs>
@@ -307,7 +331,7 @@ const PathBreadcrumbs = ({
       )}
       {last.map((item) => (
         <Breadcrumb key={item.path} onPress={() => onNavigate(item.path)}>
-          <Typography component="span" size="xl" fontWeight="bold">
+          <Typography component="span" size={{ xxs: 'xl', s: 'xxl' }} fontWeight="bold">
             {item.label}
           </Typography>
         </Breadcrumb>
@@ -466,7 +490,7 @@ const MoveResourceDialog = ({ targets }: { targets: string[] }) => {
             移動先
           </Typography>
           {/* 実アプリは高さ 332px で中をスクロールする */}
-          <Paper padding="none" outlined>
+          <Paper padding="m">
             <DirectoryTree activePath={to} onSelect={setTo} label="移動先のフォルダ" />
           </Paper>
         </Stack>
@@ -531,8 +555,8 @@ const ResourceMenu = ({
         </MenuItem>
       ) : null}
       {one ? <MenuItem leading={<Icon name="clip" size="s" />}>パスのコピー</MenuItem> : null}
+      {/* 実アプリの削除は他の項目と同じ色（赤くしない） */}
       <MenuItem
-        color="negative"
         leading={<Icon name="garbage_can" size="s" />}
         onAction={() => onOpenDialog(<DeleteResourceDialog targets={targets} />)}
       >
@@ -571,6 +595,7 @@ const FileManager = ({
   }
 
   const noSelection = selected.length === 0
+  const hideTree = useBelow(belowLg)
 
   return (
     <AppShell active="files">
@@ -578,73 +603,91 @@ const FileManager = ({
       <ServerDetailHeader status="RUNNING" tab="ファイル管理" />
       <Paper padding="none" elevation={1}>
         <Grid gapless>
-          {/* GAP-NEW: 幅で要素を隠す手段が無い。実アプリは lg 未満でツリーを出さないが、ここでは上に積まれる */}
-          {/* GAP-NEW: GridItem に境界線を付けられず、ツリーと一覧の間の縦罫（borderRight）が無い */}
-          <GridItem size={{ xxs: 12, l: 3 }}>
-            <DirectoryTree activePath={path} onSelect={navigate} label="フォルダ" />
-          </GridItem>
-          <GridItem size={{ xxs: 12, l: 9 }}>
-            <Stack gap="xxs">
+          {/* 実アプリは lg（1200px）未満でツリーを出さない。ツリーの幅は 230px の固定
+              GAP-NEW: GridItem に境界線を付けられず、ツリーと一覧の間の縦罫（borderRight）が無い */}
+          {!hideTree && (
+            <GridItem size={3}>
+              <Paper padding="m" elevation={0}>
+                <DirectoryTree activePath={path} onSelect={navigate} label="フォルダ" />
+              </Paper>
+            </GridItem>
+          )}
+          <GridItem size={hideTree ? 12 : 9}>
+            <Stack>
               {/* FileBrowser/Header */}
-              <Stack flexDirection="row" gap="s" alignItems="center" justifyContent="space-between">
-                <PathBreadcrumbs key={path} path={path} onNavigate={navigate} />
-                {/* FileBrowser/Header/SingleActionButton */}
-                <MenuTrigger>
-                  <Button
-                    appearance="outlined"
-                    leading={<Icon name="plus" size="s" />}
-                    trailing={<Icon name="chevron_down" size="s" />}
-                  >
-                    追加
-                  </Button>
-                  <Menu placement="bottom end">
-                    <MenuItem
-                      leading={<Icon name="upload" size="s" />}
-                      onAction={() => setOpenDialog(<UploadResourceDialog />)}
+              <Paper padding="m" elevation={0}>
+                <Stack
+                  flexDirection="row"
+                  gap="s"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <PathBreadcrumbs key={path} path={path} onNavigate={navigate} />
+                  {/* FileBrowser/Header/SingleActionButton */}
+                  <MenuTrigger>
+                    <Button
+                      appearance="outlined"
+                      leading={<Icon name="plus" size="s" />}
+                      trailing={<Icon name="chevron_down" size="s" />}
                     >
-                      アップロード
-                    </MenuItem>
-                    <MenuItem
-                      leading={<Icon name="note" size="s" />}
-                      onAction={() => setOpenDialog(<CreateResourceDialog />)}
-                    >
-                      新規ファイル
-                    </MenuItem>
-                    <MenuItem
-                      leading={<Icon name="folder" size="s" />}
-                      onAction={() => setOpenDialog(<CreateResourceDialog folder />)}
-                    >
-                      新規フォルダ
-                    </MenuItem>
-                  </Menu>
-                </MenuTrigger>
-              </Stack>
+                      追加
+                    </Button>
+                    <Menu placement="bottom end">
+                      <MenuItem
+                        leading={<Icon name="upload" size="s" />}
+                        onAction={() => setOpenDialog(<UploadResourceDialog />)}
+                      >
+                        アップロード
+                      </MenuItem>
+                      <MenuItem
+                        leading={<Icon name="note" size="s" />}
+                        onAction={() => setOpenDialog(<CreateResourceDialog />)}
+                      >
+                        新規ファイル
+                      </MenuItem>
+                      <MenuItem
+                        leading={<Icon name="folder" size="s" />}
+                        onAction={() => setOpenDialog(<CreateResourceDialog folder />)}
+                      >
+                        新規フォルダ
+                      </MenuItem>
+                    </Menu>
+                  </MenuTrigger>
+                </Stack>
+              </Paper>
               <Divider />
               {/* FileBrowser/MultiActionSection */}
-              <Stack
-                flexDirection={{ xxs: 'column', m: 'row' }}
-                gap="s"
-                justifyContent="space-between"
-              >
-                <Typography size="s" component="span">
-                  {noSelection ? '未選択' : `${selected.length}個選択中`}
-                </Typography>
-                <Stack flexDirection="row" gap="s">
-                  {bulkActions.map(([label, icon]) => (
-                    <Button
-                      key={label}
-                      appearance="outlined"
-                      size="s"
-                      leading={<Icon name={icon} size="s" />}
-                      isDisabled={noSelection}
-                    >
-                      {label}
-                    </Button>
-                  ))}
+              <Paper padding="m" elevation={0}>
+                <Stack
+                  flexDirection={{ xxs: 'column', m: 'row' }}
+                  gap="s"
+                  justifyContent="space-between"
+                >
+                  <Typography size="s" component="span">
+                    {noSelection ? '未選択' : `${selected.length}個選択中`}
+                  </Typography>
+                  {/* 実アプリは flexWrap で折り返す。Stack に折り返しが無いので、狭い幅では 2 つずつ 2 行に分けている */}
+                  <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="m">
+                    {[bulkActions.slice(0, 2), bulkActions.slice(2)].map((group) => (
+                      <Stack key={group[0][0]} flexDirection="row" gap="m">
+                        {group.map(([label, icon]) => (
+                          <Button
+                            key={label}
+                            appearance="outlined"
+                            leading={<Icon name={icon} size="s" />}
+                            isDisabled={noSelection}
+                          >
+                            {label}
+                          </Button>
+                        ))}
+                      </Stack>
+                    ))}
+                  </Stack>
                 </Stack>
-              </Stack>
+              </Paper>
               <Divider />
-              {/* FileBrowser/ResourcesTable。行を押すとフォルダが開く（実アプリはダブルクリック） */}
+              {/* FileBrowser/ResourcesTable。行を押すとフォルダが開く（実アプリは PC ではダブルクリック、
+                  タッチ端末では 1 回のタップ。ファイルのダブルクリックで編集が開く操作は入れていない） */}
               <Table
                 aria-label="ファイル一覧"
                 selectionMode="multiple"
@@ -890,7 +933,7 @@ export const InitError: Story = {
 }
 
 /**
- * スマートフォン幅。実アプリはツリーを隠すが、wip-ui では幅で隠せないため上に積まれる。
+ * スマートフォン幅。ツリーは隠れ、パンくずは 4 階層以上で後ろ 1 つを残して省略する。
  *
  * @summary スマートフォン幅
  */

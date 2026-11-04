@@ -152,8 +152,9 @@ export const GamersMaintenance: Story = {
 export const DeployNowMaintenance: Story = {
   render: () => (
     <AuthShell>
-      {/* 実物は Tailwind の rounded-lg border shadow-sm の白いカード */}
-      <Card outlined elevation={1}>
+      {/* 実物は Tailwind の rounded-lg border shadow-sm・p-8（32px）の白いカード。
+          GAP-NEW: Paper は outlined にすると影が消えるので、枠線と影を両方は出せない */}
+      <Card outlined padding="xl">
         <Stack gap="m" alignItems="center">
           <Typography size="xl" fontWeight="bold" component="h1">
             メンテナンス中です

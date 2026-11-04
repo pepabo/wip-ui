@@ -9,6 +9,7 @@ import { Divider } from '../../Divider'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Menu, MenuItem, MenuTrigger } from '../../Menu'
+import { Paper } from '../../Paper'
 import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
@@ -55,14 +56,25 @@ const primaryColor: ButtonColor = 'interactive'
 
 // ─── 共通 ───
 
-/** 実画面のページ見出し（AccountHeader の「アカウント」、PageHeader の「メンバー」） */
-const AppHeading = ({ title, description }: { title: string; description?: string }) => (
+/**
+ * 実画面のページ見出し。ゲーマーズの AccountHeader は xxl の「アカウント」だけ、
+ * AI ゲートウェイの shared/ui/PageHeader は xl の見出しと xs の説明
+ */
+const AppHeading = ({
+  title,
+  description,
+  size = 'xl',
+}: {
+  title: string
+  description?: string
+  size?: 'xl' | 'xxl'
+}) => (
   <Stack gap="xxs">
-    <Typography size="xxl" fontWeight="bold" component="h2">
+    <Typography size={size} fontWeight="bold" component="h2">
       {title}
     </Typography>
     {description && (
-      <Typography size="s" color="medium_emphasis" component="div">
+      <Typography size="xs" color="medium_emphasis" component="div">
         {description}
       </Typography>
     )}
@@ -153,84 +165,86 @@ const AccountRow = ({
   </Stack>
 )
 
+// 実物は Container maxWidth="md"（900px）
 const GamersAccount = () => (
-  <Stack gap="l">
-    {/* AccountHeader。サーバー一覧（/home）へ戻るボタンと見出し */}
-    <Stack flexDirection="row">
-      <Button appearance="outlined" leading={<Icon name="arrow_left" size="s" />}>
-        サーバー
-      </Button>
-    </Stack>
-    <AppHeading title="アカウント" />
-    <Card>
-      <Stack gap="l">
-        <AccountRow title="アカウントID">
-          <Typography size="s">{account.id}</Typography>
-        </AccountRow>
-        <Divider />
-        <AccountRow title="メールアドレス" action={<Button appearance="outlined">変更</Button>}>
-          <Typography size="s">{account.email}</Typography>
-        </AccountRow>
-        <Divider />
-        {/* ExternalIdentitiesSection。解除は確認を挟まず、押すとすぐ解除する */}
-        <Stack gap="xs">
-          <Typography fontWeight="bold" component="h3">
-            外部アカウント連携
-          </Typography>
-          {externalProviders.map((p, i) => (
-            <Stack key={p.label} gap="xs">
-              {i > 0 && <Divider />}
-              <Stack
-                flexDirection={{ xxs: 'column', s: 'row' }}
-                gap="s"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                {/* 実物はプロバイダ名の枠を 150px に固定して表示名の頭をそろえる（GAP-NEW: Stack に幅の指定が無い） */}
-                <Stack flexDirection="row" gap="l" alignItems="center">
-                  <Stack flexDirection="row" gap="s" alignItems="center">
-                    {/* 実物は alt にプロバイダ名を入れるが、すぐ横に同じ名前の文字があるので alt は空にする。
-                        GAP-NEW: 画像の枠（Image）が無い。実物は object-fit: contain */}
-                    <img src={p.logo} alt="" width={22} height={22} />
+  <Container size="m">
+    <Stack gap="l">
+      {/* AccountHeader。サーバー一覧（/home）へ戻るボタンと見出し */}
+      <Stack flexDirection="row">
+        <Button appearance="outlined" leading={<Icon name="arrow_left" size="s" />}>
+          サーバー
+        </Button>
+      </Stack>
+      <AppHeading title="アカウント" size="xxl" />
+      <Card>
+        <Stack gap="l">
+          <AccountRow title="アカウントID">
+            <Typography size="s">{account.id}</Typography>
+          </AccountRow>
+          <Divider />
+          <AccountRow title="メールアドレス" action={<Button appearance="outlined">変更</Button>}>
+            <Typography size="s">{account.email}</Typography>
+          </AccountRow>
+          <Divider />
+          {/* ExternalIdentitiesSection。解除は確認を挟まず、押すとすぐ解除する */}
+          <Stack gap="xs">
+            <Typography fontWeight="bold" component="h3">
+              外部アカウント連携
+            </Typography>
+            {externalProviders.map((p, i) => (
+              <Stack key={p.label} gap="xs">
+                {i > 0 && <Divider />}
+                <Stack
+                  flexDirection={{ xxs: 'column', s: 'row' }}
+                  gap="s"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  {/* 実物はプロバイダ名の枠を 150px に固定して表示名の頭をそろえる（GAP-NEW: Stack に幅の指定が無い） */}
+                  <Stack flexDirection="row" gap="l" alignItems="center">
+                    <Stack flexDirection="row" gap="s" alignItems="center">
+                      {/* GAP-NEW: 画像の枠（Image）が無い。実物は object-fit: contain */}
+                      <img src={p.logo} alt={p.label} width={22} height={22} />
+                      <Typography size="s" component="span">
+                        {p.label}
+                      </Typography>
+                    </Stack>
                     <Typography size="s" component="span">
-                      {p.label}
+                      {p.linked ?? '未連携'}
                     </Typography>
                   </Stack>
-                  <Typography size="s" component="span">
-                    {p.linked ?? '未連携'}
-                  </Typography>
+                  {p.linked ? (
+                    <Button appearance="outlined" color="negative">
+                      解除
+                    </Button>
+                  ) : (
+                    // 実物は外部の認可画面へ移る
+                    <Button appearance="outlined">連携</Button>
+                  )}
                 </Stack>
-                {p.linked ? (
-                  <Button appearance="outlined" color="negative">
-                    解除
-                  </Button>
-                ) : (
-                  // 実物は外部の認可画面へ移る
-                  <Button appearance="outlined">連携</Button>
-                )}
               </Stack>
-            </Stack>
-          ))}
+            ))}
+          </Stack>
+          <Divider />
+          <AccountRow title="メール受信設定" action={<Button appearance="outlined">変更</Button>}>
+            <Typography size="s" fontWeight="bold" component="h4">
+              ニュースレター
+            </Typography>
+            <Typography size="s">{account.newsletter ? '受信する' : '受信しない'}</Typography>
+          </AccountRow>
+          <Divider />
+          <AccountRow
+            title="アカウント削除"
+            action={
+              <Button appearance="outlined" color="negative">
+                削除
+              </Button>
+            }
+          />
         </Stack>
-        <Divider />
-        <AccountRow title="メール受信設定" action={<Button appearance="outlined">変更</Button>}>
-          <Typography size="s" fontWeight="bold" component="h4">
-            ニュースレター
-          </Typography>
-          <Typography size="s">{account.newsletter ? '受信する' : '受信しない'}</Typography>
-        </AccountRow>
-        <Divider />
-        <AccountRow
-          title="アカウント削除"
-          action={
-            <Button appearance="outlined" color="negative">
-              削除
-            </Button>
-          }
-        />
-      </Stack>
-    </Card>
-  </Stack>
+      </Card>
+    </Stack>
+  </Container>
 )
 
 /** update-email/_components/UpdateEmailBackButton・UpdateOptEmailNotificationBackButton */
@@ -273,7 +287,7 @@ const UpdateEmailPage = () => (
   </Container>
 )
 
-/** update-opt-email-notification/_components/UpdateOptEmailNotificationPaper（CheckboxItem） */
+/** update-opt-email-notification/_components/UpdateOptEmailNotificationPaper（components/CheckboxItem。題も説明も m） */
 const UpdateNewsletterPage = () => (
   <Container size="s">
     <Stack gap="l">
@@ -284,10 +298,10 @@ const UpdateNewsletterPage = () => (
             メール受信設定
           </Typography>
           <Stack gap="xs">
-            <Typography size="s" fontWeight="bold" component="h4">
+            <Typography fontWeight="bold" component="h4">
               ニュースレター
             </Typography>
-            <Typography size="s" color="medium_emphasis" component="div">
+            <Typography component="div">
               クーポンや最新アップデート情報などをお届けします。
             </Typography>
             <Checkbox defaultSelected={account.newsletter}>受信する</Checkbox>
@@ -497,11 +511,11 @@ const MemberActions = ({
   )
 }
 
-// GAP-NEW: Table のセルに 2 段目の補足（DataTableText tone="secondary"）を置く型が無い
+// GAP-NEW: Table のセルに 2 段目の補足（DataTableText tone="secondary"。14px・灰色）を置く型が無い
 const TwoLine = ({ primary, secondary }: { primary: ReactNode; secondary: string }) => (
   <Stack gap="xxs">
     {primary}
-    <Typography size="xs" color="medium_emphasis" component="span">
+    <Typography size="s" color="medium_emphasis" component="span">
       {secondary}
     </Typography>
   </Stack>
@@ -525,77 +539,81 @@ const AiMembers = ({
     <AppHeading title="メンバー" description="組織のメンバーを管理します" />
     {/* GAP-NEW: Skeleton が無い。実物は表の形の骨格（SkeletonTable）を出すが、Loader で代用している */}
     {view === 'loading' && (
-      <Card>
+      <Paper outlined>
         <Stack alignItems="center">
           <Loader size="m" message="メンバーを読み込んでいます" />
         </Stack>
-      </Card>
+      </Paper>
     )}
     {view === 'error' && <RetryCallout message="メンバーを読み込めませんでした。" />}
     {view === 'success' && (
-      <>
-        {/* shared/ui/ListToolbar。GAP-NEW: TextField に虫眼鏡のアイコンを差せない */}
-        <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="s" justifyContent="space-between">
-          <TextField
-            aria-label="メンバーを名前かメールアドレスで検索する"
-            placeholder="名前で検索"
-            size="s"
-            type="search"
-          />
-          <Button color={primaryColor} leading={<Icon name="person_plus" size="s" />}>
-            メンバーを招待する
-          </Button>
+      // 実物の一覧と招待は面に入れない。表は shared/ui/DataTable が枠線の Paper（padding 0）に入れる。
+      // GAP-NEW: Table が幅 100% にならない（実物は DataTable の CSS で width: 100%）
+      <Stack gap="l">
+        <Stack gap="s">
+          {/* shared/ui/ListToolbar。検索は左（600px 以上で幅 280px）、招待は右。
+              GAP-NEW: TextField に虫眼鏡のアイコンを差せない。Stack に幅の指定が無い */}
+          <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="s" justifyContent="space-between">
+            <TextField
+              aria-label="メンバーを名前かメールアドレスで検索する"
+              placeholder="名前で検索"
+              size="s"
+              type="search"
+            />
+            <Button color={primaryColor} leading={<Icon name="person_plus" size="s" />}>
+              メンバーを招待する
+            </Button>
+          </Stack>
+          <Paper outlined padding="none">
+            <Table aria-label="メンバー一覧">
+              <TableHeader>
+                <Column isRowHeader>表示名</Column>
+                <Column>ロール</Column>
+                <Column>参加プロジェクト</Column>
+                {/* 実物の列見出しは aria-label だけで、目に見える文字は無い */}
+                <Column aria-label="操作"> </Column>
+              </TableHeader>
+              <TableBody renderEmptyState={() => 'メンバーはいません'}>
+                {members.map((m) => (
+                  <Row key={m.id}>
+                    <Cell>
+                      <TwoLine
+                        primary={
+                          <Stack flexDirection="row" gap="xs" alignItems="center">
+                            <Typography component="span">{m.name}</Typography>
+                            {m.status !== 'active' && (
+                              <Sticker
+                                size="s"
+                                color={m.status === 'suspended' ? 'negative' : 'neutral'}
+                              >
+                                {memberStatusLabels[m.status]}
+                              </Sticker>
+                            )}
+                          </Stack>
+                        }
+                        secondary={m.email}
+                      />
+                    </Cell>
+                    {/* GAP-NEW: Column / Cell に右寄せ（DataTableColumn の align: 'end'）が無い */}
+                    <Cell>{m.role}</Cell>
+                    <Cell>{projectCount(m)}</Cell>
+                    <Cell>
+                      {/* 自分の行と、参加中でないメンバーの行には操作を出さない */}
+                      {m.id !== viewerId && m.status === 'active' && (
+                        <MemberActions member={m} onOpenDialog={onOpenDialog} />
+                      )}
+                    </Cell>
+                  </Row>
+                ))}
+              </TableBody>
+            </Table>
+          </Paper>
         </Stack>
-        <Card padding="none">
-          <Table aria-label="メンバー一覧">
-            <TableHeader>
-              <Column isRowHeader>表示名</Column>
-              <Column>ロール</Column>
-              <Column>参加プロジェクト</Column>
-              {/* 実物の列見出しは aria-label だけで、目に見える文字は無い */}
-              <Column aria-label="操作"> </Column>
-            </TableHeader>
-            <TableBody renderEmptyState={() => 'メンバーはいません'}>
-              {members.map((m) => (
-                <Row key={m.id}>
-                  <Cell>
-                    <TwoLine
-                      primary={
-                        <Stack flexDirection="row" gap="xs" alignItems="center">
-                          <Typography size="s" fontWeight="bold" component="span">
-                            {m.name}
-                          </Typography>
-                          {m.status !== 'active' && (
-                            <Sticker
-                              size="s"
-                              color={m.status === 'suspended' ? 'negative' : 'neutral'}
-                            >
-                              {memberStatusLabels[m.status]}
-                            </Sticker>
-                          )}
-                        </Stack>
-                      }
-                      secondary={m.email}
-                    />
-                  </Cell>
-                  <Cell>{m.role}</Cell>
-                  <Cell>{projectCount(m)}</Cell>
-                  <Cell>
-                    {/* 自分の行と、参加中でないメンバーの行には操作を出さない */}
-                    {m.id !== viewerId && m.status === 'active' && (
-                      <MemberActions member={m} onOpenDialog={onOpenDialog} />
-                    )}
-                  </Cell>
-                </Row>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-        <Card>
-          <Stack gap="s">
-            <Typography size="m" fontWeight="bold" component="h3">
-              発行済みの招待
-            </Typography>
+        <Stack gap="s">
+          <Typography size="m" fontWeight="bold" component="h3">
+            発行済みの招待
+          </Typography>
+          <Paper outlined padding="none">
             <Table aria-label="発行済みの招待一覧">
               <TableHeader>
                 <Column isRowHeader>ロール</Column>
@@ -625,9 +643,9 @@ const AiMembers = ({
                 ))}
               </TableBody>
             </Table>
-          </Stack>
-        </Card>
-      </>
+          </Paper>
+        </Stack>
+      </Stack>
     )}
   </Stack>
 )
@@ -710,47 +728,52 @@ const MemberProjectsPanel = ({ member, onClose }: { member: Member; onClose?: ()
       <DialogDescription>
         このメンバーが参加しているプロジェクトと、それぞれのロールを管理します。
       </DialogDescription>
-      <Table aria-label={`${member.name} が参加しているプロジェクト`}>
-        <TableHeader>
-          <Column isRowHeader>プロジェクト</Column>
-          <Column>ロール</Column>
-          <Column aria-label="操作"> </Column>
-        </TableHeader>
-        <TableBody renderEmptyState={() => '参加しているプロジェクトはありません'}>
-          {member.projects.map((p) => (
-            <Row key={p.id}>
-              {/* 実物はプロジェクトの画面へのリンク。GAP-NEW: 文中のテキストリンク（Link）が無い */}
-              <Cell>{p.name}</Cell>
-              <Cell>{p.role}</Cell>
-              <Cell>
-                {/* ProjectActions */}
-                <MenuTrigger>
-                  <Button
-                    appearance="transparent"
-                    size="s"
-                    iconOnly
-                    aria-label={`${p.name} の操作メニュー`}
-                  >
-                    <Icon name="ellipsis_vertical" size="s" aria-hidden="true" />
-                  </Button>
-                  <Menu placement="bottom end">
-                    <MenuItem
-                      leading={
-                        <Icon name={p.role === '管理者' ? 'minus_on_circle' : 'person'} size="s" />
-                      }
+      <Paper outlined padding="none">
+        <Table aria-label={`${member.name} が参加しているプロジェクト`}>
+          <TableHeader>
+            <Column isRowHeader>プロジェクト</Column>
+            <Column>ロール</Column>
+            <Column aria-label="操作"> </Column>
+          </TableHeader>
+          <TableBody renderEmptyState={() => '参加しているプロジェクトはありません'}>
+            {member.projects.map((p) => (
+              <Row key={p.id}>
+                {/* 実物はプロジェクトの画面へのリンク。GAP-NEW: 文中のテキストリンク（Link）が無い */}
+                <Cell>{p.name}</Cell>
+                <Cell>{p.role}</Cell>
+                <Cell>
+                  {/* ProjectActions */}
+                  <MenuTrigger>
+                    <Button
+                      appearance="transparent"
+                      size="s"
+                      iconOnly
+                      aria-label={`${p.name} の操作メニュー`}
                     >
-                      {p.role === '管理者' ? '管理者権限を外す' : '管理者にする'}
-                    </MenuItem>
-                    <MenuItem color="negative" leading={<Icon name="garbage_can" size="s" />}>
-                      プロジェクトから外す
-                    </MenuItem>
-                  </Menu>
-                </MenuTrigger>
-              </Cell>
-            </Row>
-          ))}
-        </TableBody>
-      </Table>
+                      <Icon name="ellipsis_vertical" size="s" aria-hidden="true" />
+                    </Button>
+                    <Menu placement="bottom end">
+                      <MenuItem
+                        leading={
+                          <Icon
+                            name={p.role === '管理者' ? 'minus_on_circle' : 'person'}
+                            size="s"
+                          />
+                        }
+                      >
+                        {p.role === '管理者' ? '管理者権限を外す' : '管理者にする'}
+                      </MenuItem>
+                      <MenuItem color="negative" leading={<Icon name="garbage_can" size="s" />}>
+                        プロジェクトから外す
+                      </MenuItem>
+                    </Menu>
+                  </MenuTrigger>
+                </Cell>
+              </Row>
+            ))}
+          </TableBody>
+        </Table>
+      </Paper>
     </Stack>
     <DialogFooter>
       <Button color={primaryColor} onPress={onClose}>

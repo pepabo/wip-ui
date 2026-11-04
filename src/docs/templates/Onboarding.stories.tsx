@@ -14,10 +14,42 @@ import { Stack } from '../../Stack'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
 import { AppShell } from './AppShell'
+import sevenDaysImage from './assets/gamers/game/7days-to-die.webp'
+import abioticFactorImage from './assets/gamers/game/abiotic-factor.webp'
+import arkImage from './assets/gamers/game/ark_image.webp'
+import astroneerImage from './assets/gamers/game/astroneer.webp'
+import brickadiaImage from './assets/gamers/game/brickadia.webp'
+import conanExilesImage from './assets/gamers/game/conan-exiles.webp'
+import corekeeperImage from './assets/gamers/game/corekeeper.webp'
+import dstImage from './assets/gamers/game/donotstarvetogether.webp'
+import enshroudedImage from './assets/gamers/game/enshrouded.webp'
+import factorioImage from './assets/gamers/game/factorio.webp'
+import fivemImage from './assets/gamers/game/fivem.webp'
+import gmodImage from './assets/gamers/game/gmod.webp'
+import humanitzImage from './assets/gamers/game/humanitz.webp'
+import hytaleImage from './assets/gamers/game/hytale.webp'
+import icarusImage from './assets/gamers/game/icarus.webp'
+import minecraftBeImage from './assets/gamers/game/minecraft_be_image.webp'
+import minecraftJeImage from './assets/gamers/game/minecraft_je_image.webp'
+import necesseImage from './assets/gamers/game/necesse.webp'
+import palworldImage from './assets/gamers/game/palworld_image.webp'
+import projectZomboidImage from './assets/gamers/game/projectzomboid.webp'
+import redmImage from './assets/gamers/game/redm.webp'
+import romesteadImage from './assets/gamers/game/romestead.webp'
+import runescapeImage from './assets/gamers/game/runescape-dragonwilds.webp'
+import rustImage from './assets/gamers/game/rust.webp'
+import satisfactoryImage from './assets/gamers/game/satisfactory.webp'
+import sonsOfTheForestImage from './assets/gamers/game/sons-of-the-forest.webp'
+import soulmaskImage from './assets/gamers/game/soulmask.webp'
+import starruptureImage from './assets/gamers/game/starrupture.webp'
+import terrariaImage from './assets/gamers/game/terraria.webp'
+import theForestImage from './assets/gamers/game/the-forest.webp'
+import valheimImage from './assets/gamers/game/valheim.webp'
+import vrisingImage from './assets/gamers/game/vrising.webp'
+import windroseImage from './assets/gamers/game/windrose.webp'
 import paypayLogo from './assets/gamers/paypay.svg'
 import maintenanceImage from './assets/gamers/purchase-maintenance.svg'
 import soldOutImage from './assets/gamers/sold-out.svg'
-import { gameImages } from './gameServer'
 import { Card } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -54,38 +86,224 @@ type Story = StoryObj<typeof meta>
 
 // ─── データ ───
 
-// 表示名は backend/entity/game.go の GameDisplayNames、「3日 ○円~」は model/game.ts の minPrice
+// listGames() が返すゲーム（backend/entity/instance_type.go の availableImageAliasesForInstanceType）を
+// services/Game.ts の sortGames の順に並べたもの。表示名は backend/entity/game.go の GameDisplayNames、
+// 「3日 ○円~」・画像・検索語（searchReadings ＋ searchAliases）は model/game.ts の Games。
+// fivem-enhanced はリリースフラグ（gameReleaseFlags）で止まっているので入れていない
 const games = [
   {
     id: 'minecraft-je',
     name: 'Minecraft (Java版)',
     minPrice: 520,
-    readings: 'まいんくらふと マイクラ',
+    img: minecraftJeImage,
+    search: ['まいんくらふと', 'マイクラ', 'マイクラJE'],
   },
   {
-    id: 'minecraft-be',
+    id: 'minecraft-bedrock',
     name: 'Minecraft (統合版)',
     minPrice: 260,
-    readings: 'まいんくらふと マイクラ',
+    img: minecraftBeImage,
+    search: ['まいんくらふと', 'マイクラ', 'マイクラBE'],
   },
-  { id: 'palworld', name: 'パルワールド', minPrice: 1900, readings: 'ぱるわーるど palworld' },
-  { id: 'seven-days-to-die', name: '7 Days to Die', minPrice: 1000, readings: '7dtd' },
-  { id: 'ark-se', name: 'ARK: Survival Evolved', minPrice: 1000, readings: 'あーく' },
-  { id: 'satisfactory', name: 'Satisfactory', minPrice: 1900, readings: 'さてぃすふぁくとりー' },
-  { id: 'fivem', name: 'FiveM(GTA V)', minPrice: 1000, readings: 'ふぁいぶえむ' },
-  { id: 'terraria', name: 'Terraria', minPrice: 260, readings: 'てらりあ' },
-  { id: 'corekeeper', name: 'Core Keeper', minPrice: 520, readings: 'こあきーぱー' },
-  { id: 'valheim', name: 'Valheim', minPrice: 520, readings: 'ばるへいむ' },
-  { id: 'project-zomboid', name: 'Project Zomboid', minPrice: 520, readings: 'ぞんぼいど' },
-  { id: 'enshrouded', name: 'Enshrouded', minPrice: 1000, readings: 'えんしゅらうでっど' },
+  {
+    id: 'palworld',
+    name: 'パルワールド',
+    minPrice: 1900,
+    img: palworldImage,
+    search: ['ぱるわーるど', 'palworld'],
+  },
+  {
+    id: '7dtd',
+    name: '7 Days to Die',
+    minPrice: 1000,
+    img: sevenDaysImage,
+    search: ['せぶんでいずとぅーだい', '7DTD', '7daystodie'],
+  },
+  {
+    id: 'ark-se',
+    name: 'ARK: Survival Evolved',
+    minPrice: 1000,
+    img: arkImage,
+    search: ['あーくさばいばるえぼるぶど'],
+  },
+  {
+    id: 'satisfactory',
+    name: 'Satisfactory',
+    minPrice: 1900,
+    img: satisfactoryImage,
+    search: ['さてぃすふぁくとりー'],
+  },
+  {
+    id: 'fivem',
+    name: 'FiveM(GTA V)',
+    minPrice: 1000,
+    img: fivemImage,
+    search: ['ふぁいぶえむ', 'じーてぃーえー'],
+  },
+  { id: 'terraria', name: 'Terraria', minPrice: 260, img: terrariaImage, search: ['てらりあ'] },
+  {
+    id: 'corekeeper',
+    name: 'Core Keeper',
+    minPrice: 520,
+    img: corekeeperImage,
+    search: ['こあきーぱー', 'corekeeper'],
+  },
+  {
+    id: 'astroneer',
+    name: 'ASTRONEER',
+    minPrice: 520,
+    img: astroneerImage,
+    search: ['あすとろにーあ'],
+  },
+  {
+    id: 'project-zomboid',
+    name: 'Project Zomboid',
+    minPrice: 520,
+    img: projectZomboidImage,
+    search: ['ぷろじぇくとぞんぼいど', 'PZ', 'projectzomboid'],
+  },
+  {
+    id: 'starrupture',
+    name: 'StarRupture',
+    minPrice: 520,
+    img: starruptureImage,
+    search: ['すたーらぷちゃー'],
+  },
+  {
+    id: 'hytale',
+    name: 'Hytale',
+    minPrice: 520,
+    img: hytaleImage,
+    search: ['はいている', 'はいてーる'],
+  },
+  {
+    id: 'windrose',
+    name: 'Windrose',
+    minPrice: 1000,
+    img: windroseImage,
+    search: ['うぃんどろーず'],
+  },
+  {
+    id: 'romestead',
+    name: 'Romestead',
+    minPrice: 520,
+    img: romesteadImage,
+    search: ['ろーむすてっど'],
+  },
+  {
+    id: 'runescape-dragonwilds',
+    name: 'RuneScape: Dragonwilds',
+    minPrice: 520,
+    img: runescapeImage,
+    search: ['るーんすけーぷ どらごんわいるず', 'RuneScape'],
+  },
+  {
+    id: 'vrising',
+    name: 'V Rising',
+    minPrice: 1000,
+    img: vrisingImage,
+    search: ['ぶいらいじんぐ'],
+  },
+  {
+    id: 'conan-exiles',
+    name: 'Conan Exiles',
+    minPrice: 1900,
+    img: conanExilesImage,
+    search: ['こなんえぐざいるず'],
+  },
+  { id: 'necesse', name: 'Necesse', minPrice: 520, img: necesseImage, search: ['ねせす'] },
+  { id: 'icarus', name: 'ICARUS', minPrice: 1000, img: icarusImage, search: ['いかるす'] },
+  {
+    id: 'brickadia',
+    name: 'Brickadia',
+    minPrice: 520,
+    img: brickadiaImage,
+    search: ['ぶりっかでぃあ'],
+  },
+  {
+    id: 'humanitz',
+    name: 'HumanitZ',
+    minPrice: 1000,
+    img: humanitzImage,
+    search: ['ひゅーまん いっと じー'],
+  },
+  {
+    id: 'redm',
+    name: 'RedM(RDR2/RDO)',
+    minPrice: 1000,
+    img: redmImage,
+    search: ['れっどえむ', 'れっど でっど りでんぷしょん つー', 'れっど でっど おんらいん'],
+  },
+  {
+    id: 'the-forest',
+    name: 'The Forest',
+    minPrice: 1000,
+    img: theForestImage,
+    search: ['ざふぉれすと'],
+  },
+  {
+    id: 'sons-of-the-forest',
+    name: 'Sons Of The Forest',
+    minPrice: 1000,
+    img: sonsOfTheForestImage,
+    search: ['さんずおぶざふぉれすと'],
+  },
+  {
+    id: 'donotstarvetogether',
+    name: "Don't Starve Together",
+    minPrice: 520,
+    img: dstImage,
+    search: ['どんとすたーぶとぅぎゃざー', 'DST', 'ドンスタ', 'donotstarvetogether'],
+  },
+  {
+    id: 'valheim',
+    name: 'Valheim',
+    minPrice: 520,
+    img: valheimImage,
+    search: ['ばるへいむ', 'ゔぁるへいむ'],
+  },
+  {
+    id: 'enshrouded',
+    name: 'Enshrouded',
+    minPrice: 1900,
+    img: enshroudedImage,
+    search: ['えんしゅらうでっど'],
+  },
+  { id: 'factorio', name: 'Factorio', minPrice: 520, img: factorioImage, search: ['ふぁくとりお'] },
+  {
+    id: 'abioticfactor',
+    name: 'Abiotic Factor',
+    minPrice: 1000,
+    img: abioticFactorImage,
+    search: ['あびおてぃっくふぁくたー', 'abioticfactor'],
+  },
+  { id: 'rust', name: 'Rust', minPrice: 1900, img: rustImage, search: ['らすと'] },
+  {
+    id: 'soulmask',
+    name: 'Soulmask',
+    minPrice: 1900,
+    img: soulmaskImage,
+    search: ['そうるますく', 'そーるますく'],
+  },
+  {
+    id: 'gmod',
+    name: "Garry's Mod",
+    minPrice: 520,
+    img: gmodImage,
+    search: ['ぎゃりーずもっど', 'Gmod'],
+  },
 ]
 type Game = (typeof games)[number]
 
-/** services/Plan.tsx の findDescription（Minecraft Java版）、月額は run.yml の 1ヶ月の価格。CPU / Disk は例 */
+/**
+ * Minecraft (Java版) のプラン。説明は services/Plan.tsx の findDescription、CPU / Disk は backend/entity/instance_type.go の
+ * ToSpecHumanized、1ヶ月の価格は register_subscription_plan_by_admin/run.yml
+ */
 const plans = [
-  { memory: 4, cpu: 2, disk: 50, description: '目安 1~5人', monthly: 1500 },
-  { memory: 8, cpu: 4, disk: 100, description: '目安 6~10人、Mod使用', monthly: 3000 },
-  { memory: 16, cpu: 6, disk: 200, description: '目安 11人~、Mod使用', monthly: 4300 },
+  { memory: 4, cpu: 4, disk: '100GB', description: '目安 1~5人', monthly: 1500 },
+  { memory: 8, cpu: 6, disk: '100GB', description: '目安 6~10人、Mod使用', monthly: 3000 },
+  { memory: 16, cpu: 8, disk: '100GB', description: '目安 11人~、Mod使用', monthly: 4300 },
+  { memory: 32, cpu: 12, disk: '100GB', description: '目安 20人~、Mod使用', monthly: 11000 },
 ]
 
 /** 期間。3日は月額表示が無い。3日の価格と長期の割引率は例（実際の値は契約プランの billingRules から来る） */
@@ -98,6 +316,10 @@ const periods = [
   { id: '24', label: '24ヶ月', months: 24, discount: 20 },
 ]
 type Period = (typeof periods)[number]
+
+/** lib/normalizeSearchText。カタカナをひらがなにし、小文字にする */
+const normalize = (text: string) =>
+  text.replace(/[ァ-ヶ]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0x60)).toLowerCase()
 
 const yen = (n: number) => `${n.toLocaleString('ja-JP')}円`
 
@@ -113,7 +335,8 @@ const COUPON = { code: 'GAMERS500', name: '初回500円OFF', discount: 500 }
 /** 登録済みのカード（components/PaymentCardDetail）。expire は YYMM で来て YY/MM で出す */
 const REGISTERED_CARD = { last4: '4242', expire: '28/12' }
 
-const expireMonths = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
+/** components/CcExpSelect。月は 1〜12、年は今年から 10 年。初期値は今日（例：2026/10/30）の月と年 */
+const expireMonths = Array.from({ length: 12 }, (_, i) => String(i + 1))
 const expireYears = Array.from({ length: 10 }, (_, i) => String(2026 + i))
 
 // ─── 共通 ───
@@ -257,9 +480,9 @@ const NoticeCard = ({ children }: { children: ReactNode }) => (
 
 const GameSelect = () => {
   const [query, setQuery] = useState('')
-  const q = query.trim().toLowerCase()
+  const q = normalize(query.trim())
   const hits = games.filter(
-    (g) => !q || g.name.toLowerCase().includes(q) || g.readings.toLowerCase().includes(q)
+    (g) => !q || [g.name, ...g.search].some((t) => normalize(t).includes(q))
   )
   return (
     <Stack gap="l">
@@ -282,7 +505,7 @@ const GameSelect = () => {
             <Card padding="m">
               <Stack gap="s" alignItems="center">
                 {/* GAP-NEW: 画像の枠（Image）が無い。実物の CardMedia はカードの端まで広げ object-fit: cover で切り抜く */}
-                <img src={gameImages[g.name]} alt={g.name} width="100%" height={136} />
+                <img src={g.img} alt={g.name} width="100%" height={136} />
                 {/* GAP-3: カード全体を押せる面にできないので、ゲーム名をボタンにしている */}
                 <Button appearance="transparent" width="full">
                   <Typography size="l" fontWeight="bold" component="span">
@@ -337,7 +560,7 @@ const PlanSelect = () => {
                   選んだゲームの 80px 角のキービジュアルを入力欄の先頭に出す。ここでは Select の左に置いている */}
               {/* GAP-NEW: 画像の枠（Image）が無い（実物は object-fit: cover と左側の角丸） */}
               <Stack flexDirection="row" gap="s" alignItems="center">
-                <img src={gameImages[game.name]} alt={game.name} width={80} height={80} />
+                <img src={game.img} alt={game.name} width={80} height={80} />
                 <Select
                   aria-label="ゲーム"
                   width="full"
@@ -370,7 +593,7 @@ const PlanSelect = () => {
                         </Typography>
                         <Stack gap="xxs">
                           <Typography size="xs" component="span">
-                            CPU {p.cpu}Core / Disk {p.disk}GB
+                            CPU {p.cpu}Core / Disk {p.disk}
                           </Typography>
                           <Typography size="xs" component="span">
                             {p.description}
@@ -488,7 +711,7 @@ const RegisterPaymentCardForm = () => (
       <Grid spacing="xs">
         <GridItem size={6}>
           {/* components/CcExpSelect */}
-          <Select label="有効期限(月)" width="full">
+          <Select label="有効期限(月)" width="full" defaultSelectedKey="10">
             {expireMonths.map((m) => (
               <SelectItem key={m} id={m}>
                 {m}
@@ -497,7 +720,7 @@ const RegisterPaymentCardForm = () => (
           </Select>
         </GridItem>
         <GridItem size={6}>
-          <Select label="有効期限(年)" width="full">
+          <Select label="有効期限(年)" width="full" defaultSelectedKey="2026">
             {expireYears.map((y) => (
               <SelectItem key={y} id={y}>
                 {y}
@@ -569,6 +792,7 @@ const PaymentCardDetail = () => (
 
 /** PaymentInfoPaper/PaymentMethodCard（登録済みの決済手段がある場合） */
 const PaymentMethodCard = ({ onChange }: { onChange: () => void }) => (
+  // GAP-NEW: Stack の alignItems にブレークポイントごとの値を渡せない。実物は横並び（s 以上）で縦の中央揃え
   <Stack
     flexDirection={{ xxs: 'column', s: 'row' }}
     gap="xs"
@@ -638,7 +862,7 @@ const PaymentMethodChangeDialog = ({
           onChange={(v) => setMethod(v as 'credit-card' | 'paypay')}
         >
           <Stack gap="l">
-            <Stack gap="s">
+            <Stack gap="m">
               {/* GAP-NEW: カードブランドのアイコン（PaymentCardBrandIconsList）が無い */}
               <Radio value="credit-card">クレジットカード</Radio>
               {/* InputDialogContent の creditCardFormState：登録済みなら confirm、「変更」で register */}
@@ -706,7 +930,7 @@ const PaymentInfo = ({
                 <InitialPaymentMethodRadioGroup />
               )}
 
-              <Stack gap="l">
+              <Stack gap="xl">
                 <SectionTitle>クーポン</SectionTitle>
                 {coupon ? (
                   <Stack gap="xs">
@@ -803,6 +1027,7 @@ const PurchaseMaintenance = () => (
     <Stack alignItems="center">
       <img src={maintenanceImage} alt="メンテナンス" width={250} height={250} />
     </Stack>
+    {/* GAP-NEW: Typography に文字揃え（text-align）が無い。実物は Paper 全体が中央揃えで、2 行の本文も行ごとに中央に揃う */}
     <Stack gap="xs" alignItems="center">
       <Typography size="xl" fontWeight="bold" component="h1">
         おっと！今は準備中みたいです。

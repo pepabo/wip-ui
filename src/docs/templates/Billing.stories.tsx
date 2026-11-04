@@ -70,14 +70,25 @@ const primaryColor: ButtonColor = 'interactive'
 
 // ─── 共通 ───
 
-/** 実画面のページ見出し（ServerPaymentHeader の「支払い」、PageHeader の「クレジット」） */
-const AppHeading = ({ title, description }: { title: string; description?: string }) => (
+/**
+ * 実画面のページ見出し。ゲーマーズの ServerPaymentHeader は xxxl の「支払い」だけ、
+ * AI ゲートウェイの shared/ui/PageHeader は xl の見出しと xs の説明
+ */
+const AppHeading = ({
+  title,
+  description,
+  size = 'xl',
+}: {
+  title: string
+  description?: string
+  size?: 'xl' | 'xxxl'
+}) => (
   <Stack gap="xxs">
-    <Typography size="xxl" fontWeight="bold" component="h2">
+    <Typography size={size} fontWeight="bold" component="h2">
       {title}
     </Typography>
     {description && (
-      <Typography size="s" color="medium_emphasis" component="div">
+      <Typography size="xs" color="medium_emphasis" component="div">
         {description}
       </Typography>
     )}
@@ -137,6 +148,7 @@ const billGroups = [
  * GAP-NEW: Timeline が無い。実物は左のアイコンを縦線でつなぐ。
  * GAP-NEW: Paper に地色の違う面（background.default）が無いので、枠線の面で代用している。
  * GAP-NEW: Stack の子に flex-grow を指定できず、面が右端まで伸びない（実物は flex: 1）。
+ * GAP-NEW: アイコンセットに丸に感嘆符（MUI の ErrorOutline）が無い。失敗と次回の段の実物は丸のアイコンで、三角で代用している。
  */
 const TimelineStep = ({
   icon,
@@ -263,7 +275,7 @@ const PaymentCardDetail = () => (
 const GamersPayment = ({ state, tab }: { state: GamersState; tab: 'detail' | 'history' }) => (
   <Stack gap="l">
     {/* ServerPaymentHeader */}
-    <AppHeading title="支払い" />
+    <AppHeading title="支払い" size="xxxl" />
     {/* PaymentTabPanels。Tabs の中には Select を置かない（既知の不具合）。ダイアログは Tabs の外に置く */}
     <Tabs defaultSelectedKey={tab}>
       <TabList aria-label="支払い">
@@ -557,6 +569,9 @@ const chargeHistory: { at: string; source: string; amount: string; status: strin
   { at: '2026/10/01 00:00', source: '特典', amount: '￥1,000', status: '付与済み' },
 ]
 
+// formatDateTime（Intl の ja-JP、dateStyle: medium・timeStyle: short）
+const complimentaryExpiresAt = '2026/12/31 23:59'
+
 const historyColor: Record<string, 'negative' | 'notice' | undefined> = {
   失敗: 'negative',
   確認中: 'notice',
@@ -594,15 +609,93 @@ const SubTitle = ({ children, action }: { children: string; action?: ReactNode }
   </Stack>
 )
 
+/**
+ * sections.tsx の PrepaidBalanceSection の左の面（styles.wallet）と LowBalanceNotificationCard（styles.sideCard）。
+ * 実物はどちらも枠線（gray-200）・角丸 12px・padding 24px の影の無い面で、900px 以上で 2 列に等分する（styles.walletGrid）
+ */
+const WalletCards = ({ loading = false }: { loading?: boolean }) => (
+  <Grid spacing="m">
+    <GridItem size={{ xxs: 12, m: 6 }}>
+      <Paper elevation={0} outlined>
+        <Stack gap="m">
+          <Stack gap="m">
+            {/* GAP-NEW: InfoTip が無い（中身は「追加したクレジットは、購入日から1年で失効します。」）。
+                開く先の無い iconOnly ボタンを置く。読み込み中の骨格には InfoTip が無い */}
+            <Stack flexDirection="row" gap="xxs" alignItems="center">
+              <Typography size="m" fontWeight="bold" component="h3">
+                クレジット残高
+              </Typography>
+              {!loading && (
+                <Button
+                  appearance="transparent"
+                  size="s"
+                  iconOnly
+                  aria-label="クレジットの有効期限とは"
+                >
+                  <Icon name="info_on_circle" size="s" />
+                </Button>
+              )}
+            </Stack>
+            {loading ? (
+              <LoadingBlock />
+            ) : (
+              // GAP-NEW: Money（小数部を小さく薄くする）が無い
+              <Typography size="xxl" fontWeight="bold" component="div">
+                {balance}
+              </Typography>
+            )}
+          </Stack>
+          {loading ? (
+            <LoadingBlock />
+          ) : (
+            // GAP-NEW: 実物は styles.walletActionButton で文字を 12px・太字にし、影を消している
+            <Stack flexDirection="row" gap="xs">
+              <Button color={primaryColor} size="s" leading={<Icon name="plus" size="s" />}>
+                追加する
+              </Button>
+              <Button appearance="outlined" size="s" leading={<Icon name="gear" size="s" />}>
+                自動チャージ
+              </Button>
+            </Stack>
+          )}
+        </Stack>
+      </Paper>
+    </GridItem>
+    <GridItem size={{ xxs: 12, m: 6 }}>
+      <Paper elevation={0} outlined>
+        <Stack gap="m">
+          <Stack gap="xxs">
+            <Typography size="m" fontWeight="bold" component="h3">
+              通知
+            </Typography>
+            <Typography size="s" color="medium_emphasis" component="div">
+              クレジット残高が基準を下回ったときにメールでお知らせします。
+            </Typography>
+          </Stack>
+          {loading ? (
+            <LoadingBlock />
+          ) : (
+            <Stack flexDirection="row">
+              <Button appearance="outlined" size="s" leading={<Icon name="bell" size="s" />}>
+                設定する
+              </Button>
+            </Stack>
+          )}
+        </Stack>
+      </Paper>
+    </GridItem>
+  </Grid>
+)
+
 const AiCredit = ({ view }: { view: CreditView }) => {
   if (view === 'cardChallengeReturn') {
     // CardChallengeReturn。請求画面へ戻すまでの間だけ出る
     return (
       <Stack gap="l">
         <AppHeading title="カード認証" description="カード認証の結果を確認しています" />
-        <Card>
-          <LoadingBlock message="確認しています" />
-        </Card>
+        <Paper>
+          <Loader message="確認しています" />
+        </Paper>
       </Stack>
     )
   }
@@ -613,78 +706,32 @@ const AiCredit = ({ view }: { view: CreditView }) => {
         title="クレジット"
         description="クレジット残高、支払い方法、チャージ履歴を管理します"
       />
-      {/* BillingContent */}
+      {/* BillingContent。実物の節は面に入れず、見出しと表を縦に積む（styles.sections は gap 32px、styles.stack は 16px） */}
       {view === 'loading' && (
-        <Card>
-          <LoadingBlock message="請求情報を読み込んでいます" />
-        </Card>
+        // BillingSkeleton。骨格では特典クレジットの節を出さない
+        <Stack gap="xl">
+          <WalletCards loading />
+          <Stack gap="m">
+            <SubTitle>チャージ履歴</SubTitle>
+            <LoadingBlock />
+          </Stack>
+          <Stack gap="m">
+            <SubTitle>お支払い方法</SubTitle>
+            <LoadingBlock />
+          </Stack>
+        </Stack>
       )}
       {view === 'error' && <RetryCallout message="請求情報を読み込めませんでした。" />}
       {view === 'success' && (
-        <>
-          <Grid spacing="m">
-            <GridItem size={{ xxs: 12, m: 7 }}>
-              {/* PrepaidBalanceSection */}
-              <Card padding="m">
-                <Stack gap="m">
-                  <Stack gap="xs">
-                    {/* GAP-NEW: InfoTip が無い（中身は「追加したクレジットは、購入日から1年で失効します。」）。
-                        開く先の無い iconOnly ボタンを置く */}
-                    <Stack flexDirection="row" gap="xxs" alignItems="center">
-                      <Typography size="m" fontWeight="bold" component="h3">
-                        クレジット残高
-                      </Typography>
-                      <Button
-                        appearance="transparent"
-                        size="s"
-                        iconOnly
-                        aria-label="クレジットの有効期限とは"
-                      >
-                        <Icon name="info_on_circle" size="s" />
-                      </Button>
-                    </Stack>
-                    {/* GAP-NEW: Money（小数部を小さく薄くする）が無い */}
-                    <Typography size="xxl" fontWeight="bold" component="div">
-                      {balance}
-                    </Typography>
-                  </Stack>
-                  <Stack flexDirection="row" gap="s">
-                    <Button color={primaryColor} size="s" leading={<Icon name="plus" size="s" />}>
-                      追加する
-                    </Button>
-                    <Button appearance="outlined" size="s" leading={<Icon name="gear" size="s" />}>
-                      自動チャージ
-                    </Button>
-                  </Stack>
-                </Stack>
-              </Card>
-            </GridItem>
-            <GridItem size={{ xxs: 12, m: 5 }}>
-              {/* LowBalanceNotificationCard */}
-              <Card padding="m">
-                <Stack gap="m">
-                  <Stack gap="xxs">
-                    <Typography size="m" fontWeight="bold" component="h3">
-                      通知
-                    </Typography>
-                    <Typography size="s" color="medium_emphasis" component="div">
-                      クレジット残高が基準を下回ったときにメールでお知らせします。
-                    </Typography>
-                  </Stack>
-                  <Stack flexDirection="row">
-                    <Button appearance="outlined" size="s" leading={<Icon name="bell" size="s" />}>
-                      設定する
-                    </Button>
-                  </Stack>
-                </Stack>
-              </Card>
-            </GridItem>
-          </Grid>
+        <Stack gap="xl">
+          {/* PrepaidBalanceSection */}
+          <WalletCards />
 
           {/* ComplimentaryCreditSection。有効な特典があるときだけ出る */}
-          <Card>
-            <Stack gap="s">
-              <SubTitle>特典クレジット</SubTitle>
+          <Stack gap="m">
+            <SubTitle>特典クレジット</SubTitle>
+            {/* shared/ui/DataTable は表を枠線の Paper（padding 0）に入れる。GAP-NEW: Table が幅 100% にならず（実物は CSS で width: 100%）、列の右寄せ（align: 'end'）も無い */}
+            <Paper outlined padding="none">
               <Table aria-label="特典クレジット">
                 <TableHeader>
                   <Column isRowHeader>特典名</Column>
@@ -696,21 +743,22 @@ const AiCredit = ({ view }: { view: CreditView }) => {
                   <Row>
                     <Cell>ウェルカムクレジット</Cell>
                     <Cell>￥1,000</Cell>
-                    <Cell>2026/12/31 23:59</Cell>
+                    <Cell>{complimentaryExpiresAt}</Cell>
                     <Cell>￥412.5</Cell>
                   </Row>
                 </TableBody>
               </Table>
-              <Typography size="s" color="medium_emphasis" component="div">
-                特典クレジットは、チャージしたクレジットより先に消費されます。
-              </Typography>
-            </Stack>
-          </Card>
+            </Paper>
+            <Typography size="s" color="medium_emphasis" component="div">
+              特典クレジットは、チャージしたクレジットより先に消費されます。
+            </Typography>
+          </Stack>
 
           {/* PaymentHistorySection */}
-          <Card>
-            <Stack gap="s">
-              <SubTitle>チャージ履歴</SubTitle>
+          <Stack gap="m">
+            <SubTitle>チャージ履歴</SubTitle>
+            {/* shared/ui/DataTable は表を枠線の Paper（padding 0）に入れる。GAP-NEW: Table が幅 100% にならず（実物は CSS で width: 100%）、列の右寄せ（align: 'end'）も無い */}
+            <Paper outlined padding="none">
               <Table aria-label="チャージ履歴">
                 <TableHeader>
                   <Column isRowHeader>日時</Column>
@@ -737,21 +785,22 @@ const AiCredit = ({ view }: { view: CreditView }) => {
                   ))}
                 </TableBody>
               </Table>
-            </Stack>
-          </Card>
+            </Paper>
+          </Stack>
 
           {/* PaymentMethodsSection */}
-          <Card>
-            <Stack gap="s">
-              <SubTitle
-                action={
-                  <Button color={primaryColor} size="s">
-                    カードを追加する
-                  </Button>
-                }
-              >
-                お支払い方法
-              </SubTitle>
+          <Stack gap="m">
+            <SubTitle
+              action={
+                <Button color={primaryColor} size="s">
+                  カードを追加する
+                </Button>
+              }
+            >
+              お支払い方法
+            </SubTitle>
+            {/* shared/ui/DataTable は表を枠線の Paper（padding 0）に入れる。GAP-NEW: Table が幅 100% にならず（実物は CSS で width: 100%）、列の右寄せ（align: 'end'）も無い */}
+            <Paper outlined padding="none">
               <Table aria-label="お支払い方法">
                 <TableHeader>
                   <Column isRowHeader>カード番号</Column>
@@ -760,7 +809,7 @@ const AiCredit = ({ view }: { view: CreditView }) => {
                 <TableBody renderEmptyState={() => '登録されているカードはありません'}>
                   <Row>
                     <Cell>
-                      {/* CardBrandLabel。実物はロゴ（幅 32px）＋伏せたカード番号 */}
+                      {/* CardIdentity ＋ CardBrandLabel。実物はロゴ（幅 32px）＋伏せたカード番号 */}
                       <Stack flexDirection="row" gap="xs" alignItems="center">
                         <img src={visaLogo} alt="Visa" width={32} height={21} />
                         <Typography size="s" component="span">
@@ -775,9 +824,9 @@ const AiCredit = ({ view }: { view: CreditView }) => {
                   </Row>
                 </TableBody>
               </Table>
-            </Stack>
-          </Card>
-        </>
+            </Paper>
+          </Stack>
+        </Stack>
       )}
     </Stack>
   )

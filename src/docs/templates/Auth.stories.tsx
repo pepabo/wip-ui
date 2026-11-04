@@ -265,9 +265,9 @@ const SignupPaper = () => {
   )
 }
 
-// GAP-NEW: 1 桁ずつの入力欄（OTP / PIN 入力）が無い。TextField を 6 つ並べ、幅を 56px に絞っている。
-// 実物は数字以外を弾く・入力で次の欄へ移る・6 桁の貼り付けで自動送信する、を自前で持っている。
-// GAP-NEW: 1 桁ずつの入力欄（OTP）が無い。TextField の幅を inline style で絞らない方針のため、6 つの TextField を並べるだけにしている
+// GAP-NEW: 1 桁ずつの入力欄（OTP / PIN 入力）が無い。実物は 56px 角の枠に TextField を入れて中央ぞろえにし、
+// 数字以外を弾く・入力で次の欄へ移る・6 桁の貼り付けで自動送信する、を自前で持っている。
+// TextField の幅を inline style で絞らない方針のため、6 つの TextField を並べるだけにしている
 
 /** components/AuthenticationCodeTextField。6 桁が埋まるまで「認証」は押せない */
 const AuthenticationCodeTextField = () => (
@@ -324,11 +324,12 @@ const AuthcodePaper = ({
 
 /**
  * features/Auth・features/Signup の共通の枠（max-w-sm の白いカードに中央寄せで積む）。
- * 実物は Tailwind の rounded-lg border shadow-sm。Card の outlined で近づけている。
+ * 実物は Tailwind の rounded-lg border shadow-sm・p-8（32px）。
+ * GAP-NEW: Paper は outlined にすると影が消えるので、枠線と影を両方は出せない。枠線を選んでいる。
  * 実物のカード幅は 384px（max-w-sm）で、AuthShell の Container より狭い。
  */
 const DeployNowCard = ({ children }: { children: ReactNode }) => (
-  <Card outlined elevation={1}>
+  <Card outlined padding="xl">
     <Stack gap="m" alignItems="center">
       {children}
     </Stack>
