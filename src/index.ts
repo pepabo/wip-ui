@@ -28,6 +28,8 @@ export * from './Icon'
 export * from './Loader'
 // Menu
 export * from './Menu'
+// Meter
+export * from './Meter'
 // Paper
 export * from './Paper'
 // Radio
