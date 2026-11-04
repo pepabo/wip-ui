@@ -150,7 +150,7 @@ const rootStyle: CSSProperties = {
   display: 'flex',
   height: '100dvh',
   overflow: 'hidden',
-  backgroundColor: '#f2f3f7', // lolipopColors.gray[50]（body の地）
+  // 地の色は wip-ui のページの地（lolipop では brown 50）に任せる。実物は lolipopColors.gray[50]（#f2f3f7）
 }
 const sidebarStyle: CSSProperties = {
   width: 264,
