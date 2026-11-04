@@ -466,7 +466,7 @@ const MoveResourceDialog = ({ targets }: { targets: string[] }) => {
             移動先
           </Typography>
           {/* 実アプリは高さ 332px で中をスクロールする */}
-          <Paper outlined>
+          <Paper padding="none" outlined>
             <DirectoryTree activePath={to} onSelect={setTo} label="移動先のフォルダ" />
           </Paper>
         </Stack>
@@ -576,7 +576,7 @@ const FileManager = ({
     <AppShell active="files">
       {/* (server)/layout.tsx の ServerDetailHeader（サーバー詳細と共通。gameServer.tsx） */}
       <ServerDetailHeader status="RUNNING" tab="ファイル管理" />
-      <Paper elevation={1}>
+      <Paper padding="none" elevation={1}>
         <Grid gapless>
           {/* GAP-NEW: 幅で要素を隠す手段が無い。実アプリは lg 未満でツリーを出さないが、ここでは上に積まれる */}
           {/* GAP-NEW: GridItem に境界線を付けられず、ツリーと一覧の間の縦罫（borderRight）が無い */}

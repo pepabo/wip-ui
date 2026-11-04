@@ -19,8 +19,8 @@ import type { RadioGroupProps } from '../../Radio'
 // ── wip-ui に足りないもの（テンプレートを実際に組んで見つかった穴の一覧）──
 // 各テンプレートで回避策を書くときは、この番号を `GAP-n` として参照する。
 //
-// GAP-1 Paper に padding prop が無く、内容が面の端に接する。inline style を当てない方針のため未対応。
-//       Card / Inset は呼び出し側を変えずに済むよう名前だけ残している（Inset は素通し）。
+// GAP-1 （解消）Paper に padding が入った。Card は padding を Paper に渡し、既定は Paper の l（24px）。
+//       表や一覧の面は none、小さな面・面の中に置く面は m にしている（Paper.md の「余白」）。
 // GAP-2 Stepper（ウィザードの進行表示）が無い。
 // GAP-3 「選択できるカード」（MUI の CardActionArea 相当）が無い。→ Paper + Button で組んでいる。
 // GAP-4 Divider にラベルを入れられない（hr を描画するため children 不可）。
@@ -60,13 +60,15 @@ export const Card = ({
   outlined = false,
   elevation = 1,
   square = false,
+  padding,
 }: {
   children: ReactNode
   outlined?: boolean
   elevation?: PaperProps['elevation']
   square?: boolean
+  padding?: PaperProps['padding']
 }) => (
-  <Paper elevation={elevation} outlined={outlined} square={square}>
+  <Paper elevation={elevation} outlined={outlined} square={square} padding={padding}>
     {children}
   </Paper>
 )

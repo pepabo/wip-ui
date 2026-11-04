@@ -43,12 +43,11 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// GAP-1: Paper に padding が無い。一覧の行（実物は px-6 py-4）と列見出し（px-6 py-2）の余白。
-//        inline style を当てない方針のため未対応。
-// GAP-1: 余白をとる部品が無い。読み込み中・取得失敗・空の案内（実物は px-6 py-16）の余白。
-//        inline style を当てない方針のため未対応。
-// ビルドログの面（ログ表示面そのものが無い）の余白。実物は px-4 pb-4。
-const logStyle = { paddingInline: 16, paddingBlock: 10 }
+// 面の余白は Paper の padding で付ける（GAP-1 は解消）。一覧の面は既定の l、ビルドログの面は m。
+// GAP-NEW: 行ごとに余白をとる部品が無い。一覧の行（実物は px-6 py-4）は面の余白の内側に並ぶので、
+//          区切り線が面の端まで届かない。
+// GAP-NEW: 余白をとる部品が無い。読み込み中・取得失敗の案内（実物は px-6 py-16）の余白。
+//          inline style を当てない方針のため未対応。
 
 // GAP-NEW: 行全体をリンクにする一覧（stretched link / GridList）が無い。
 // 実物は行ごと next/link で包み hover で bg-neutral-50 にしている。Paper に role="link" を付けて代える。
@@ -62,6 +61,7 @@ const RowLink = ({
   children: ReactNode
 }) => (
   <Paper
+    padding="none"
     elevation={0}
     role="link"
     tabIndex={0}
@@ -619,44 +619,42 @@ const isErrorLine = (line: string) =>
 const BuildLog = ({ lines }: { lines: string[] }) => {
   const [copied, setCopied] = useState(false)
   return (
-    <Paper elevation={0} outlined>
-      <div style={logStyle}>
-        <Stack gap="xs">
-          <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
-            <Typography component="span" size="xs" color="low_emphasis">
-              {`${lines.length} lines`}
-            </Typography>
-            <Button
-              appearance="flat"
-              color="neutral"
-              size="s"
-              iconOnly
-              aria-label={copied ? 'コピーしました' : 'ビルドログをコピー'}
-              onPress={() => {
-                setCopied(true)
-                setTimeout(() => setCopied(false), 2000)
-              }}
-            >
-              <Icon name={copied ? 'check' : 'copy'} size="s" />
-            </Button>
-          </Stack>
-          <Divider />
-          <Stack>
-            {lines.map((line, i) => (
-              <Typography
-                component="div"
-                // biome-ignore lint/suspicious/noArrayIndexKey: ログは同じ行が繰り返し出るため行番号を key にする
-                key={i}
-                size="xs"
-                density="dense"
-                color={isErrorLine(line) ? 'negative' : 'medium_emphasis'}
-              >
-                {line || ' '}
-              </Typography>
-            ))}
-          </Stack>
+    <Paper padding="m" elevation={0} outlined>
+      <Stack gap="xs">
+        <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
+          <Typography component="span" size="xs" color="low_emphasis">
+            {`${lines.length} lines`}
+          </Typography>
+          <Button
+            appearance="flat"
+            color="neutral"
+            size="s"
+            iconOnly
+            aria-label={copied ? 'コピーしました' : 'ビルドログをコピー'}
+            onPress={() => {
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
+            }}
+          >
+            <Icon name={copied ? 'check' : 'copy'} size="s" />
+          </Button>
         </Stack>
-      </div>
+        <Divider />
+        <Stack>
+          {lines.map((line, i) => (
+            <Typography
+              component="div"
+              // biome-ignore lint/suspicious/noArrayIndexKey: ログは同じ行が繰り返し出るため行番号を key にする
+              key={i}
+              size="xs"
+              density="dense"
+              color={isErrorLine(line) ? 'negative' : 'medium_emphasis'}
+            >
+              {line || ' '}
+            </Typography>
+          ))}
+        </Stack>
+      </Stack>
     </Paper>
   )
 }

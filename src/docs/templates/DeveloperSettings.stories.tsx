@@ -40,9 +40,9 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// GAP-1: Paper に padding が無い。節の面（実物は px-6 py-4）の余白。inline style を当てない方針のため未対応。
-// GAP-1: 余白をとる部品が無い。読み込み中・取得失敗・空（実物は px-6 py-16）と、
-//        未連携の案内（px-6 py-10）の余白。inline style を当てない方針のため未対応。
+// 節の面（実物は px-6 py-4）の余白は Paper の既定の padding（l）で付く（GAP-1 は解消）。
+// GAP-NEW: 余白をとる部品が無い。面の中の読み込み中・取得失敗・空（実物は px-6 py-16）と、
+//          未連携の案内（px-6 py-10）の広い上下の余白。inline style を当てない方針のため未対応。
 // セッションの行（実物は py-3）の上下は、一覧の Stack の gap で付けている。
 
 const DOT_COLOR: Record<StickerColor, TypographyColor> = {

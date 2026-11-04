@@ -301,7 +301,7 @@ const UsageChart = ({ series, entries }: { series: Series; entries: Entry[] }) =
         ]
   const peak = Math.max(...dayWeights) / weightSum
   return (
-    <Card outlined elevation={0}>
+    <Card padding="m" outlined elevation={0}>
       <Stack gap="s">
         <Typography size="xs" color="medium_emphasis" fontWeight="bold" component="div">
           {series.title}
@@ -534,7 +534,7 @@ const SHOWN_PROJECTS = 10
 
 // 実装の DataTable は角丸の枠と横スクロールを持つ
 const TableFrame = ({ children }: { children: ReactNode }) => (
-  <Paper elevation={0} outlined>
+  <Paper padding="none" elevation={0} outlined>
     {children}
   </Paper>
 )

@@ -72,8 +72,9 @@ const Meter = ({ ratio, tone }: { ratio: number; tone: TypographyColor }) => (
   </Typography>
 )
 
-// GAP-1: 一覧の行の余白（実物は px-6 py-3.5 の行と px-6 py-3 の列見出し）。Paper / Stack に padding が無く、
-// inline style を当てない方針のため未対応。行と列見出しは面の端に接する。
+// 一覧の面は Paper の既定の padding（l）で余白を付ける（GAP-1 は解消）。
+// GAP-NEW: 行ごとに余白をとる部品が無い。一覧の行（実物は px-6 py-3.5）は面の余白の内側に並ぶので、
+// 区切り線が面の端まで届かない。
 // GAP-NEW: TabPanel に本文との間隔（実物は Grid の mt={2}・16px）が無い。inline style を当てない方針のため未対応で、
 // タブの下線に本文が接する。
 
@@ -335,7 +336,7 @@ const ServerSpecRow = ({ label, children }: { label: string; children: ReactNode
 
 /** home/_components/ServerCard。実アプリはカード全体がサーバー詳細へのリンク（CardActionArea） */
 const ServerCard = ({ server, onRename }: { server: Server; onRename: () => void }) => (
-  <Card>
+  <Card padding="m">
     <Stack gap="m">
       <Stack flexDirection="row" gap="s" alignItems="flex-start" justifyContent="space-between">
         {/* components/Sticker の spec='game-title' */}
@@ -378,7 +379,7 @@ const ServerCard = ({ server, onRename }: { server: Server; onRename: () => void
 const AddServerCard = () => (
   // GAP-3: 実アプリは紫の破線（3px dashed）＋薄紫の地のカード全体が /servers/new/game-select へのリンク。
   // GAP-NEW: 破線の枠が無いので outlined で代用。最小の高さ（280px）も指定できない
-  <Card outlined elevation={0}>
+  <Card padding="m" outlined elevation={0}>
     <Stack gap="m" alignItems="center" justifyContent="center">
       <Typography component="span" color="informative">
         <Icon name="plus" size="l" />

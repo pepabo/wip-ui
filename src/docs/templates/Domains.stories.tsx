@@ -43,8 +43,9 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// GAP-1: Paper に padding が無い。ドメインのカードの行と詳細欄（実物は px-6 py-4）、
-//        DNS レコードのコピー欄（実物は px-3 py-2）の余白。inline style を当てない方針のため未対応。
+// 面の余白は Paper の padding で付ける（GAP-1 は解消）。ドメインのカード（実物は px-6 py-4）は既定の l、
+// 中に置く DNS レコードのコピー欄（実物は px-3 py-2）は m。
+// GAP-NEW: 行ごとに余白をとる部品が無い。カードの行と詳細欄は面の余白の内側に並ぶので、区切り線が面の端まで届かない。
 // GAP-NEW: TabPanel と本文のあいだの間隔（実物は mb-3 = 12px）を付ける prop が無く、
 //          タブの下線に本文が接する。inline style を当てない方針のため未対応。
 
@@ -295,7 +296,7 @@ const MigrationSteps = ({ step }: { step: MigrationStep }) => (
 const CopyableField = ({ label, value }: { label: string; value: string }) => {
   const [copied, setCopied] = useState(false)
   return (
-    <Paper elevation={0} outlined>
+    <Paper padding="m" elevation={0} outlined>
       <Stack gap="xxs">
         <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
           <Typography component="span" size="xs" color="medium_emphasis">
@@ -634,7 +635,7 @@ const DomainsScreen = ({
 
 // 実物の features/Project/index.tsx がプロジェクトを取得している間と、取得に失敗したとき。
 // タブ（ドメイン）より上で止まるので、パンくずも出ない。
-// GAP-1: 余白をとる部品が無い。実物の読み込み中は py-16、失敗は px-6 py-16 の中央寄せ。
+// GAP-NEW: 余白をとる部品が無い。実物の読み込み中は py-16、失敗は px-6 py-16 の中央寄せ。
 //        inline style を当てない方針のため未対応。
 
 const ProjectLoadingAndError = () => (

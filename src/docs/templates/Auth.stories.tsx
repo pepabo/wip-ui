@@ -136,7 +136,7 @@ const turnstileStyle = { width: 300, height: 65 } // GAP-NEW: 外部ウィジェ
 /** components/TurnstileWidget。中身は Cloudflare が描くので、ここでは枠だけ */
 const TurnstileWidget = () => (
   <Stack alignItems="center">
-    <Paper outlined elevation={0}>
+    <Paper padding="none" outlined elevation={0}>
       <div style={turnstileStyle} />
     </Paper>
   </Stack>
@@ -206,7 +206,7 @@ const ExternalSignupModal = () => {
 
 /**
  * login/_components/LoginPaper（フィーチャーフラグ gamers_external-idp-login が ON で、外部 IdP が出るとき）。
- * 実物の Paper は余白が px 48 / py 80 と広い。GAP-1（Paper に padding が無い）のため内容が面の端に接する。
+ * 実物の Paper は余白が px 48 / py 80 と広い。上下と左右で違う余白は Paper の padding で付けられないので、既定の l にしている。
  */
 const LoginPaper = () => (
   <Card elevation={1}>

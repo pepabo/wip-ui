@@ -153,7 +153,7 @@ const TimelineStep = ({
     <Typography component="span" color={tone}>
       <Icon name={icon} size="m" />
     </Typography>
-    <Paper elevation={0} outlined>
+    <Paper padding="m" elevation={0} outlined>
       <Stack
         flexDirection={{ xxs: 'column', s: 'row' }}
         gap="m"
@@ -455,7 +455,7 @@ const years = Array.from({ length: 10 }, (_, i) => String(2026 + i))
 /** servers/new/payment-info の RegisterPaymentCardForm ＋ components/PaymentCardForm */
 // GAP-NEW: Select の placeholder の既定値が英語（Select an item）。実物（CcExpSelect）は未選択で空欄
 const RegisterPaymentCardForm = () => (
-  <Paper elevation={0} outlined>
+  <Paper padding="m" elevation={0} outlined>
     <Stack gap="l">
       <Typography size="l" fontWeight="bold" component="h3">
         クレジットカード情報
@@ -483,7 +483,7 @@ const RegisterPaymentCardForm = () => (
         </GridItem>
       </Grid>
       <TextField label="セキュリティコード" type="password" autoComplete="cc-csc" width="full" />
-      <Paper elevation={0} outlined>
+      <Paper padding="m" elevation={0} outlined>
         <Typography size="xs" component="p">
           当社がお客様から収集した以下の個人情報等は、カード発行会社がおこなう不正利用検知・防止のために、お客様が利用されているカード発行会社へ提供させていただきます。氏名、電話番号、emailアドレス、請求先住所、配送先住所、インターネット利用環境に関する情報等（送信するパラメータの内容に応じて個人情報を記載ください）
           <br />
@@ -625,7 +625,7 @@ const AiCredit = ({ view }: { view: CreditView }) => {
           <Grid spacing="m">
             <GridItem size={{ xxs: 12, m: 7 }}>
               {/* PrepaidBalanceSection */}
-              <Card>
+              <Card padding="m">
                 <Stack gap="m">
                   <Stack gap="xs">
                     {/* GAP-NEW: InfoTip が無い（中身は「追加したクレジットは、購入日から1年で失効します。」）。
@@ -661,7 +661,7 @@ const AiCredit = ({ view }: { view: CreditView }) => {
             </GridItem>
             <GridItem size={{ xxs: 12, m: 5 }}>
               {/* LowBalanceNotificationCard */}
-              <Card>
+              <Card padding="m">
                 <Stack gap="m">
                   <Stack gap="xxs">
                     <Typography size="m" fontWeight="bold" component="h3">
@@ -806,7 +806,7 @@ const ChargeDetail = ({
 )
 
 const ChargeDetails = ({ amount, totalLabel }: { amount: string; totalLabel: string }) => (
-  <Paper elevation={0} outlined>
+  <Paper padding="m" elevation={0} outlined>
     <Stack gap="xs">
       <ChargeDetail label="クレジット" value={amount} />
       <ChargeDetail label="手数料" value="￥0" />
@@ -1023,7 +1023,7 @@ const WelcomeCreditGrantedDialog = () => (
       <DialogHeader>
         <DialogTitle>会員登録ありがとうございます！</DialogTitle>
       </DialogHeader>
-      <Paper elevation={0} outlined>
+      <Paper padding="m" elevation={0} outlined>
         <Stack gap="xxs" alignItems="center">
           <Typography size="s" component="p">
             感謝の気持ちを込めて

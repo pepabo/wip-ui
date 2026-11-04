@@ -140,7 +140,7 @@ const ChoiceCard = ({
   selected: boolean
   children: ReactNode
 }) => (
-  <Paper elevation={0} outlined={selected}>
+  <Paper padding="m" elevation={0} outlined={selected}>
     <Radio value={value}>
       <Stack gap="s">{children}</Stack>
     </Radio>
@@ -279,7 +279,7 @@ const GameSelect = () => {
         {hits.map((g) => (
           <GridItem key={g.id} size={{ xxs: 12, m: 3 }}>
             {/* components/GameCard（showdetail）。上半分がキービジュアル、下に名前と「3日 ○円 ~」。カード全体がボタン */}
-            <Card>
+            <Card padding="m">
               <Stack gap="s" alignItems="center">
                 {/* GAP-NEW: 画像の枠（Image）が無い。実物の CardMedia はカードの端まで広げ object-fit: cover で切り抜く */}
                 <img src={gameImages[g.name]} alt={g.name} width="100%" height={136} />
@@ -478,7 +478,7 @@ const PlanSelect = () => {
 /** payment-info/_components/RegisterPaymentCardForm ＋ components/PaymentCardForm */
 const RegisterPaymentCardForm = () => (
   // 実アプリは一段明るい #1D2A40 の面
-  <Paper elevation={0} outlined>
+  <Paper padding="m" elevation={0} outlined>
     <Stack gap="l">
       <Typography size="l" fontWeight="bold" component="h3">
         クレジットカード情報
@@ -514,7 +514,7 @@ const RegisterPaymentCardForm = () => (
         width="full"
       />
       {/* 実物は rgb(255 255 255 / .05) の地。GAP-NEW: 面の地色だけを変える指定が無いので outlined で代用 */}
-      <Paper elevation={0} outlined>
+      <Paper padding="m" elevation={0} outlined>
         <Typography size="xs">
           当社がお客様から収集した以下の個人情報等は、カード発行会社がおこなう不正利用検知・防止のために、お客様が利用されているカード発行会社へ提供させていただきます。氏名、電話番号、emailアドレス、請求先住所、配送先住所、インターネット利用環境に関する情報等（送信するパラメータの内容に応じて個人情報を記載ください）
           <br />
@@ -586,7 +586,7 @@ const PaymentMethodCard = ({ onChange }: { onChange: () => void }) => (
 /** payment-info/_components/ConfirmPaymentCardForm（変更ダイアログの中の登録済みカード） */
 const ConfirmPaymentCardForm = ({ onEdit }: { onEdit: () => void }) => (
   // 実物は rgb(255 255 255 / .05) の地。GAP-NEW: 面の地色だけを変える指定が無いので outlined で代用
-  <Paper elevation={0} outlined>
+  <Paper padding="m" elevation={0} outlined>
     <Stack
       flexDirection={{ xxs: 'column', m: 'row' }}
       gap="s"

@@ -337,7 +337,7 @@ const SelectableRow = ({
   children: ReactNode
   label: string
 }) => (
-  <Paper elevation={0} outlined={selected}>
+  <Paper padding="m" elevation={0} outlined={selected}>
     <Stack
       flexDirection={{ xxs: 'column', m: 'row' }}
       gap="s"
@@ -497,7 +497,7 @@ const ContractPaper = ({
                   ))}
                 </Stack>
               ) : (
-                <Paper elevation={0} outlined>
+                <Paper padding="m" elevation={0} outlined>
                   <Stack flexDirection="row" gap="s" alignItems="center">
                     <img
                       src={gameImages[contracted.game]}
@@ -541,7 +541,7 @@ const ContractPaper = ({
                   })}
                 </Stack>
               ) : (
-                <Paper elevation={0} outlined>
+                <Paper padding="m" elevation={0} outlined>
                   <PlanItemBody
                     spec={plan}
                     months={contracted.months}
@@ -643,7 +643,7 @@ const ServerFirewallRulesPaper = () => {
           </Button>
         </Stack>
         {/* GAP-NEW: Accordion / Disclosure が無い。実アプリは「開放済ポート　N個」の見出しを押すと表が開く。ここでは開いた状態で固定 */}
-        <Paper elevation={0} outlined>
+        <Paper padding="m" elevation={0} outlined>
           <Stack gap="m">
             <Stack flexDirection={{ xxs: 'column', m: 'row' }} gap="xl">
               <Typography component="span">開放済ポート</Typography>

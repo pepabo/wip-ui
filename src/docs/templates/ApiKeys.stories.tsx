@@ -432,7 +432,7 @@ const KeyList = ({ view, onDelete }: { view: ListView; onDelete: (apiKey: ApiKey
         </Callout>
       )}
       {loaded && (
-        <Card>
+        <Card padding="none">
           {/* 選択は react-aria の Table に任せ、Checkbox は slot="selection" で表に繋ぐ */}
           <Table
             aria-label="APIキー一覧"
@@ -735,7 +735,7 @@ const KeyDetail = ({ apiKey }: { apiKey: ApiKey }) => {
           </Typography>
           <UsagePeriodFilter />
         </Stack>
-        <Card outlined elevation={0}>
+        <Card padding="m" outlined elevation={0}>
           <Stack gap="s">
             <Typography size="s" color="medium_emphasis" component="div">
               利用額
@@ -764,7 +764,7 @@ const KeyDetail = ({ apiKey }: { apiKey: ApiKey }) => {
         </Stack>
       </Stack>
       {/* shared/ui/SettingsList：設定のまとまりを 1 枚の面に積み、行ごとに詳細ページへ渡す */}
-      <Paper elevation={0} outlined>
+      <Paper padding="none" elevation={0} outlined>
         {(['limits', 'models', 'guardrails'] as const).map((sub, i) => (
           <Stack key={sub} gap="xxs">
             {i > 0 ? <Divider /> : null}

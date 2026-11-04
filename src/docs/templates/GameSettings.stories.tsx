@@ -903,7 +903,7 @@ const UserTable = ({
   users: string[]
   deletable?: boolean
 }) => (
-  <Paper elevation={0} outlined>
+  <Paper padding="m" elevation={0} outlined>
     <Stack gap="m">
       <Stack flexDirection={{ xxs: 'column', s: 'row' }} gap="xl">
         <Typography size="s" component="span">

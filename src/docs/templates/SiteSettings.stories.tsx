@@ -49,10 +49,12 @@ type Story = StoryObj<typeof meta>
 
 // ─── GAP の回避策（inline style はここに集める） ───
 
-// GAP-1: Paper に padding が無い。一覧の行（実物は px-6 py-4）・列見出し（px-6 py-2）・
-//        設定カードの行（py-3）・リポジトリ選択の面の余白。inline style を当てない方針のため未対応。
-// GAP-1: 余白をとる部品が無い。空の案内と読み込み中（実物は px-6 py-16 / py-16）の余白。
-//        inline style を当てない方針のため未対応。
+// 面の余白は Paper の padding で付ける（GAP-1 は解消）。設定カードと一覧の面は既定の l、
+// ダイアログの中のリポジトリ選択の面は m。
+// GAP-NEW: 行ごとに余白をとる部品が無い。一覧の行（実物は px-6 py-4）と列見出し（px-6 py-2）は
+//          面の余白の内側に並ぶので、区切り線が面の端まで届かない。
+// GAP-NEW: 余白をとる部品が無い。空の案内と読み込み中（実物は px-6 py-16 / py-16）の広い上下の余白。
+//          inline style を当てない方針のため未対応。
 // GAP-NEW: TabPanel と本文のあいだの間隔（実物は 16px）を付ける prop が無く、
 //          タブの下線に本文が接する。inline style を当てない方針のため未対応。
 
@@ -565,7 +567,7 @@ const ConnectionAddDialog = ({
                 />
               </GridItem>
             </Grid>
-            <Paper elevation={0} outlined>
+            <Paper padding="m" elevation={0} outlined>
               {matched.length === 0 ? (
                 <Stack alignItems="center">
                   <Typography component="div" size="s" color="low_emphasis">
@@ -604,7 +606,7 @@ const ConnectionAddDialog = ({
         ) : (
           <>
             {/* GAP-NEW: Paper に地色の違う面（bg-neutral-100）が無い */}
-            <Paper elevation={0} outlined>
+            <Paper padding="m" elevation={0} outlined>
               <Stack flexDirection="row" gap="xs" alignItems="center">
                 <Icon name="github" size="s" />
                 <Typography component="div" size="m" fontWeight="bold">

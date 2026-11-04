@@ -546,7 +546,7 @@ const AiMembers = ({
             メンバーを招待する
           </Button>
         </Stack>
-        <Card>
+        <Card padding="none">
           <Table aria-label="メンバー一覧">
             <TableHeader>
               <Column isRowHeader>表示名</Column>
