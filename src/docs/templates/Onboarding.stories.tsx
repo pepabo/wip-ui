@@ -350,7 +350,7 @@ const expireYears = Array.from({ length: 10 }, (_, i) => String(2026 + i))
 // ─── 共通 ───
 
 const SectionTitle = ({ children }: { children: ReactNode }) => (
-  <Typography size="xxl" fontWeight="bold" component="h2">
+  <Typography size="xxl" fontWeight="bold" component="div">
     {children}
   </Typography>
 )
@@ -417,7 +417,7 @@ const OrderDetail = ({
       <Stack gap="xxl">
         <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
           {/* 実物は variant='xxl_comfort' */}
-          <Typography size="xxl" density="comfort" fontWeight="bold" component="h2">
+          <Typography size="xxl" density="comfort" fontWeight="bold" component="div">
             注文内容
           </Typography>
           {/* changeButtonHref（orderDetailDialogChangeButtonHrefV2）。/servers/new/plan-select?game=…&plan=… */}
@@ -518,7 +518,7 @@ const GameSelect = () => {
     // 見出し（ServersNewHeader、mb 5）→ 検索欄（mb 3）→ カード
     <Stack gap="xxl">
       {/* game-select/_components/ServersNewHeader */}
-      <Typography size="xxxl" fontWeight="bold" component="h1">
+      <Typography size="xxxl" fontWeight="bold" component="div">
         ゲーム選択
       </Typography>
       <Stack gap="l">
@@ -638,7 +638,7 @@ const PlanSelect = () => {
                   {plans.map((p) => (
                     <GridItem key={p.memory} size={{ xxs: 12, s: 4 }}>
                       <ChoiceCard value={String(p.memory)} selected={p.memory === memory}>
-                        <Typography size="l" fontWeight="bold" component="h3">
+                        <Typography size="l" fontWeight="bold" component="div">
                           {p.memory}GB
                         </Typography>
                         <Stack gap="xxs">
@@ -670,7 +670,7 @@ const PlanSelect = () => {
                     return (
                       <GridItem key={pd.id} size={{ xxs: 12, s: 4 }}>
                         <ChoiceCard value={pd.id} selected={pd.id === period.id}>
-                          <Typography size="l" fontWeight="bold" component="h3">
+                          <Typography size="l" fontWeight="bold" component="div">
                             {pd.label}
                           </Typography>
                           {pd.months > 1 ? (
@@ -725,15 +725,33 @@ const PlanSelect = () => {
                   })}
                 </Grid>
               </RadioGroup>
-              {/* GAP-NEW: 文中のリンクが無い。「契約期間を変更する」「対応バージョン一覧」は本来リンク */}
+              {/* 文中のリンクは wip-ui に無いので素の a。実物は MUI の Link（purple[400]・下線）で別タブ */}
               <Typography size="xxs" density="comfort" component="div">
-                ※
-                契約期間の変更が適用されるのは現在の契約期間満了後からとなります。詳しくは契約期間を変更するをご確認ください。
+                ※ 契約期間の変更が適用されるのは現在の契約期間満了後からとなります。詳しくは
+                <a
+                  href="https://support.server.lolipop.jp/hc/ja/articles/50168829900819"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Typography size="xxs" density="comfort" color="informative" component="span">
+                    契約期間を変更する
+                  </Typography>
+                </a>
+                をご確認ください。
               </Typography>
               {/* ActiveGameNotion。Minecraft (Java版) のときだけ出る */}
               {game.id === 'minecraft-je' && (
                 <Typography size="xxs" density="comfort" component="div">
-                  対応バージョンについて事前にご確認ください。対応バージョン一覧
+                  対応バージョンについて事前にご確認ください。
+                  <a
+                    href="https://support.server.lolipop.jp/hc/ja/articles/30409406263187"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Typography size="xxs" density="comfort" color="informative" component="span">
+                      対応バージョン一覧
+                    </Typography>
+                  </a>
                 </Typography>
               )}
             </Stack>
@@ -776,7 +794,7 @@ const RegisterPaymentCardForm = () => (
   // セキュリティコードの下だけ mb 5
   <Paper padding="xl" elevation={0} outlined>
     <Stack gap="xl">
-      <Typography size="l" fontWeight="bold" component="h3">
+      <Typography size="l" fontWeight="bold" component="div">
         クレジットカード情報
       </Typography>
       <TextField label="名義" autoComplete="cc-name" width="full" />
@@ -842,9 +860,19 @@ const InitialPaymentMethodRadioGroup = () => {
             <Radio value="paypay">PayPay</Radio>
             <img src={paypayLogo} alt="PayPay" width={30} height={30} />
           </Stack>
-          {/* GAP-NEW: 文中のリンクが無い。「利用できる支払い方法と対応ブランド」は本来リンク */}
+          {/* 文中のリンクは wip-ui に無いので素の a（実物は MUI の Link で別タブ） */}
           <Typography size="xxs" component="div">
-            ※この支払い方法は自動更新に対応していません。詳しくは利用できる支払い方法と対応ブランドをご確認ください。
+            ※この支払い方法は自動更新に対応していません。詳しくは
+            <a
+              href="https://support.server.lolipop.jp/hc/ja/articles/34754308816787"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Typography size="xxs" color="informative" component="span">
+                利用できる支払い方法と対応ブランド
+              </Typography>
+            </a>
+            をご確認ください。
           </Typography>
         </Stack>
       </Stack>
@@ -954,9 +982,19 @@ const PaymentMethodChangeDialog = ({
                 <Radio value="paypay">PayPay</Radio>
                 <img src={paypayLogo} alt="PayPay" width={30} height={30} />
               </Stack>
-              {/* GAP-NEW: 文中のリンクが無い。「利用できる支払い方法と対応ブランド」は本来リンク */}
+              {/* 文中のリンクは wip-ui に無いので素の a（実物は MUI の Link で別タブ） */}
               <Typography size="xxs" component="div">
-                ※このお支払い方法は自動更新に対応していません。詳しくは利用できる支払い方法と対応ブランドをご確認ください。
+                ※このお支払い方法は自動更新に対応していません。詳しくは
+                <a
+                  href="https://support.server.lolipop.jp/hc/ja/articles/34754308816787"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Typography size="xxs" color="informative" component="span">
+                    利用できる支払い方法と対応ブランド
+                  </Typography>
+                </a>
+                をご確認ください。
               </Typography>
             </Stack>
           </Stack>
@@ -1098,7 +1136,7 @@ const SoldOut = () => {
   return (
     // 実物の Paper は p 8
     <NoticeCard padding="xxl">
-      <Typography size="xxl" fontWeight="bold" component="h1">
+      <Typography size="xxl" fontWeight="bold" component="div">
         売り切れ
       </Typography>
       {/* 実物は 12em 角。HTML の width / height は em を取れないので 16px 換算の 192 にしている */}
@@ -1134,7 +1172,7 @@ const PurchaseMaintenance = () => {
       </Stack>
       {/* GAP-NEW: Typography に文字揃え（text-align）が無い。実物は Paper 全体が中央揃えで、2 行の本文も行ごとに中央に揃う */}
       <Stack gap="xs" alignItems="center">
-        <Typography size="xl" fontWeight="bold" component="h1">
+        <Typography size="xl" fontWeight="bold" component="div">
           おっと！今は準備中みたいです。
         </Typography>
         <Typography component="div">

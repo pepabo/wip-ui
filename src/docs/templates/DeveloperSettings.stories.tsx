@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { Button, LinkButton } from '../../Button'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
-import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
@@ -62,18 +61,27 @@ const DOT_COLOR: Record<StickerColor, TypographyColor> = {
   attention: 'notice',
 }
 
-// GAP-NEW: StatusIndicator（色ドット + ラベル）が無い。Deploys.stories.tsx と同じ代用。
-// 実物は inline-flex items-center gap-1.5（6px）に 8px の丸（lolipop の solid 色の hex）と Typography s medium_emphasis。
-// gap-1.5 に当たる段階が無いので xxs（4px）。丸は circle のアイコン（s）を Typography の色で塗っている。
+// GAP-NEW: StatusIndicator（色ドット + ラベル）が無い。Deploys.stories.tsx と同じく、実物の
+// inline-flex items-center gap-1.5（6px）と 8px の丸（色は hex）を素の span で組み、丸の色は Typography の色を
+// currentColor で継ぐ。文字は Typography s medium_emphasis
+const statusIndicatorStyle = { display: 'inline-flex', alignItems: 'center', gap: 6 } as const
+const statusDotStyle = {
+  display: 'block',
+  width: 8,
+  height: 8,
+  borderRadius: '50%',
+  background: 'currentColor',
+} as const
+
 const StatusIndicator = ({ color, children }: { color: StickerColor; children: ReactNode }) => (
-  <Stack flexDirection="row" gap="xxs" alignItems="center">
-    <Typography component="span" size="xs" color={DOT_COLOR[color]}>
-      <Icon name="circle" size="s" color="currentColor" aria-hidden />
+  <span style={statusIndicatorStyle}>
+    <Typography component="span" color={DOT_COLOR[color]}>
+      <span aria-hidden style={statusDotStyle} />
     </Typography>
-    <Typography component="div" size="s" color="medium_emphasis">
+    <Typography component="span" size="s" color="medium_emphasis">
       {children}
     </Typography>
-  </Stack>
+  </span>
 )
 
 // 実物は flex justify-center py-16 + Loader
@@ -97,16 +105,17 @@ const CenteredMessage = ({ message }: { message: string }) => (
   </Paper>
 )
 
-// GAP-NEW: 箇条書き（ul / li）の部品が無い。実物は ul.list-disc pl-5 の li の中に Typography s。
-// 行の間は実物は 0。Stack の gap に 0 の段階が無いので最小の xxs（4px）。
+// GAP-NEW: 箇条書き（ul / li）の部品が無い。実物と同じく素の ul（list-disc pl-5）に Typography の li を並べる。
+// 行の間は実物と同じく 0
+const bulletListStyle = { margin: 0, paddingLeft: 20 } as const
 const Bullets = ({ items }: { items: string[] }) => (
-  <Stack gap="xxs">
+  <ul style={bulletListStyle}>
     {items.map((item) => (
-      <Typography component="div" key={item} size="s">
-        ・{item}
+      <Typography component="li" key={item} size="s">
+        {item}
       </Typography>
     ))}
-  </Stack>
+  </ul>
 )
 
 /**

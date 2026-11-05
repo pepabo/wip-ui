@@ -146,12 +146,22 @@ const DOT_COLOR: Record<StickerColor, TypographyColor> = {
   attention: 'notice',
 }
 
-// GAP-NEW: 色ドット + ラベル（shared/ui/StatusIndicator）が無い。実物は lolipop の solid 色を hex で持つ。
-// ここは Icon の circle を Typography の色で塗って代える。
+// GAP-NEW: 色ドット + ラベル（shared/ui/StatusIndicator）が無い。実物は 8px（size-2）の丸に lolipop の solid 色を hex で塗り、
+// 文字と gap-1.5（6px）で並べる。ここは素の span で 8px の丸を作り、Typography の色を currentColor で継いで塗る。
+// gap は 6px が段階に無く xxs（4px）
+const dotStyle = {
+  display: 'inline-block',
+  width: 8,
+  height: 8,
+  borderRadius: '50%',
+  background: 'currentColor',
+  flexShrink: 0,
+} as const
+
 const StatusIndicator = ({ color, children }: { color: StickerColor; children: ReactNode }) => (
   <Stack flexDirection="row" gap="xxs" alignItems="center">
     <Typography component="span" size="xs" color={DOT_COLOR[color]}>
-      <Icon name="circle" size="s" color="currentColor" aria-hidden />
+      <span aria-hidden style={dotStyle} />
     </Typography>
     <Typography component="span" size="s" color="medium_emphasis">
       {children}
@@ -162,7 +172,7 @@ const StatusIndicator = ({ color, children }: { color: StickerColor; children: R
 // GAP-NEW: ラベルの無いドット（shared/ui/StatusDot）も無い。文言は aria-label でのみ補う
 const StatusDot = ({ color, label }: { color: StickerColor; label: string }) => (
   <Typography component="span" color={DOT_COLOR[color]}>
-    <Icon name="circle" size="s" color="currentColor" role="img" aria-label={label} />
+    <span role="img" aria-label={label} style={dotStyle} />
   </Typography>
 )
 

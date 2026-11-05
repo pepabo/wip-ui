@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
@@ -26,7 +26,7 @@ import {
 import claudeLogo from './assets/ai-gateway/providers/claude.svg'
 import geminiLogo from './assets/ai-gateway/providers/gemini.svg'
 import openaiLogo from './assets/ai-gateway/providers/openai.svg'
-import { InfoTip, TextLink } from './parts'
+import { InfoTip } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
@@ -531,8 +531,25 @@ const KeyList = ({
                         </Checkbox>
                       </Cell>
                       <Cell>
-                        {/* 実装は名前が詳細へのリンク（GAP-NEW: Link が無い） */}
-                        <TwoLine primary={k.alias} secondary={project} />
+                        {/* 名前は詳細へのリンク（.keyLink：色は継ぎ、下線なし。GAP: hover の下線は出せない）。
+                            押しても行の操作（onRowAction）は起こさない */}
+                        <TwoLine
+                          primary={
+                            <a
+                              href={`#${k.id}`}
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                onNavigate?.('key-detail')
+                              }}
+                              style={plainLinkStyle}
+                            >
+                              {k.alias}
+                            </a>
+                          }
+                          secondary={project}
+                        />
                       </Cell>
                       <Cell>
                         {/* DataTableText tone="aux"（14px・行の高さ 20px） */}
@@ -641,6 +658,15 @@ const KeyList = ({
     </>
   )
 }
+
+// 素の a の見た目を消す（文中のリンク・設定の一覧の行の部品が wip-ui に無い）
+const plainLinkStyle = { color: 'inherit', textDecoration: 'none' } as const
+const settingsRowStyle = {
+  display: 'block',
+  padding: '12px 16px',
+  color: 'inherit',
+  textDecoration: 'none',
+} as const
 
 // ─── キーの画面の枠（KeyDetail/KeySettingsShell）───
 
@@ -794,11 +820,11 @@ const KeyDetail = ({
                   {yen(apiKey.usage)} / {yen(apiKey.budget)}
                 </Typography>
                 <Meter
-                  aria-label="予算の消費"
+                  aria-label={`${apiKey.alias} の予算の使用状況`}
                   size="s"
                   value={apiKey.usage}
                   maxValue={apiKey.budget}
-                  valueLabel={`${yen(apiKey.usage)} / ${yen(apiKey.budget)}`}
+                  valueLabel={`使用 ${yen(apiKey.usage)} / ${yen(apiKey.budget)}`}
                   color={budgetColor(apiKey.usage / apiKey.budget)}
                 />
                 {apiKey.duration !== null && (
@@ -812,16 +838,20 @@ const KeyDetail = ({
           )}
           <SettingRow label="適用中のルール">
             {rule ? (
-              // 実装はルールの詳細（/rules/:ruleId）へ移る。.ruleLink は 14px・行の高さ 20px。
-              // GAP: 実物のリンクの色は gray[700] で下線なし（hover で gray[900] と下線）
-              <Typography size="s" density="dense" component="span">
-                <TextLink
-                  href={`/accounts/example/projects/${project}/rules/${encodeURIComponent(rule)}`}
-                  onPress={() => onNavigate?.('rule-detail')}
-                >
+              // 実装はルールの詳細（/rules/:ruleId）へ移る。.ruleLink は 14px・行の高さ 20px・gray[700]・下線なし（hover で下線）。
+              // 文中のリンクの部品が無いので素の a に Typography を入れる。GAP: hover の下線と gray[900] は出せない
+              <a
+                href={`/accounts/example/projects/${project}/rules/${encodeURIComponent(rule)}`}
+                onClick={(e) => {
+                  e.preventDefault()
+                  onNavigate?.('rule-detail')
+                }}
+                style={plainLinkStyle}
+              >
+                <Typography size="s" density="dense" component="span">
                   {rule}
-                </TextLink>
-              </Typography>
+                </Typography>
+              </a>
             ) : (
               <Typography size="s" color="medium_emphasis" component="div">
                 なし
@@ -857,24 +887,30 @@ const KeyDetail = ({
         </Stack>
       </Stack>
       {/* shared/ui/SettingsList：設定のまとまりを 1 枚の面に積み、行ごとに詳細ページへ渡す。
-          行の見出しは Typography s・太字、右に chevron_right（s） */}
+          行は素の a（余白 12px 16px・間 16px・見出しは s の太字・右に chevron_right）。行の間は罫線。
+          GAP: 行の hover の地（gray[50]）と、罫線の色（gray[100]）は出せない */}
       <Paper padding="none" outlined>
         {(['limits', 'models', 'guardrails'] as const).map((sub, i) => (
-          <Stack key={sub} gap="xxs">
+          <Fragment key={sub}>
             {i > 0 ? <Divider /> : null}
-            {/* GAP-NEW: 実物の行は素の a（余白 12px 16px・高さ 48px・見出しは太字・左寄せ）。
-                Button の size="s"（14px）で文字の大きさだけ合わせ、width="full" は中身が中央に寄り太字にもならない */}
-            <Button
-              appearance="transparent"
-              color="neutral"
-              size="s"
-              width="full"
-              trailing={<Glyph name="chevron_right" />}
-              onPress={() => onNavigate?.(`key-${sub}`)}
+            <a
+              href={`#${sub}`}
+              onClick={(e) => {
+                e.preventDefault()
+                onNavigate?.(`key-${sub}`)
+              }}
+              style={settingsRowStyle}
             >
-              {subTitle[sub]}
-            </Button>
-          </Stack>
+              <Stack flexDirection="row" gap="m" alignItems="center" justifyContent="space-between">
+                <Typography size="s" fontWeight="bold" component="span">
+                  {subTitle[sub]}
+                </Typography>
+                <Typography size="s" color="medium_emphasis" component="span">
+                  <Glyph name="chevron_right" />
+                </Typography>
+              </Stack>
+            </a>
+          </Fragment>
         ))}
       </Paper>
     </>

@@ -51,7 +51,7 @@ const ErrorPage = () => {
       <Card elevation={0} padding={{ xxs: 'l', s: 'xxl' }}>
         <Stack gap="xxl">
           <Stack gap="l">
-            <Typography size="xl" fontWeight="bold" component="h1">
+            <Typography size="xl" fontWeight="bold" component="div">
               問題が発生しました
             </Typography>
             <Typography size="m" component="div">
@@ -63,14 +63,15 @@ const ErrorPage = () => {
               gap="m"
               justifyContent="space-between"
             >
-              <Stack gap="xxs">
-                <Typography size="m" fontWeight="bold" component="span">
+              {/* 実物は Box の中に 2 行を間 0 で重ねる。Stack の gap は 0 にできないので素の div */}
+              <div>
+                <Typography size="m" fontWeight="bold" component="div">
                   エラートラッキングコード
                 </Typography>
-                <Typography size="m" component="span">
+                <Typography size="m" component="div">
                   {code}
                 </Typography>
-              </Stack>
+              </div>
               {/* components/CopyButton。押すと「コピーしました」のスナックバーが出る */}
               <Button appearance="outlined" leading={<Icon name="copy" size="s" />}>
                 コピー
@@ -156,7 +157,7 @@ export const GamersMaintenance: Story = {
             <Stack gap="l">
               <Stack gap="m" alignItems="center">
                 <img src={chatbotImage} alt="chatbotのイラスト" width={192} height={192} />
-                <Typography size="m" fontWeight="bold" component="h1">
+                <Typography size="m" fontWeight="bold" component="div">
                   メンテナンス中です
                 </Typography>
               </Stack>

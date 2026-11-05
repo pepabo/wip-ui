@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../Accordion'
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
 import { Checkbox } from '../../Checkbox'
@@ -430,7 +431,7 @@ const InstalledMods = ({
   return (
     <Stack gap="m">
       <Stack flexDirection="row" gap="m" alignItems="center">
-        <Typography size="xxl" fontWeight="bold" component="h2">
+        <Typography size="xxl" fontWeight="bold" component="div">
           インストール済MOD
         </Typography>
         <ConfigSticker />
@@ -609,12 +610,13 @@ const CategorySidebar = ({
   // CategorySidebar/hooks.ts の isCategoryOpen。最初は開いている
   const [isCategoryOpen, setIsCategoryOpen] = useState(true)
   return (
-    <Paper elevation={0}>
+    // 実物の Paper は余白なしで、ListSubheader と ListItem の左右が 16px
+    <Paper elevation={0} padding="m">
       <Stack gap="m">
         <Stack gap="xs">
           <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
             {/* ListSubheader（14px・text.secondary） */}
-            <Typography size="s" color="medium_emphasis" component="h3">
+            <Typography size="s" color="medium_emphasis" component="div">
               プラットフォーム
             </Typography>
             {onClose && (
@@ -635,42 +637,39 @@ const CategorySidebar = ({
         </Stack>
         <Divider />
         <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
-          <Typography size="s" color="medium_emphasis" component="h3">
+          <Typography size="s" color="medium_emphasis" component="div">
             フィルタ
           </Typography>
           <Button appearance="transparent" size="s" onPress={onClear}>
             すべてクリア
           </Button>
         </Stack>
-        <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
-          <Typography size="s" component="div">
-            カテゴリ
-          </Typography>
-          {/* 実物は ExpandLess / ExpandMore */}
-          <Button
-            appearance="transparent"
-            size="s"
-            iconOnly
-            aria-label="カテゴリ"
-            aria-expanded={isCategoryOpen}
-            onPress={() => setIsCategoryOpen((v) => !v)}
-          >
-            <Icon name={isCategoryOpen ? 'chevron_up' : 'chevron_down'} size="m" />
-          </Button>
-        </Stack>
-        {isCategoryOpen && (
-          <Stack gap="xs">
-            {categories.map((c) => (
-              <Checkbox key={c} isSelected={selected.includes(c)} onChange={() => onToggle(c)}>
-                {c}
-              </Checkbox>
-            ))}
-          </Stack>
-        )}
+        {/* 実物は ListItem「カテゴリ」と右端の開閉ボタン（Collapse）。最初は開いている */}
+        <Accordion
+          expandedKeys={isCategoryOpen ? ['category'] : []}
+          onExpandedChange={(keys) => setIsCategoryOpen(keys.has('category'))}
+        >
+          <AccordionItem id="category">
+            <AccordionTrigger headingLevel="none">カテゴリ</AccordionTrigger>
+            <AccordionContent>
+              <Stack gap="xs">
+                {categories.map((c) => (
+                  <Checkbox key={c} isSelected={selected.includes(c)} onChange={() => onToggle(c)}>
+                    {c}
+                  </Checkbox>
+                ))}
+              </Stack>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </Stack>
     </Paper>
   )
 }
+
+// 素の a の既定の色を消し、中の Typography の色を使う（名前は hover で下線、作者名は常に下線）
+const plainLinkStyle = { color: 'inherit', textDecoration: 'none' } as const
+const inheritLinkStyle = { color: 'inherit' } as const
 
 /** ModManager/ModResultItem */
 const ModResultItem = ({ mod }: { mod: SearchResult }) => {
@@ -686,30 +685,44 @@ const ModResultItem = ({ mod }: { mod: SearchResult }) => {
             gap={{ xxs: 'xxs', s: 's' }}
             alignItems="flex-start"
           >
-            {/* 名前は Modrinth のプロジェクトのページ（projectUrl）を新しいタブで開くリンク。文中のリンクが無いので Button */}
-            <Button
-              appearance="transparent"
-              size="s"
-              trailing={<Icon name="launch" size="s" />}
+            {/* 名前は Modrinth のプロジェクトのページ（projectUrl）を新しいタブで開くリンク（text.primary・hover で下線）。
+                文中のリンクの部品が無いので素の a */}
+            <a
+              href="https://modrinth.com/"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label={`${mod.name}（新しいタブで開く）`}
-              onPress={() => navigate('external')}
+              onClick={(event) => {
+                event.preventDefault()
+                navigate('external')
+              }}
+              style={plainLinkStyle}
             >
-              {mod.name}
-            </Button>
-            <Stack flexDirection="row" gap="xxs" alignItems="center">
-              <Typography size="xs" color="medium_emphasis" component="span">
-                by
-              </Typography>
-              {/* 作者名は authorUrl を新しいタブで開くリンク（下線付き） */}
-              <Button
-                appearance="transparent"
-                size="s"
-                aria-label={`${mod.author}（新しいタブで開く）`}
-                onPress={() => navigate('external')}
+              <Stack flexDirection="row" gap="xxs" alignItems="center">
+                <Typography size="s" fontWeight="bold" component="span">
+                  {mod.name}
+                </Typography>
+                <Typography size="s" color="medium_emphasis" component="span">
+                  <Icon name="launch" size="s" color="currentColor" aria-hidden />
+                </Typography>
+              </Stack>
+            </a>
+            {/* 「by 作者名」は caption（12px・text.secondary）。作者名は authorUrl を新しいタブで開く下線付きのリンク */}
+            <Typography size="xs" color="medium_emphasis" component="span">
+              by{' '}
+              <a
+                href="https://modrinth.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) => {
+                  event.preventDefault()
+                  navigate('external')
+                }}
+                style={inheritLinkStyle}
               >
                 {mod.author}
-              </Button>
-            </Stack>
+              </a>
+            </Typography>
           </Stack>
           <Stack flexDirection="row" gap="xs" alignItems="center">
             <Stack flexDirection="row" gap="xxs" alignItems="center">

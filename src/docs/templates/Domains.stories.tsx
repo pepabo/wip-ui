@@ -227,10 +227,10 @@ const PromoBanner = () => (
     }
   >
     <Stack gap="xxs">
-      <Typography size="s" fontWeight="bold">
+      <Typography component="div" size="s" fontWeight="bold">
         Webアプリケーションに自分だけのドメインを設定しませんか？
       </Typography>
-      <Typography size="xs" color="medium_emphasis">
+      <Typography component="div" size="xs" color="medium_emphasis">
         ムームードメインは、ロリポップ！を運営するGMOペパボの独自ドメイン取得サービスです。
         <br />
         620種類以上のドメインの中からお選びいただけます。
@@ -241,16 +241,70 @@ const PromoBanner = () => (
 
 const STEP_LABELS = ['レコードを追加', '公開先を切り替え'] as const
 
-// GAP-2: Stepper が無い。実物の MigrationSteps は ol + 丸の番号（size-5 の border、今の段は border-2 border-neutral-900）
-// + 横線のコネクタ（h-px w-5 bg-neutral-300）を手組みしている。丸の枠と横線は出せないので、番号とチェックだけを置く。
-// parts の StepIndicator は「発行待ち（スピナー）」の段を持てないので、ここでローカルに組む。
-// GAP-NEW: Stack に role / component が渡せず、実物の ol / li と aria-current="step" を再現できない。
-// GAP-NEW: Stack に折り返し（flex-wrap）と縦横別の gap が無い。実物は gap-x-3 gap-y-1 で折り返す。
+// GAP-2: Stepper が無い。実物の MigrationSteps と同じく、ol / li と、丸の枠（size-5。今の段は border-2）・
+// 段をつなぐ横線（h-px w-5）を素の要素で組む。枠と線の色は Typography の色を currentColor で継ぐ
+// （実物の border-neutral-300 は low_emphasis、border-neutral-900 は high_emphasis）
+const stepListStyle = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  columnGap: 12,
+  rowGap: 4,
+  margin: 0,
+  padding: 0,
+  listStyle: 'none',
+} as const
+const stepItemStyle = { display: 'flex', alignItems: 'center', gap: 8 } as const
+const stepConnectorStyle = {
+  display: 'block',
+  width: 20,
+  height: 1,
+  background: 'currentColor',
+} as const
+const stepMarkerStyle = (active: boolean) =>
+  ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxSizing: 'border-box',
+    width: 20,
+    height: 20,
+    borderRadius: '50%',
+    border: `${active ? 2 : 1}px solid currentColor`,
+  }) as const
+
+type StepState = 'done' | 'active' | 'busy' | 'todo'
+
+const StepMarker = ({ n, state }: { n: number; state: StepState }) => {
+  // 実物の発行待ちは size-5（20px）の自前スピナー
+  if (state === 'busy') return <Loader size="s" />
+  return (
+    <Typography component="span" color={state === 'active' ? 'high_emphasis' : 'low_emphasis'}>
+      <span aria-hidden style={stepMarkerStyle(state === 'active')}>
+        {state === 'done' ? (
+          <Typography component="span" color="positive">
+            <Icon name="check" size="s" color="currentColor" />
+          </Typography>
+        ) : (
+          <Typography
+            component="span"
+            size="xs"
+            fontWeight="bold"
+            color={state === 'active' ? 'high_emphasis' : 'low_emphasis'}
+          >
+            {n}
+          </Typography>
+        )}
+      </span>
+    </Typography>
+  )
+}
+
 const MigrationSteps = ({ step }: { step: MigrationStep }) => (
-  <Stack flexDirection="row" gap="s" alignItems="center">
+  <ol aria-label="移行の手順" style={stepListStyle}>
     {STEP_LABELS.map((label, index) => {
       const n = index + 1
-      const state =
+      const state: StepState =
         step.current === 'done' || n < step.current
           ? 'done'
           : n > step.current
@@ -260,26 +314,13 @@ const MigrationSteps = ({ step }: { step: MigrationStep }) => (
               : 'active'
       const current = state === 'active' || state === 'busy'
       return (
-        <Stack key={label} flexDirection="row" gap="xs" alignItems="center">
-          {/* GAP-2: 段をつなぐ横のコネクタが無いため縦罫を流用している */}
-          {index > 0 && <Divider orientation="vertical" flexItem />}
-          {/* 実物の発行待ちは size-5（20px）の自前スピナー */}
-          {state === 'busy' ? (
-            <Loader size="s" />
-          ) : state === 'done' ? (
-            <Typography component="span" color="positive">
-              <Icon name="check" size="s" color="currentColor" />
-            </Typography>
-          ) : (
-            <Typography
-              component="span"
-              size="xs"
-              fontWeight="bold"
-              color={state === 'active' ? 'high_emphasis' : 'low_emphasis'}
-            >
-              {n}
+        <li key={label} style={stepItemStyle} aria-current={current ? 'step' : undefined}>
+          {index > 0 && (
+            <Typography component="span" color="low_emphasis">
+              <span aria-hidden style={stepConnectorStyle} />
             </Typography>
           )}
+          <StepMarker n={n} state={state} />
           <Typography
             component="span"
             size="xs"
@@ -294,56 +335,73 @@ const MigrationSteps = ({ step }: { step: MigrationStep }) => (
           >
             {label}
           </Typography>
-        </Stack>
+        </li>
       )
     })}
-  </Stack>
+  </ol>
 )
 
-// GAP-NEW: 押すとコピーされる値の欄（CopyableField）が無い。実物は native button の中に
-// ラベルと値を置き、押すと緑の枠で「✓ コピーしました」に 2 秒切り替える。
-// ここは値の欄とコピーボタンを分けて代える。長い値の truncate（省略表示）も wip-ui に無い。
-// GAP-NEW: Paper の padding は上下左右で同じ値しか取れない。実物は px-3 py-2 なので左右に合わせて s（12px）。
-// 実物の枠は border-neutral-200 の角丸 rounded（4px）で、コピー後は border-emerald-300 bg-emerald-50 に変わる。
+// GAP-NEW: 押すとコピーされる値の欄（CopyableField）が無い。実物と同じく、欄全体を素の button にし、
+// 中にラベルと値（固定の高さ h-5・長い値は省略）を置く。押すと 2 秒「✓ コピーしました」に変わる。
+// 枠（rounded・px-3 py-2）は素の要素で付け、色は Typography の色を currentColor で継ぐ。
+// 実物の枠は border-neutral-200、コピー後は border-emerald-300 bg-emerald-50（地の色は出せない）
+const copyableFieldStyle = {
+  display: 'block',
+  boxSizing: 'border-box',
+  width: '100%',
+  padding: '8px 12px',
+  // low_emphasis のままだと実物の border-neutral-200 より濃いので、3 割に薄める（出典の無い暫定値）
+  border: '1px solid color-mix(in srgb, currentColor 30%, transparent)',
+  borderRadius: 4,
+  background: 'transparent',
+  font: 'inherit',
+  color: 'inherit',
+  textAlign: 'left',
+  cursor: 'pointer',
+} as const
+const copyableValueStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  height: 20,
+  marginTop: 2,
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  textOverflow: 'ellipsis',
+} as const
+
 const CopyableField = ({ label, value }: { label: string; value: string }) => {
   const [copied, setCopied] = useState(false)
   return (
-    <Paper padding="s" elevation={0} outlined>
-      <Stack gap="xxs">
-        <Stack flexDirection="row" alignItems="center" justifyContent="space-between">
-          <Typography size="xs" color="medium_emphasis">
-            {label}
-          </Typography>
-          <Button
-            appearance="transparent"
-            color="neutral"
-            size="s"
-            iconOnly
-            aria-label={`${label}をコピー`}
-            onPress={() => {
-              setCopied(true)
-              setTimeout(() => setCopied(false), 2000)
-            }}
-          >
-            <Icon name="copy" size="s" />
-          </Button>
-        </Stack>
-        {copied ? (
-          <Stack flexDirection="row" gap="xxs" alignItems="center">
-            <Typography component="span" size="s" color="positive">
-              <Icon name="check" size="s" color="currentColor" aria-hidden />
+    <Typography component="div" color={copied ? 'positive' : 'low_emphasis'}>
+      <button
+        type="button"
+        style={copyableFieldStyle}
+        onClick={() => {
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
+        }}
+      >
+        <Typography component="div" size="xs" color="medium_emphasis">
+          {label}
+        </Typography>
+        <span style={copyableValueStyle}>
+          {copied ? (
+            <Stack flexDirection="row" gap="xxs" alignItems="center">
+              <Typography component="span" size="s" color="positive">
+                <Icon name="check" size="s" color="currentColor" aria-hidden />
+              </Typography>
+              <Typography component="span" size="s" color="positive">
+                コピーしました
+              </Typography>
+            </Stack>
+          ) : (
+            <Typography component="span" size="s" color="high_emphasis">
+              {value}
             </Typography>
-            <Typography component="span" size="s" color="positive">
-              コピーしました
-            </Typography>
-          </Stack>
-        ) : (
-          <Typography component="span" size="s">
-            {value}
-          </Typography>
-        )}
-      </Stack>
-    </Paper>
+          )}
+        </span>
+      </button>
+    </Typography>
   )
 }
 
@@ -392,7 +450,11 @@ const DomainProgress = ({ domain }: { domain: Domain }) => {
           <Stack flexDirection="row" gap="xs" alignItems="center">
             {/* 実物は size-3.5（14px）の自前スピナー */}
             {preparing && <Loader size="s" />}
-            <Typography size="s" color={preparing ? 'medium_emphasis' : 'high_emphasis'}>
+            <Typography
+              component="div"
+              size="s"
+              color={preparing ? 'medium_emphasis' : 'high_emphasis'}
+            >
               {message}
             </Typography>
           </Stack>
@@ -588,7 +650,7 @@ const DomainAddDialog = ({ onClose }: { onClose: () => void }) => {
             value={value}
             onChange={setValue}
           />
-          <Typography size="s" color="medium_emphasis">
+          <Typography component="div" size="s" color="medium_emphasis">
             ※追加後に表示される DNS レコードを設定すると、ドメインが有効になります。
           </Typography>
         </Stack>
@@ -719,14 +781,14 @@ const ProjectLoadingAndError = () => (
     </DeployNowShell>
     <DeployNowShell>
       <Stack alignItems="center">
-        <Typography size="s" color="low_emphasis">
+        <Typography component="div" size="s" color="low_emphasis">
           プロジェクトの取得に失敗しました。時間をおいて再度お試しください。
         </Typography>
       </Stack>
     </DeployNowShell>
     <DeployNowShell>
       <Stack alignItems="center">
-        <Typography size="s" color="low_emphasis">
+        <Typography component="div" size="s" color="low_emphasis">
           プロジェクトが見つかりません。
         </Typography>
       </Stack>

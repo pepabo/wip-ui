@@ -62,7 +62,12 @@ type GamersState = {
   /** 自動更新の決済に失敗し、契約が停止（SUSPENDED）している */
   error?: boolean
   loading?: boolean
+  /** PayPay の契約（billingSystem が each-time）。自動更新が無く、期限までに「契約更新」で購入する */
+  eachTime?: boolean
 }
+
+/** PaymentStates の 'cancel'。自動更新を停止したあと */
+type ContractStatus = 'update' | 'cancel'
 
 // useSubscriptionContractDisplayName（PlanService.findPlanTitle）。8GB・1ヶ月契約は例
 const planDisplayName = '8GBプラン'
@@ -133,14 +138,16 @@ const TimelineStep = ({
     <GridItem size={11}>
       {/* 実物は px { xs: 1.5, sm: 2 }・py 1.5（12px / 16px） */}
       <Paper padding={{ xxs: 's', s: 'm' }} elevation={0} outlined>
+        {/* 実物は alignItems を指定せず（stretch）、ボタンを縦の中央に置く Stack で包む。
+            xs の縦積みではボタンが幅いっぱいに伸びる */}
         <Stack
           flexDirection={{ xxs: 'column', s: 'row' }}
           gap="m"
           justifyContent="space-between"
-          alignItems="center"
+          alignItems="stretch"
         >
           <Stack gap="xxs">{children}</Stack>
-          {action}
+          {action && <Stack justifyContent="center">{action}</Stack>}
         </Stack>
       </Paper>
     </GridItem>
@@ -185,7 +192,7 @@ const LatestStep = ({ state, dialogs }: { state: GamersState; dialogs: DialogCon
             : `2026/10/01：${amountWithBreakdown(3000, 1)}を支払い済み`}
         </Typography>
         <Typography size="s" component="span">
-          前回の自動更新
+          前回の{state.eachTime ? '' : '自動'}更新
         </Typography>
         {state.error && (
           <Typography fontWeight="bold" color="negative" component="span">
@@ -201,32 +208,62 @@ const LatestStep = ({ state, dialogs }: { state: GamersState; dialogs: DialogCon
   </TimelineStep>
 )
 
-const NextStep = ({ state, dialogs }: { state: GamersState; dialogs: DialogControl }) => (
-  <TimelineStep
-    icon="exclamation_on_triangle"
-    tone="notice"
-    action={
-      !state.loading && (
-        <Button appearance="outlined" color="negative" onPress={() => dialogs.open('cancel')}>
-          自動更新の停止
-        </Button>
-      )
-    }
-  >
-    {state.loading ? (
-      <LoadingBlock />
-    ) : (
-      <>
-        <Typography fontWeight="bold" component="span">
-          2026/11/01：{amountWithBreakdown(3000, 1)}を支払い予定
-        </Typography>
-        <Typography size="s" component="span">
-          次回の自動更新
-        </Typography>
-      </>
-    )}
-  </TimelineStep>
-)
+const NextStep = ({
+  state,
+  status,
+  dialogs,
+  onResume,
+}: {
+  state: GamersState
+  status: ContractStatus
+  dialogs: DialogControl
+  onResume: () => void
+}) => {
+  const navigate = useGamersNavigate()
+  const action = state.loading ? undefined : state.eachTime ? (
+    // 実物は href='billing'（契約更新の購入）。決済に失敗しているときは押せない
+    <Button appearance="outlined" isDisabled={state.error} onPress={() => navigate('billing')}>
+      契約更新
+    </Button>
+  ) : status === 'cancel' ? (
+    // 実物は color='primary'。押すとすぐ再開し、Snackbar「プランが再開されました」
+    <Button appearance="outlined" color="interactive" onPress={onResume}>
+      自動更新の再開
+    </Button>
+  ) : (
+    <Button appearance="outlined" color="negative" onPress={() => dialogs.open('cancel')}>
+      自動更新の停止
+    </Button>
+  )
+  return (
+    <TimelineStep icon="exclamation_on_triangle" tone="notice" action={action}>
+      {state.loading ? (
+        <LoadingBlock />
+      ) : state.eachTime ? (
+        <>
+          {/* latestSuccessBillItem の periodEndAt（次の期間の始まり）と periodEndDate（その前日） */}
+          <Typography fontWeight="bold" component="span">
+            2026/11/01：契約終了
+          </Typography>
+          <Typography size="s" component="span">
+            更新可能期間：2026/10/31まで
+          </Typography>
+        </>
+      ) : (
+        <>
+          <Typography fontWeight="bold" component="span">
+            {status === 'cancel'
+              ? '2026/11/01：プランの自動更新を停止'
+              : `2026/11/01：${amountWithBreakdown(3000, 1)}を支払い予定`}
+          </Typography>
+          <Typography size="s" component="span">
+            次回の自動更新
+          </Typography>
+        </>
+      )}
+    </TimelineStep>
+  )
+}
 
 /**
  * components/PaymentCardDetail。ブランドの図柄（fontSize 60、白地に角丸 0.125rem）の右に、番号と有効期限の 2 行
@@ -249,10 +286,14 @@ const PaymentCardDetail = () => (
 /** RecentryPaymentsPaper。見出し「最近の支払い」の下（mt 5）に PaymentsTimeline */
 const RecentPaymentsPaper = ({
   state,
+  status,
   dialogs,
+  onResume,
 }: {
   state: GamersState
+  status: ContractStatus
   dialogs: DialogControl
+  onResume: () => void
 }) => (
   <PaymentPaper>
     {/* 実物は見出しの下（PaymentsTimeline の mt 5）が 40px。Stack の gap は xl（32px）。
@@ -272,7 +313,7 @@ const RecentPaymentsPaper = ({
             </Typography>
           )}
         </TimelineMiddle>
-        <NextStep state={state} dialogs={dialogs} />
+        <NextStep state={state} status={status} dialogs={dialogs} onResume={onResume} />
       </Stack>
     </Stack>
   </PaymentPaper>
@@ -297,7 +338,18 @@ const PaymentMethodsPaper = ({
         <Typography size="xl" fontWeight="bold" component="div">
           決済手段
         </Typography>
-        {state.loading ? <LoadingBlock /> : <PaymentCardDetail />}
+        {state.loading ? (
+          <LoadingBlock />
+        ) : state.eachTime ? (
+          <Stack flexDirection="row" gap="m" alignItems="center">
+            <img src={paypayLogo} alt="PayPay" width={48} height={48} />
+            <Typography size="s" component="div">
+              PayPay
+            </Typography>
+          </Stack>
+        ) : (
+          <PaymentCardDetail />
+        )}
       </Stack>
       <Button appearance="outlined" onPress={() => dialogs.open('paymentMethod')}>
         変更
@@ -326,11 +378,28 @@ const PaymentHistoryPaper = ({ dialogs }: { dialogs: DialogControl }) => (
         <TableBody>
           {billGroups.map((bg) => (
             <Row key={bg.id} id={bg.id}>
-              <Cell>{bg.issuedAt}</Cell>
-              <Cell>{yen(bg.amount)}</Cell>
-              <Cell>{bg.period}</Cell>
+              {/* 実物のセルは MUI の body2（14px） */}
+              <Cell>
+                <Typography size="s" component="span">
+                  {bg.issuedAt}
+                </Typography>
+              </Cell>
+              <Cell>
+                <Typography size="s" component="span">
+                  {yen(bg.amount)}
+                </Typography>
+              </Cell>
+              <Cell>
+                <Typography size="s" component="span">
+                  {bg.period}
+                </Typography>
+              </Cell>
               {/* 失敗は error の色で「失敗」、未決済は「未決済」 */}
-              <Cell>成功</Cell>
+              <Cell>
+                <Typography size="s" component="span">
+                  成功
+                </Typography>
+              </Cell>
               <Cell>
                 {/* 実物は右寄せ。失敗した行は領収書ではなく赤の「再決済」、未決済の行は何も出さない */}
                 <Button
@@ -362,7 +431,9 @@ const RetryPaymentDialog = ({ close }: { close: () => void }) => (
     <DialogHeader>
       <DialogTitle>再決済</DialogTitle>
     </DialogHeader>
-    <Typography size="s">2026/11/01 〜 2026/12/01 ご利用分の再決済を行います</Typography>
+    <Typography component="div" size="s">
+      2026/11/01 〜 2026/12/01 ご利用分の再決済を行います
+    </Typography>
     <DialogFooter>
       <Button appearance="transparent" onPress={close}>
         閉じる
@@ -374,24 +445,50 @@ const RetryPaymentDialog = ({ close }: { close: () => void }) => (
   </Dialog>
 )
 
-/** ContractCancellationDialog。停止すると続けて満足度のアンケートを出す（「今後表示しない」を選んでいなければ） */
-const ContractCancellationDialog = ({ dialogs }: { dialogs: DialogControl }) => (
+/**
+ * ContractCancellationDialog。停止すると続けて満足度のアンケートを出す（「今後表示しない」を選んでいなければ）。
+ * 契約が停止（SUSPENDED）しているときは「解約」になり、即時解約の注意を出す
+ */
+const ContractCancellationDialog = ({
+  suspended,
+  dialogs,
+  onStop,
+}: {
+  suspended: boolean
+  dialogs: DialogControl
+  onStop: () => void
+}) => (
   <Dialog isOpen onOpenChange={(open) => !open && dialogs.close()}>
     <DialogHeader>
-      <DialogTitle>自動更新の停止</DialogTitle>
+      <DialogTitle>{suspended ? '解約' : '自動更新の停止'}</DialogTitle>
     </DialogHeader>
     <Stack gap="l">
-      <Typography>{planDisplayName}の自動更新を停止します</Typography>
-      <Callout color="informative" appearance="outline">
-        自動更新停止後も2026/11/01までご利用可能です
-      </Callout>
+      <Typography component="div">
+        {suspended ? `${planDisplayName}を解約します` : `${planDisplayName}の自動更新を停止します`}
+      </Typography>
+      {suspended ? (
+        <Callout color="notice" appearance="outline">
+          契約期間を過ぎているため、即時解約されます
+        </Callout>
+      ) : (
+        <Callout color="informative" appearance="outline">
+          自動更新停止後も2026/11/01までご利用可能です
+        </Callout>
+      )}
     </Stack>
     <DialogFooter>
       <Button appearance="transparent" onPress={dialogs.close}>
         閉じる
       </Button>
-      <Button appearance="outlined" color="negative" onPress={() => dialogs.open('survey')}>
-        停止
+      <Button
+        appearance="outlined"
+        color="negative"
+        onPress={() => {
+          onStop()
+          dialogs.open('survey')
+        }}
+      >
+        {suspended ? '解約' : '停止'}
       </Button>
     </DialogFooter>
   </Dialog>
@@ -433,7 +530,8 @@ const SatisfactionSurveyDialog = ({ close }: { close: () => void }) => (
       </Stack>
       <Stack flexDirection="row" justifyContent="space-between" alignItems="center">
         <Checkbox>今後表示しない</Checkbox>
-        <Button appearance="transparent" onPress={close}>
+        {/* 実物は size='large' */}
+        <Button appearance="transparent" size="l" onPress={close}>
           閉じる
         </Button>
       </Stack>
@@ -460,7 +558,8 @@ const InvoiceDialog = ({ close }: { close: () => void }) => (
       <TextField aria-label="宛名" width="full" />
     </Stack>
     <DialogFooter>
-      <Button appearance="transparent" onPress={close}>
+      {/* 実物は「閉じる」だけ size='large' */}
+      <Button appearance="transparent" size="l" onPress={close}>
         閉じる
       </Button>
       <Button appearance="outlined" onPress={close}>
@@ -564,8 +663,8 @@ const PaymentMethodChangeDialog = ({ close }: { close: () => void }) => {
         </Callout>
         {/* 実物の RadioGroup に見える見出しは無い */}
         <RadioGroup aria-label="支払い方法" defaultValue="credit-card">
-          {/* 実物はカード情報の入力中だけ gap 4（32px）、ほかは 0。Stack の gap の最小は xxs（4px） */}
-          <Stack gap={editing ? 'xl' : 'xxs'}>
+          {/* 実物はカード情報の入力中だけ gap 4（32px）。ほかは gap 0 で、登録済みのカードの面の mb 2（16px）が間になる */}
+          <Stack gap={editing ? 'xl' : 'm'}>
             <Stack gap="m">
               <Stack flexDirection="row" gap="xs" alignItems="center">
                 <Radio value="credit-card">クレジットカード</Radio>
@@ -593,9 +692,19 @@ const PaymentMethodChangeDialog = ({ close }: { close: () => void }) => {
                 <Radio value="paypay">PayPay</Radio>
                 <img src={paypayLogo} alt="PayPay" width={30} height={30} />
               </Stack>
-              {/* 実物は「利用できる支払い方法と対応ブランド」がヘルプ記事へのリンク（別タブ） */}
               <Typography size="xxs" component="div">
-                ※この支払い方法は自動更新に対応していません。詳しくは利用できる支払い方法と対応ブランドをご確認ください。
+                ※この支払い方法は自動更新に対応していません。詳しくは
+                {/* 実物は MUI の Link（primary の色・下線）で、ヘルプ記事を別タブで開く */}
+                <a
+                  href="https://support.server.lolipop.jp/hc/ja/articles/34754308816787"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Typography size="xxs" color="informative" component="span">
+                    利用できる支払い方法と対応ブランド
+                  </Typography>
+                </a>
+                をご確認ください。
               </Typography>
             </Stack>
           </Stack>
@@ -626,6 +735,7 @@ const PaymentScreen = ({
   initialDialog?: DialogName | null
 }) => {
   const [dialog, setDialog] = useState<DialogName | null>(initialDialog)
+  const [status, setStatus] = useState<ContractStatus>('update')
   const dialogs: DialogControl = { open: setDialog, close: () => setDialog(null) }
   return (
     <GamersServerShell active="payment">
@@ -636,12 +746,24 @@ const PaymentScreen = ({
           <Typography size="xxxl" fontWeight="bold" component="div">
             支払い
           </Typography>
-          <PaymentTabPanels state={state} tab={tab} dialogs={dialogs} />
+          <PaymentTabPanels
+            state={state}
+            status={status}
+            tab={tab}
+            dialogs={dialogs}
+            onResume={() => setStatus('update')}
+          />
         </Stack>
       </Container>
       {/* Tabs の外に置く。Dialog の中の Select を Tabs の子孫にしないため */}
       {dialog === 'retry' && <RetryPaymentDialog close={dialogs.close} />}
-      {dialog === 'cancel' && <ContractCancellationDialog dialogs={dialogs} />}
+      {dialog === 'cancel' && (
+        <ContractCancellationDialog
+          suspended={!!state.error}
+          dialogs={dialogs}
+          onStop={() => setStatus('cancel')}
+        />
+      )}
       {dialog === 'survey' && <SatisfactionSurveyDialog close={dialogs.close} />}
       {dialog === 'invoice' && <InvoiceDialog close={dialogs.close} />}
       {dialog === 'paymentMethod' && <PaymentMethodChangeDialog close={dialogs.close} />}
@@ -655,12 +777,16 @@ const PaymentScreen = ({
  */
 const PaymentTabPanels = ({
   state,
+  status,
   tab,
   dialogs,
+  onResume,
 }: {
   state: GamersState
+  status: ContractStatus
   tab: 'detail' | 'history'
   dialogs: DialogControl
+  onResume: () => void
 }) => {
   const navigate = useGamersNavigate()
   return (
@@ -677,7 +803,12 @@ const PaymentTabPanels = ({
         </TabList>
         <TabPanel id="detail">
           <Stack gap="l">
-            <RecentPaymentsPaper state={state} dialogs={dialogs} />
+            <RecentPaymentsPaper
+              state={state}
+              status={status}
+              dialogs={dialogs}
+              onResume={onResume}
+            />
             {/* 特典アカウント（isBenefitAccount）では出ない */}
             <PaymentMethodsPaper state={state} dialogs={dialogs} />
           </Stack>
@@ -708,6 +839,16 @@ export const Default: Story = {
  */
 export const Loading: Story = {
   render: () => <PaymentScreen state={{ loading: true }} />,
+}
+
+/**
+ * PayPay の契約（都度払い）。自動更新が無く、タイムラインの次の段は契約の終了日と「契約更新」になる。
+ * 「契約更新」で契約更新の購入（Templates/Gamers/Renewal）へ移る。
+ *
+ * @summary PayPay の契約
+ */
+export const EachTimeBilling: Story = {
+  render: () => <PaymentScreen state={{ eachTime: true }} />,
 }
 
 /**

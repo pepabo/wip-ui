@@ -405,8 +405,8 @@ const DailyChartsSection = ({
       />
       <Grid spacing="m">
         {series.map((s) => (
-          // chartGrid: 600px 未満は 1 列、600px 以上は 2 列、900px 以上は 3 列
-          <GridItem key={s.key} size={{ xxs: 12, s: 6, m: 4 }}>
+          // chartGrid: 600px 未満は 1 列、600px 以上は 2 列、900px 以上は 3 列（900px に近い段階は l の 1024px）
+          <GridItem key={s.key} size={{ xxs: 12, s: 6, l: 4 }}>
             <UsageChart series={s} entries={entries} />
           </GridItem>
         ))}

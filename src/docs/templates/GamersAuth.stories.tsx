@@ -39,7 +39,7 @@ import type { ReactNode } from 'react'
  * - MUI の maxWidth='sm'（600px）を Container の size="s" に、Paper の px 4〜6 を padding の xl〜xxl に寄せている。
  *   Paper の上下の余白（py 8〜10 / 10〜14）は左右と分けて指定できないので、左右と同じ値
  * - MUI の各要素の mt / mb は Stack の gap に寄せている
- * - Checkbox のラベルは実物では xs の文字。「利用規約」「プライバシーポリシー」は実物ではリンク（#0288D1）
+ * - 「利用規約」「プライバシーポリシー」のリンクの色は実物では #0288D1。informative の色で出している
  * - 外部 IdP のロゴは無効のときに薄くならない。スマホ幅でラベルを隠してロゴだけにする切り替えも無い
  * - Turnstile は Cloudflare が描く 300×65 の iframe。ここでは同じ大きさの枠だけを置く
  * - 認証コードの欄は実物では 56px 角・中央ぞろえ
@@ -85,7 +85,7 @@ const AuthPaper = ({ children }: { children: ReactNode }) => (
 
 /** 見出し。Typography variant='xxl' bold component='div' */
 const PaperTitle = ({ children }: { children: string }) => (
-  <Typography size="xxl" fontWeight="bold" component="h1">
+  <Typography size="xxl" fontWeight="bold" component="div">
     {children}
   </Typography>
 )
@@ -166,9 +166,27 @@ const ConsentCheckboxes = ({
 }) => (
   // 実物は 1 つ目が mb 0.5、2 つ目が mt 0.5（4px）
   <Stack gap="xxs">
-    <Checkbox defaultSelected>サービスからのニュースレターを受信する</Checkbox>
+    {/* 実物のラベルは Typography variant='xs'。利用規約とプライバシーポリシーは文中のリンク（#0288D1）で、wip-ui に無いので素の a */}
+    <Checkbox defaultSelected>
+      <Typography size="xs" component="span">
+        サービスからのニュースレターを受信する
+      </Typography>
+    </Checkbox>
     <Checkbox isSelected={agreed} onChange={onAgreed}>
-      利用規約 と プライバシーポリシー に同意する
+      <Typography size="xs" component="span">
+        <a href="https://lolipop.jp/terms/tos/">
+          <Typography size="xs" color="informative" component="span">
+            利用規約
+          </Typography>
+        </a>
+        {' と '}
+        <a href="https://pepabo.com/company/privacy/">
+          <Typography size="xs" color="informative" component="span">
+            プライバシーポリシー
+          </Typography>
+        </a>
+        に同意する
+      </Typography>
     </Checkbox>
   </Stack>
 )
@@ -512,7 +530,7 @@ export const GamersSignupComplete: Story = {
       <PageContainer>
         <AuthPaper>
           <Stack gap="xl">
-            <Typography size="xl" fontWeight="bold" component="h1">
+            <Typography size="xl" fontWeight="bold" component="div">
               アカウント作成完了
             </Typography>
             <Stack gap="l">

@@ -389,14 +389,15 @@ const SidebarCredit = ({ onNavigate }: { onNavigate: Navigate }) => (
   <section aria-label="クレジット残高">
     <Paper outlined padding="s">
       <Stack flexDirection="row" gap="xs" alignItems="flex-end" justifyContent="space-between">
-        <Stack>
+        {/* .creditBody は縦積みで間 0。Stack は gap 0 を持たないので素の div で 2 行を積む */}
+        <div>
           <Typography component="div" size="xs" color="medium_emphasis" fontWeight="bold">
             クレジット
           </Typography>
           <Typography component="div" size="m" fontWeight="bold">
             {creditBalance}
           </Typography>
-        </Stack>
+        </div>
         <Button
           appearance="outlined"
           color="neutral"
@@ -568,7 +569,10 @@ const AccountSwitcher = ({ onNavigate }: { onNavigate: Navigate }) => {
   return (
     <>
       <Stack flexDirection="row" gap="xxs" alignItems="center">
-        <Icon name="people" size="s" aria-hidden="true" />
+        {/* 実物のアイコンは組織名のリンクの中にあり、リンクと同じ gray[600] */}
+        <Typography component="span" color="medium_emphasis">
+          <Icon name="people" size="s" aria-hidden="true" />
+        </Typography>
         <CrumbLink label={accountName} onPress={() => onNavigate?.('projects')} />
         <MenuTrigger>
           <Button

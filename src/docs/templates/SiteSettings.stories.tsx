@@ -63,6 +63,25 @@ type Story = StoryObj<typeof meta>
 // GAP-NEW: Button の isPending に見た目が無い（押せなくなるだけ）。実物の wip-ui も同じなので、
 // 処理中が分かるよう leading に Loader を入れている。
 
+// 素の button の見た目を消す（実物は Tailwind の preflight で枠・地・余白が無い）
+const plainButtonStyle = {
+  padding: 0,
+  border: 0,
+  background: 'none',
+  font: 'inherit',
+  color: 'inherit',
+  cursor: 'pointer',
+} as const
+// 実物の code チップ（rounded border px-1）
+// 枠の色は low_emphasis を 3 割に薄める（実物の #e0e0e0 に寄せた、出典の無い暫定値）
+const codeChipStyle = {
+  padding: '0 4px',
+  border: '1px solid color-mix(in srgb, currentColor 30%, transparent)',
+  borderRadius: 4,
+} as const
+// 実物のタグの中の inline-flex items-center gap-1
+const tagInnerStyle = { display: 'inline-flex', alignItems: 'center', gap: 4 } as const
+
 /** 実物の各セクションの読み込み中（flex justify-center py-16 + Loader）。 */
 const SectionLoading = () => (
   <Stack alignItems="center">
@@ -765,25 +784,24 @@ const TagsCard = ({
           タグの取得に失敗しました。
         </Typography>
       ) : (
+        // 実物は flex flex-wrap items-center gap-2。GAP-NEW: Stack に折り返し（flex-wrap）が無い
         <Stack flexDirection="row" gap="xs" alignItems="center">
           {tags.map((t) => (
-            // GAP-NEW: Sticker に外す（×）ボタンが無い（removable な Tag / Chip が無い）。
-            // 実物は Sticker の中に native button の × を入れている
-            <Stack key={t} flexDirection="row" gap="xxs" alignItems="center">
-              <Sticker color="neutral" size="s">
+            // GAP-NEW: 外せるタグ（removable な Tag / Chip）が無い。実物と同じく、Sticker の中の
+            // inline-flex gap-1 に名前と素の button の「×」を並べる
+            <Sticker key={t} color="neutral" size="s">
+              <span style={tagInnerStyle}>
                 {t}
-              </Sticker>
-              <Button
-                appearance="transparent"
-                color="neutral"
-                size="s"
-                iconOnly
-                aria-label={`タグ「${t}」を外す`}
-                onPress={() => onDetach(t)}
-              >
-                <Icon name="cross" size="s" />
-              </Button>
-            </Stack>
+                <button
+                  type="button"
+                  aria-label={`タグ「${t}」を外す`}
+                  style={plainButtonStyle}
+                  onClick={() => onDetach(t)}
+                >
+                  ×
+                </button>
+              </span>
+            </Sticker>
           ))}
           <Button appearance="outlined" color="neutral" size="s" onPress={onAdd}>
             + タグを追加
@@ -817,19 +835,21 @@ const TagAddDialog = ({
             <Typography component="div" size="s" color="medium_emphasis">
               既存のタグ
             </Typography>
-            {/* GAP-NEW: 押せる Sticker が無い。実物は Sticker を native button で包んでいる */}
+            {/* GAP-NEW: 押せる Sticker が無い。実物と同じく Sticker を素の button で包む。
+                実物は flex flex-wrap gap-2 で、hover で薄くなる（hover は出せない）。Stack に折り返しが無い */}
             <Stack flexDirection="row" gap="xs">
               {availableTags.map((t) => (
-                <Button
+                <button
                   key={t}
-                  appearance="outlined"
-                  color="neutral"
-                  size="s"
+                  type="button"
                   aria-label={`タグ「${t}」を追加`}
-                  onPress={() => onAttach(t)}
+                  style={plainButtonStyle}
+                  onClick={() => onAttach(t)}
                 >
-                  {t}
-                </Button>
+                  <Sticker color="neutral" size="s">
+                    {t}
+                  </Sticker>
+                </button>
               ))}
             </Stack>
           </Stack>
@@ -1001,8 +1021,20 @@ const SettingsScreen = ({
 const MASKED_VALUE = '••••••••••'
 const AI_GATEWAY_ENV_KEY = 'AI_GATEWAY_API_KEY'
 
-// GAP-NEW: アイコンに目（表示 / 非表示）が無い。実物は EyeIcons の SVG を手書きしている。
-// 近いものとして、表示は magnifying_glass、非表示に戻すのは lock で代えている。
+// GAP-NEW: アイコンに目（表示 / 非表示）が無い。実物と同じく、EyeIcons の SVG（Figma の visibility /
+// visibility_off）をそのまま埋め込む
+const EyeIcon = () => (
+  <svg width="16" height="16" viewBox="8 8 16 16" fill="currentColor" aria-hidden="true">
+    <path d="M18.125 18.125C18.7083 17.5417 19 16.8333 19 16C19 15.1667 18.7083 14.4583 18.125 13.875C17.5417 13.2917 16.8333 13 16 13C15.1667 13 14.4583 13.2917 13.875 13.875C13.2917 14.4583 13 15.1667 13 16C13 16.8333 13.2917 17.5417 13.875 18.125C14.4583 18.7083 15.1667 19 16 19C16.8333 19 17.5417 18.7083 18.125 18.125ZM14.725 17.275C14.375 16.925 14.2 16.5 14.2 16C14.2 15.5 14.375 15.075 14.725 14.725C15.075 14.375 15.5 14.2 16 14.2C16.5 14.2 16.925 14.375 17.275 14.725C17.625 15.075 17.8 15.5 17.8 16C17.8 16.5 17.625 16.925 17.275 17.275C16.925 17.625 16.5 17.8 16 17.8C15.5 17.8 15.075 17.625 14.725 17.275ZM11.5667 19.6417C10.2333 18.7361 9.26667 17.5222 8.66667 16C9.26667 14.4778 10.2333 13.2639 11.5667 12.3583C12.9 11.4528 14.3778 11 16 11C17.6222 11 19.1 11.4528 20.4333 12.3583C21.7667 13.2639 22.7333 14.4778 23.3333 16C22.7333 17.5222 21.7667 18.7361 20.4333 19.6417C19.1 20.5472 17.6222 21 16 21C14.3778 21 12.9 20.5472 11.5667 19.6417Z" />
+  </svg>
+)
+
+const EyeOffIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+    <path d="M13.2001 15.0664L10.4001 12.2997C10.0112 12.422 9.61958 12.5136 9.22513 12.5747C8.83069 12.6359 8.42235 12.6664 8.00013 12.6664C6.32235 12.6664 4.82791 12.2025 3.5168 11.2747C2.20569 10.347 1.25569 9.14418 0.666797 7.66641C0.90013 7.07752 1.19457 6.5303 1.55013 6.02474C1.90569 5.51918 2.31124 5.06641 2.7668 4.66641L0.933464 2.79974L1.8668 1.86641L14.1335 14.1331L13.2001 15.0664ZM8.00013 10.6664C8.12235 10.6664 8.23624 10.6609 8.3418 10.6497C8.44735 10.6386 8.56124 10.6164 8.68346 10.5831L5.08346 6.98307C5.05013 7.1053 5.02791 7.21918 5.0168 7.32474C5.00569 7.4303 5.00013 7.54418 5.00013 7.66641C5.00013 8.49974 5.2918 9.20807 5.87513 9.79141C6.45846 10.3747 7.1668 10.6664 8.00013 10.6664ZM12.8668 10.9664L10.7501 8.86641C10.8279 8.67752 10.889 8.48585 10.9335 8.29141C10.9779 8.09696 11.0001 7.88863 11.0001 7.66641C11.0001 6.83307 10.7085 6.12474 10.1251 5.54141C9.5418 4.95807 8.83346 4.66641 8.00013 4.66641C7.77791 4.66641 7.56957 4.68863 7.37513 4.73307C7.18069 4.77752 6.98902 4.84418 6.80013 4.93307L5.10013 3.23307C5.55569 3.04418 6.02235 2.90252 6.50013 2.80807C6.97791 2.71363 7.47791 2.66641 8.00013 2.66641C9.67791 2.66641 11.1724 3.1303 12.4835 4.05807C13.7946 4.98585 14.7446 6.18863 15.3335 7.66641C15.0779 8.32196 14.7418 8.9303 14.3251 9.49141C13.9085 10.0525 13.4224 10.5442 12.8668 10.9664ZM9.78346 7.89974L7.78346 5.89974C8.09457 5.84418 8.38069 5.86918 8.6418 5.97474C8.90291 6.0803 9.12791 6.23307 9.3168 6.43307C9.50569 6.63307 9.6418 6.86363 9.72513 7.12474C9.80846 7.38585 9.82791 7.64418 9.78346 7.89974Z" />
+  </svg>
+)
+
 const EyeToggle = ({
   kind,
   label,
@@ -1023,7 +1055,7 @@ const EyeToggle = ({
     aria-pressed={pressed}
     onPress={onPress}
   >
-    <Icon name={kind === 'reveal' ? 'magnifying_glass' : 'lock'} size="s" />
+    {kind === 'reveal' ? <EyeIcon /> : <EyeOffIcon />}
   </Button>
 )
 
@@ -1401,10 +1433,16 @@ const EnvVarsScreen = ({
                           ロリポップ！AIゲートウェイは、Claude・GPT・Gemini
                           などのAIモデルをひとつのAPIキーで呼び出せるサービスです。
                           <br />
-                          {/* GAP-20: 実物はキー名を font-mono の code チップで出している */}
+                          {/* GAP-20: 等幅のトークンが無い。実物と同じく素の code（ブラウザ既定の等幅）にし、
+                              枠（rounded border px-1）は素の要素で付ける。枠の色は Typography の色を継ぐ。
+                              実物の枠は #e0e0e0・地は白（地の色は出せない） */}
                           発行したキーを{' '}
-                          <Typography component="span" size="xs" fontWeight="bold">
-                            {AI_GATEWAY_ENV_KEY}
+                          <Typography component="span" size="xs" color="low_emphasis">
+                            <code style={codeChipStyle}>
+                              <Typography component="span" size="xs" color="medium_emphasis">
+                                {AI_GATEWAY_ENV_KEY}
+                              </Typography>
+                            </code>
                           </Typography>{' '}
                           として追加すると、アプリから使えます。
                         </Typography>

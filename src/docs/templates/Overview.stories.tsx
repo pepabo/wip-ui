@@ -227,7 +227,7 @@ const ServerStatusPaper = ({ status }: { status: ServerStatus }) => {
             <GridItem key={m.label} size={{ xxs: 12, l: 4 }}>
               {status !== 'RUNNING' ? (
                 <Stack gap="s">
-                  <Typography size="s" fontWeight="bold" component="h3">
+                  <Typography size="s" fontWeight="bold" component="div">
                     {m.label}
                   </Typography>
                   <EmptyNotice>
@@ -269,9 +269,10 @@ const ServerDetailPaper = ({
   <Card padding={paperPadding}>
     <Stack gap="xl">
       <PaperTitle>詳細情報</PaperTitle>
+      {/* 実物は Grid の間 0（狭い幅で縦に積むとき）。Stack の gap は 0 にできないので xxs */}
       <Stack
         flexDirection={{ xxs: 'column', m: 'row' }}
-        gap="s"
+        gap="xxs"
         justifyContent="space-between"
         alignItems="flex-start"
       >
@@ -282,26 +283,30 @@ const ServerDetailPaper = ({
         </Button>
       </Stack>
       <Divider />
-      <Stack
-        flexDirection={{ xxs: 'column', m: 'row' }}
-        gap="s"
-        justifyContent="space-between"
-        alignItems="flex-start"
-      >
-        <Typography size="s" fontWeight="bold" component="span">
-          SSH Key
-        </Typography>
-        {/* KeyGenerateButton。起動中以外は鍵を再生成できない */}
-        <Button
-          appearance="outlined"
-          leading={<Icon name="copy" size="s" />}
-          isDisabled={status !== 'RUNNING'}
-          onPress={onSshKey}
+      {/* 実物の SSH Key の行は my 4。Stack の spacing 4 に下の 32px が足され、次の区切り線まで 64px 開く */}
+      <Stack gap="xxxl">
+        {/* 狭い幅ではボタンが mt 1（8px） */}
+        <Stack
+          flexDirection={{ xxs: 'column', m: 'row' }}
+          gap="xs"
+          justifyContent="space-between"
+          alignItems="flex-start"
         >
-          秘密鍵を再作成
-        </Button>
+          <Typography size="s" fontWeight="bold" component="span">
+            SSH Key
+          </Typography>
+          {/* KeyGenerateButton。起動中以外は鍵を再生成できない */}
+          <Button
+            appearance="outlined"
+            leading={<Icon name="copy" size="s" />}
+            isDisabled={status !== 'RUNNING'}
+            onPress={onSshKey}
+          >
+            秘密鍵を再作成
+          </Button>
+        </Stack>
+        <Divider />
       </Stack>
-      <Divider />
       <ConfigRow label="SSH ユーザー名">admin</ConfigRow>
       <Divider />
       <ConfigRow label="サーバーID">{server.id}</ConfigRow>
@@ -488,7 +493,7 @@ const ContractPaper = ({
         <Grid spacing="l">
           <GridItem size={{ xxs: 12, l: 4 }}>
             <Stack gap="xs">
-              <Typography size="s" fontWeight="bold" component="h3">
+              <Typography size="s" fontWeight="bold" component="div">
                 ゲーム
               </Typography>
               {/* GameItem。名前の左に 70px 角のキービジュアル。GAP-NEW: 画像の枠（Image）が無い（実物は object-fit: cover） */}
@@ -525,7 +530,7 @@ const ContractPaper = ({
           </GridItem>
           <GridItem size={{ xxs: 12, l: 8 }}>
             <Stack gap="xs">
-              <Typography size="s" fontWeight="bold" component="h3">
+              <Typography size="s" fontWeight="bold" component="div">
                 プラン
               </Typography>
               {open ? (
@@ -574,7 +579,7 @@ const ContractPaper = ({
             <Grid spacing="l">
               <GridItem size={{ xxs: 12, l: 8 }} offset={{ xxs: 0, l: 4 }}>
                 <Stack gap="xs">
-                  <Typography size="s" fontWeight="bold" component="h3">
+                  <Typography size="s" fontWeight="bold" component="div">
                     期間
                   </Typography>
                   {/* 列数は ceil(件数/3)・ceil(件数/2)。6 件なら s で 2 列、m 以上で 3 列 */}

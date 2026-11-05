@@ -1,6 +1,5 @@
 import { Fragment, useState } from 'react'
 
-import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
 import { Button, LinkButton } from '../../Button'
 import { Callout } from '../../Callout'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
@@ -91,18 +90,31 @@ const DOT_COLOR: Record<StickerColor, TypographyColor> = {
   attention: 'notice',
 }
 
-// GAP-NEW: StatusIndicator（色ドット + ラベル）が無い。実物は shared/ui/StatusIndicator で
-// 色を hex で持っている。Icon の circle を Typography の色で塗って代える。
+// GAP-NEW: StatusIndicator（色ドット + ラベル）が無い。実物は shared/ui/StatusIndicator で、
+// 8px の丸（色は hex）と文字を inline-flex gap-1.5（6px）で並べる。丸と並びは素の span で作り、
+// 丸の色は Typography の色を currentColor で継ぐ
+const statusIndicatorStyle = { display: 'inline-flex', alignItems: 'center', gap: 6 } as const
+const statusDotStyle = {
+  display: 'block',
+  width: 8,
+  height: 8,
+  borderRadius: '50%',
+  background: 'currentColor',
+} as const
+
 const StatusIndicator = ({ color, children }: { color: StickerColor; children: ReactNode }) => (
-  <Stack flexDirection="row" gap="xxs" alignItems="center">
-    <Typography component="span" size="xs" color={DOT_COLOR[color]}>
-      <Icon name="circle" size="s" color="currentColor" aria-hidden />
+  <span style={statusIndicatorStyle}>
+    <Typography component="span" color={DOT_COLOR[color]}>
+      <span aria-hidden style={statusDotStyle} />
     </Typography>
     <Typography component="span" size="s" color="medium_emphasis">
       {children}
     </Typography>
-  </Stack>
+  </span>
 )
+
+// 素の a の下線を消す（実物は Tailwind の preflight で下線が無い）
+const plainLinkStyle = { textDecoration: 'none' } as const
 
 const MetaRow = ({ label, children }: { label: string; children: ReactNode }) => (
   <Stack gap="xxs">
@@ -573,7 +585,8 @@ const BuildLog = ({ lines }: { lines: string[] }) => {
           </Button>
         </Stack>
         <Divider />
-        <Stack>
+        {/* 行は間を空けずに積む（Stack にすると既定の gap m が行ごとに入る） */}
+        <div>
           {lines.map((line, i) => (
             <Typography
               component="div"
@@ -586,7 +599,7 @@ const BuildLog = ({ lines }: { lines: string[] }) => {
               {line || ' '}
             </Typography>
           ))}
-        </Stack>
+        </div>
       </Stack>
     </Paper>
   )
@@ -681,17 +694,50 @@ const DeployDetail = ({
   const publicHost = previewHost ?? project.domain
   return (
     <Stack gap="l">
-      {/* 実物は nav（flex-wrap gap-1.5）に Link > Typography s medium_emphasis、「/」（s low_emphasis）、
-          現在地（s）を手で並べている。GAP は deployNowShell の ProjectDetailLayout のパンくずと同じ */}
-      <Breadcrumbs>
-        <Breadcrumb href="#" onPress={() => navigate('projects')}>
-          プロジェクト
-        </Breadcrumb>
-        <Breadcrumb href="#" onPress={onBack}>
-          {project.name}
-        </Breadcrumb>
-        <Breadcrumb>デプロイ詳細</Breadcrumb>
-      </Breadcrumbs>
+      {/* 実物は Breadcrumbs を使わず、nav（flex-wrap gap-1.5）に Link > Typography s medium_emphasis、
+          「/」（s low_emphasis）、現在地（s）を手で並べている。deployNowShell の ProjectDetailLayout のパンくずと同じ組み方。
+          GAP-NEW: 文中のリンクが無いので素の a。gap-1.5（6px）は段階に無く xs（8px）。折り返し（flex-wrap）も無い */}
+      <nav aria-label="パンくずリスト">
+        <Stack flexDirection="row" gap="xs" alignItems="center">
+          <a
+            href="/projects"
+            style={plainLinkStyle}
+            onClick={(event) => {
+              event.preventDefault()
+              navigate('projects')
+            }}
+          >
+            <Typography component="span" size="s" color="medium_emphasis">
+              プロジェクト
+            </Typography>
+          </a>
+          <span aria-hidden>
+            <Typography component="span" size="s" color="low_emphasis">
+              /
+            </Typography>
+          </span>
+          <a
+            href={`/projects/${project.id}`}
+            style={plainLinkStyle}
+            onClick={(event) => {
+              event.preventDefault()
+              onBack()
+            }}
+          >
+            <Typography component="span" size="s" color="medium_emphasis">
+              {project.name}
+            </Typography>
+          </a>
+          <span aria-hidden>
+            <Typography component="span" size="s" color="low_emphasis">
+              /
+            </Typography>
+          </span>
+          <Typography component="span" size="s">
+            デプロイ詳細
+          </Typography>
+        </Stack>
+      </nav>
 
       {/* 実物は flex-col gap-3、sm 以上で flex-row items-start justify-between gap-4。
           GAP-17: items-start を sm 以上だけに付けられないので常に flex-start にしている */}

@@ -312,7 +312,7 @@ const StartActions = () => {
   const navigate = useDeployNowNavigate()
   return (
     // 実物は flex gap-1。sm 未満は「ドキュメント」「ログイン」を隠す。
-    // GAP: 表示/非表示のレスポンシブ指定が無く、常に出す。ロゴも実物は h-7 md:h-12 だが 48px 固定
+    // GAP: 表示/非表示のレスポンシブ指定が無く、常に出す。そのため 390px 幅では AppBar が 2 段に折り返す
     <Stack flexDirection="row" gap="xxs" alignItems="center">
       <LinkButton
         href="#"
@@ -491,7 +491,7 @@ const ProjectHero = ({
             {hero.domain}
           </TextLink>
         ) : (
-          <Typography size="s" color="low_emphasis">
+          <Typography component="div" size="s" color="low_emphasis">
             ドメイン未発行
           </Typography>
         )}
@@ -506,7 +506,9 @@ const ProjectHero = ({
               {hero.lastDeployedAt}
             </TextLink>
           ) : (
-            <Typography size="s">{hero.lastDeployedAt}</Typography>
+            <Typography component="div" size="s">
+              {hero.lastDeployedAt}
+            </Typography>
           )}
         </MetaRow>
         {hero.githubRepository && (

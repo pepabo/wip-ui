@@ -433,20 +433,19 @@ const AccountMembers = ({
                 {visible.map((m) => (
                   <Row key={m.id} id={m.id}>
                     <Cell>
-                      <Stack gap="xxs">
-                        <Stack flexDirection="row" gap="xs" alignItems="center">
-                          <Typography component="span">{m.name}</Typography>
-                          {m.status !== 'active' && (
-                            <Sticker
-                              size="s"
-                              color={m.status === 'suspended' ? 'negative' : 'neutral'}
-                            >
-                              {memberStatusLabels[m.status]}
-                            </Sticker>
-                          )}
-                        </Stack>
-                        <Secondary>{m.email}</Secondary>
+                      {/* 名前の行（.memberName）とメールの間は 0。DataTableText の 4px（.text + .text）は名前の行の後ろには付かない */}
+                      <Stack flexDirection="row" gap="xs" alignItems="center">
+                        <Typography component="span">{m.name}</Typography>
+                        {m.status !== 'active' && (
+                          <Sticker
+                            size="s"
+                            color={m.status === 'suspended' ? 'negative' : 'neutral'}
+                          >
+                            {memberStatusLabels[m.status]}
+                          </Sticker>
+                        )}
                       </Stack>
+                      <Secondary>{m.email}</Secondary>
                     </Cell>
                     <Cell>
                       <Aux>{m.role}</Aux>

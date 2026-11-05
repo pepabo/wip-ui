@@ -31,7 +31,7 @@ const MaintenanceScreen = () => {
       <Typography size="xl" fontWeight="bold" component="h1">
         メンテナンス中です
       </Typography>
-      <Typography size="s" color="low_emphasis">
+      <Typography component="div" size="s" color="low_emphasis">
         現在メンテナンスを実施しています。ご不便をおかけしますが、しばらく時間をおいてから再度アクセスしてください。
       </Typography>
       {/* 実物は Tailwind の黒地の a（h-10・w-full・text-sm font-medium）。フルリロードでプロジェクト一覧へ入り直す。
@@ -54,6 +54,7 @@ const NotFoundScreen = () => {
   const navigate = useDeployNowNavigate()
   return (
     <Stack gap="l" alignItems="center">
+      {/* 実物の 404 は root の not-found で、Tailwind（preflight）の外に描かれる。p と h1 には既定の margin が付く */}
       <Typography size="xxl" fontWeight="bold" color="low_emphasis" component="p">
         404
       </Typography>

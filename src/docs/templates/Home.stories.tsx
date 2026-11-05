@@ -221,9 +221,9 @@ const ServerStatusView = ({ server }: { server: Server }) => {
   )
 }
 
-/** home/_components/ServerCard の IP アドレス・プランの行（3:9） */
+/** home/_components/ServerCard の IP アドレス・プランの行（3:9。実物の Grid container は spacing 無し） */
 const ServerSpecRow = ({ label, children }: { label: string; children: ReactNode }) => (
-  <Grid spacing="s">
+  <Grid>
     <GridItem size={3}>
       <Typography size="s" color="medium_emphasis" component="span">
         {label}
@@ -306,7 +306,10 @@ const AddServerCard = () => {
   )
 }
 
-/** home/_components/HomeServerCardsList（xs 12 / sm 4 の 3 カラム） */
+/**
+ * home/_components/HomeServerCardsList。実物は columns {xs:4, sm:8, md:12} の Grid に size {xs:12, sm:4, md:4} で置くので、
+ * xs は 1 列、sm（600px）から 2 列、md（900px）から 3 列。「サーバーを追加」も同じ
+ */
 const ServerCardsList = ({
   items,
   onRename,
@@ -316,11 +319,11 @@ const ServerCardsList = ({
 }) => (
   <Grid spacing="m">
     {items.map((server) => (
-      <GridItem key={server.id} size={{ xxs: 12, s: 4 }}>
+      <GridItem key={server.id} size={{ xxs: 12, s: 6, m: 4 }}>
         <ServerCard server={server} onRename={() => onRename(server)} />
       </GridItem>
     ))}
-    <GridItem size={{ xxs: 12, s: 4 }}>
+    <GridItem size={{ xxs: 12, s: 6, m: 4 }}>
       <AddServerCard />
     </GridItem>
   </Grid>
@@ -798,7 +801,7 @@ const HomeScreen = ({
       <GamersPageContainer maxWidth="xl">
         <Stack gap="m">
           {/* HomeHeader。実物は variant='xxxl_comfort' の太字・白、mb 2。component の指定は無い */}
-          <Typography size="xxxl" density="comfort" fontWeight="bold" component="h1">
+          <Typography size="xxxl" density="comfort" fontWeight="bold" component="div">
             ホーム
           </Typography>
           <HomeContents items={serverItems} defaultTab={defaultTab} initialRenaming={renaming} />

@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { Button } from '../../Button'
 import { Checkbox } from '../../Checkbox'
-import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
+import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Icon } from '../../Icon'
 import { Stack } from '../../Stack'
@@ -34,6 +34,7 @@ import type { ReactNode } from 'react'
  * - 外部アカウントの表示名は実物では 1 行で省略（ellipsis）。ここでは折り返す
  * - 外部アカウントのロゴは実物では object-fit: contain
  * - Dialog は実物では fullWidth（600px）。ここでは中身の幅
+ * - AccountPaper の最初の段の上は、実物では pt 2 ＋ mt 1（24px）が Paper の余白に足される。ここでは Paper の余白だけ
  * - 変更のページの「送信」「保存」の上は実物では mt 5（40px）。Stack の gap は xl（32px）
  */
 
@@ -166,52 +167,55 @@ const AccountPage = ({ leaveDialogOpen = false }: { leaveDialogOpen?: boolean })
         </Typography>
         {/* AccountPaper */}
         <Card padding={{ xxs: 'xl', m: 'xxl' }}>
-          {/* 段の下（区切り線の上）は xl、区切り線の下は l */}
-          <Stack gap="l">
-            <Stack gap="xl">
-              <AccountRow title="アカウントID">
-                <Typography size="s" component="div">
-                  {account.id}
-                </Typography>
-              </AccountRow>
-              <Divider />
-            </Stack>
-            <Stack gap="xl">
-              <AccountRow
-                title="メールアドレス"
-                action={
-                  <Button appearance="outlined" onPress={() => navigate('account-update-email')}>
-                    変更
-                  </Button>
-                }
-              >
-                <Typography size="s" component="div">
-                  {account.email}
-                </Typography>
-              </AccountRow>
-              <Divider />
-            </Stack>
-            <Stack gap="xl">
-              <ExternalIdentitiesSection />
-              <Divider />
-            </Stack>
-            <Stack gap="xl">
-              <AccountRow
-                title="メール受信設定"
-                action={
-                  <Button appearance="outlined" onPress={() => navigate('account-newsletter')}>
-                    変更
-                  </Button>
-                }
-              >
-                <Typography size="s" fontWeight="bold" component="h3">
-                  ニュースレター
-                </Typography>
-                <Typography size="s" component="div">
-                  {account.newsletter ? '受信する' : '受信しない'}
-                </Typography>
-              </AccountRow>
-              <Divider />
+          {/* 最後の「アカウント削除」の段だけ、実物は区切り線の下に mt 3 が足されて 48px */}
+          <Stack gap="xxl">
+            {/* 段の下（区切り線の上）は xl、区切り線の下は l */}
+            <Stack gap="l">
+              <Stack gap="xl">
+                <AccountRow title="アカウントID">
+                  <Typography size="s" component="div">
+                    {account.id}
+                  </Typography>
+                </AccountRow>
+                <Divider />
+              </Stack>
+              <Stack gap="xl">
+                <AccountRow
+                  title="メールアドレス"
+                  action={
+                    <Button appearance="outlined" onPress={() => navigate('account-update-email')}>
+                      変更
+                    </Button>
+                  }
+                >
+                  <Typography size="s" component="div">
+                    {account.email}
+                  </Typography>
+                </AccountRow>
+                <Divider />
+              </Stack>
+              <Stack gap="xl">
+                <ExternalIdentitiesSection />
+                <Divider />
+              </Stack>
+              <Stack gap="xl">
+                <AccountRow
+                  title="メール受信設定"
+                  action={
+                    <Button appearance="outlined" onPress={() => navigate('account-newsletter')}>
+                      変更
+                    </Button>
+                  }
+                >
+                  <Typography size="s" fontWeight="bold" component="h3">
+                    ニュースレター
+                  </Typography>
+                  <Typography size="s" component="div">
+                    {account.newsletter ? '受信する' : '受信しない'}
+                  </Typography>
+                </AccountRow>
+                <Divider />
+              </Stack>
             </Stack>
             <AccountRow
               title="アカウント削除"
@@ -315,34 +319,46 @@ const UpdateNewsletterPage = () => (
   </GamersPageContainer>
 )
 
-/** account/_components/AccountLeaveDialog。入力が一致するまで削除を押せない */
-const AccountLeaveDialog = ({ onClose }: { onClose: () => void }) => (
-  <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
-    <DialogHeader>
-      <DialogTitle>アカウント削除</DialogTitle>
-    </DialogHeader>
-    <Stack gap="l">
-      <DialogDescription>
-        誤操作を防止するためご利用のメールアドレスをご入力ください
-      </DialogDescription>
-      <TextField
-        label="ご利用のメールアドレス"
-        placeholder="mail@pepabo.com"
-        type="email"
-        width="full"
-      />
-    </Stack>
-    <DialogFooter>
-      <Button appearance="transparent" onPress={onClose}>
-        閉じる
-      </Button>
-      {/* 削除に成功すると /login?leave_account=success へ移る */}
-      <Button appearance="outlined" color="negative" isDisabled>
-        削除
-      </Button>
-    </DialogFooter>
-  </Dialog>
-)
+/** account/_components/AccountLeaveDialog。ご利用のメールアドレスと一致するまで削除を押せない */
+const AccountLeaveDialog = ({ onClose }: { onClose: () => void }) => {
+  const navigate = useGamersNavigate()
+  const [email, setEmail] = useState('')
+  return (
+    <Dialog isOpen onOpenChange={(open) => !open && onClose()}>
+      <DialogHeader>
+        <DialogTitle>アカウント削除</DialogTitle>
+      </DialogHeader>
+      {/* 実物の DialogContentText は variant='s'（14px）・mb 3。DialogDescription は m（16px）なので Typography で出す */}
+      <Stack gap="l">
+        <Typography size="s" component="div">
+          誤操作を防止するためご利用のメールアドレスをご入力ください
+        </Typography>
+        <TextField
+          label="ご利用のメールアドレス"
+          placeholder="mail@pepabo.com"
+          type="email"
+          width="full"
+          value={email}
+          onChange={setEmail}
+        />
+      </Stack>
+      <DialogFooter>
+        <Button appearance="transparent" onPress={onClose}>
+          閉じる
+        </Button>
+        {/* 削除に成功すると /login?leave_account=success へ移る */}
+        <Button
+          appearance="outlined"
+          color="negative"
+          isDisabled={email !== account.email}
+          onPress={() => navigate('login')}
+        >
+          削除
+        </Button>
+      </DialogFooter>
+    </Dialog>
+  )
+}
 
 // ─── ストーリー ───
 

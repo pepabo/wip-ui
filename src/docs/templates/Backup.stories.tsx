@@ -133,7 +133,7 @@ const PaperTitle = ({ children, action }: { children: ReactNode; action: ReactNo
     alignItems="flex-start"
     justifyContent="space-between"
   >
-    <Typography size="xxl" fontWeight="bold" component="h2">
+    <Typography size="xxl" fontWeight="bold" component="div">
       {children}
     </Typography>
     {action}
@@ -173,10 +173,13 @@ const BackupListTable = ({
     <>
       <Table aria-label="バックアップ">
         <TableHeader>
-          <Column isRowHeader>名前</Column>
-          <Column>サイズ</Column>
-          <Column>作成日時</Column>
-          {isServerBackup ? null : <Column>ゲーム</Column>}
+          {/* DataGrid の列は、操作の列のほかは並べ替えられる */}
+          <Column isRowHeader allowsSorting>
+            名前
+          </Column>
+          <Column allowsSorting>サイズ</Column>
+          <Column allowsSorting>作成日時</Column>
+          {isServerBackup ? null : <Column allowsSorting>ゲーム</Column>}
           <Column aria-label="操作"> </Column>
         </TableHeader>
         {/* DataGrid の noRowsLabel と同じく、0 件でも見出しは残す */}

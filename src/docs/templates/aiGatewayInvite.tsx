@@ -107,38 +107,42 @@ export const InviteDialog = ({
         <DialogHeader>
           <DialogTitle>メンバーを招待する</DialogTitle>
         </DialogHeader>
+        {/* 説明とタブの間は 12px（Tabs の marginTop） */}
         <Stack gap="s">
           <DialogDescription>メールで招待するか、招待URLを発行して共有します。</DialogDescription>
-          <Tabs
-            selectedKey={mode}
-            onSelectionChange={(key) => setMode(String(key) === 'url' ? 'url' : 'email')}
-          >
-            <TabList aria-label="招待方法">
-              <Tab id="email">メールで招待</Tab>
-              <Tab id="url">URLで招待</Tab>
-            </TabList>
-          </Tabs>
-          {mode === 'email' ? (
-            <Stack gap="s">
-              {/* 招待できるロールが 2 つ以上あるときだけ出る。既定はメンバー */}
-              <Select label="ロール" width="full" defaultSelectedKey="member">
-                <SelectItem id="owner">オーナー</SelectItem>
-                <SelectItem id="member">メンバー</SelectItem>
-              </Select>
-              <TextField
-                label="招待メールの宛先"
-                placeholder="member@example.com"
-                type="email"
-                width="full"
-                value={email}
-                onChange={setEmail}
-              />
-            </Stack>
-          ) : (
-            <Typography size="s" color="medium_emphasis">
-              招待URLを発行して、参加してほしい方へ共有します。URLを知っている人がメンバーとして参加できます。
-            </Typography>
-          )}
+          {/* タブとパネルの間は 24px（shared/ui/TabPanel の padding-top） */}
+          <Stack gap="l">
+            <Tabs
+              selectedKey={mode}
+              onSelectionChange={(key) => setMode(String(key) === 'url' ? 'url' : 'email')}
+            >
+              <TabList aria-label="招待方法">
+                <Tab id="email">メールで招待</Tab>
+                <Tab id="url">URLで招待</Tab>
+              </TabList>
+            </Tabs>
+            {mode === 'email' ? (
+              <Stack gap="s">
+                {/* 招待できるロールが 2 つ以上あるときだけ出る。既定はメンバー */}
+                <Select label="ロール" width="full" defaultSelectedKey="member">
+                  <SelectItem id="owner">オーナー</SelectItem>
+                  <SelectItem id="member">メンバー</SelectItem>
+                </Select>
+                <TextField
+                  label="招待メールの宛先"
+                  placeholder="member@example.com"
+                  type="email"
+                  width="full"
+                  value={email}
+                  onChange={setEmail}
+                />
+              </Stack>
+            ) : (
+              <Typography size="s" color="medium_emphasis">
+                招待URLを発行して、参加してほしい方へ共有します。URLを知っている人がメンバーとして参加できます。
+              </Typography>
+            )}
+          </Stack>
         </Stack>
         <DialogFooter>
           <Button appearance="transparent" color="neutral" onPress={close}>
