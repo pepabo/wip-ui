@@ -62,6 +62,7 @@
 |---|---|---|
 | AppBar | ページ上部でタイトルと主要なアクションを表示するナビゲーションバー | `dist/js/AppBar/AppBar.md` |
 | Breadcrumbs | ページ階層のパンくずリスト | `dist/js/Breadcrumbs/Breadcrumbs.md` |
+| Link | 文章の中や、値として置くテキストのリンク | `dist/js/Link/Link.md` |
 | Tabs | 同じ階層のコンテンツの表示を切り替えるタブ | `dist/js/Tab/Tabs.md` |
 
 ## FlavorProvider
