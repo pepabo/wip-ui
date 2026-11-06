@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useState } from 'react'
 
 import { AppBar, AppBarLeading, AppBarTrailing } from '../../AppBar'
 import { Button, LinkButton } from '../../Button'
@@ -11,7 +11,6 @@ import { Paper } from '../../Paper'
 import { SideNavigation, SideNavigationItem } from '../../SideNavigation'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
-import { Tab, TabList, Tabs } from '../../Tab'
 import { Typography } from '../../Typography'
 import deployNowLogo from './assets/deploy-now/logo.svg'
 import { TextLink } from './parts'
@@ -672,25 +671,130 @@ export const ProjectDetailLayout = ({
         </Callout>
       )}
 
-      {/* 実物は role="tablist"（aria-label="プロジェクト詳細タブ"・gap-6）の中に next/link を並べ、
-          タブごとに URL（?tab=）を変える。下線は border-b の全幅の線と、選んだタブの 2px の線（neutral-900）。
-          GAP: Tabs に size が無く、文字が m（16px）・全タブ太字になる。実物は text-sm（14px）で、
-          選んだタブだけ太字（neutral-900）、ほかは通常の太さの neutral-500。選んだタブの線は interactive の色 */}
-      <Tabs
+      {/* 実物は role="tablist" の中に next/link を並べ、タブごとに URL（?tab=）を変える */}
+      <DeployNowTabs
+        aria-label="プロジェクト詳細タブ"
+        items={TABS.map((tab) => ({ key: tab.key, label: tab.label, href: `?tab=${tab.key}` }))}
         selectedKey={activeTab}
-        onSelectionChange={(key) => navigate(tabDestination[key as ProjectTab])}
-      >
-        <TabList aria-label="プロジェクト詳細タブ">
-          {TABS.map((tab) => (
-            <Tab key={tab.key} id={tab.key}>
-              {tab.label}
-            </Tab>
-          ))}
-        </TabList>
-      </Tabs>
+        onSelect={(key) => navigate(tabDestination[key as ProjectTab])}
+      />
 
       {children}
     </Stack>
+  )
+}
+
+// ─── タブ（features/Project の詳細タブ・ProjectEnvVars・VerificationMethodTabs）───
+
+/*
+ * 実物は wip-ui の Tabs を使わず、role="tablist" の中に素の button（詳細タブは next/link）を並べて
+ * Tailwind で手組みしている。見た目を実物に合わせるため、ここも素の要素と style で写す。
+ * [注意] wip-ui の Tabs に置き換えない。実物が Tabs を使っていないので、置き換えると実物と違う見た目になる
+ *
+ * - 枠: border-b border-[#e0e0e0] の中に flex gap-6（24px）
+ * - タブ: px-1 pb-2 text-sm（14px / 20px）border-b-2
+ *   - 選択中: font-bold・neutral-900・下線 neutral-900
+ *   - それ以外: 通常の太さ・neutral-500。ホバーで neutral-900（disabled のときは変えない）
+ * - 実物と同じく、矢印キーでの移動は無く、各タブが Tab キーで順に止まる
+ */
+export type DeployNowTabItem = {
+  key: string
+  label: string
+  /** 文言の右に添える補足（VerificationMethodTabs の「新しく公開するドメイン」など） */
+  description?: string
+  /** 指定すると a として描画する（詳細タブの next/link） */
+  href?: string
+}
+
+// Tailwind v4 の neutral-500 / neutral-900
+const TAB_COLOR_ACTIVE = '#171717'
+const TAB_COLOR_INACTIVE = '#737373'
+
+export const DeployNowTabs = ({
+  'aria-label': ariaLabel,
+  items,
+  selectedKey,
+  onSelect,
+  isDisabled = false,
+}: {
+  'aria-label': string
+  items: ReadonlyArray<DeployNowTabItem>
+  selectedKey: string
+  onSelect: (key: string) => void
+  isDisabled?: boolean
+}) => {
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null)
+  return (
+    <div style={{ borderBottom: '1px solid #e0e0e0' }}>
+      <div role="tablist" aria-label={ariaLabel} style={{ display: 'flex', gap: 24 }}>
+        {items.map((item) => {
+          const active = item.key === selectedKey
+          const hovered = !isDisabled && hoveredKey === item.key
+          const style = {
+            display: 'block',
+            margin: 0,
+            padding: '0 4px 8px',
+            border: 'none',
+            borderBottom: `2px solid ${active ? TAB_COLOR_ACTIVE : 'transparent'}`,
+            background: 'none',
+            font: 'inherit',
+            fontSize: 14,
+            lineHeight: '20px',
+            fontWeight: active ? 700 : 400,
+            color: active || hovered ? TAB_COLOR_ACTIVE : TAB_COLOR_INACTIVE,
+            textDecoration: 'none',
+            cursor: isDisabled ? 'default' : 'pointer',
+          } as const
+          const content = (
+            <>
+              {item.label}
+              {item.description && (
+                // 実物は Typography（span・xs）に ml-1.5 font-normal を付けている
+                <span style={{ marginLeft: 6, fontWeight: 400 }}>
+                  <Typography
+                    component="span"
+                    size="xs"
+                    color={active ? 'medium_emphasis' : 'low_emphasis'}
+                  >
+                    {item.description}
+                  </Typography>
+                </span>
+              )}
+            </>
+          )
+          const common = {
+            role: 'tab',
+            'aria-selected': active,
+            style,
+            onMouseEnter: () => setHoveredKey(item.key),
+            onMouseLeave: () => setHoveredKey(null),
+          } as const
+          return item.href ? (
+            <a
+              key={item.key}
+              {...common}
+              href={item.href}
+              onClick={(event) => {
+                event.preventDefault()
+                onSelect(item.key)
+              }}
+            >
+              {content}
+            </a>
+          ) : (
+            <button
+              key={item.key}
+              {...common}
+              type="button"
+              disabled={isDisabled}
+              onClick={() => onSelect(item.key)}
+            >
+              {content}
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 

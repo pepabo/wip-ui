@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { TabPanel } from 'react-aria-components'
 
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
@@ -12,10 +11,9 @@ import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
-import { Tab, TabList, Tabs } from '../../Tab'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { DeployNowShell, ProjectDetailLayout } from './deployNowShell'
+import { DeployNowShell, DeployNowTabs, ProjectDetailLayout } from './deployNowShell'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { StickerColor } from '../../Sticker'
@@ -581,44 +579,16 @@ const DomainCard = ({
                 />
               )}
               {showMethodTabs ? (
-                // 実物は wip-ui の Tabs を使わず role="tablist" の native button で手組みしている
-                // （TabPanel が export されていない・下線色と文字サイズを変えられないため）。
-                // GAP-NEW: Tab の文字の大きさを変えられない。実物のタブ名は text-sm、選択中は font-bold
-                // text-neutral-900、それ以外は text-neutral-500。タブどうしの間は gap-6
-                <Tabs
-                  selectedKey={domain.verificationMethod}
-                  onSelectionChange={(k) => onChangeMethod(k as VerificationMethod)}
-                >
-                  {/* タブと本文の間は実物の mb-3（12px） */}
-                  <Stack gap="s">
-                    <TabList aria-label="検証方法">
-                      {METHOD_TABS.map((t) => (
-                        <Tab key={t.key} id={t.key}>
-                          <Stack flexDirection="row" gap="xs" alignItems="center">
-                            <span>{t.label}</span>
-                            <Typography
-                              component="span"
-                              size="xs"
-                              color={
-                                t.key === domain.verificationMethod
-                                  ? 'medium_emphasis'
-                                  : 'low_emphasis'
-                              }
-                            >
-                              {t.description}
-                            </Typography>
-                          </Stack>
-                        </Tab>
-                      ))}
-                    </TabList>
-                    {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
-                    {METHOD_TABS.map((t) => (
-                      <TabPanel key={t.key} id={t.key}>
-                        {progress}
-                      </TabPanel>
-                    ))}
-                  </Stack>
-                </Tabs>
+                // 実物の VerificationMethodTabs。タブと本文の間は実物の mb-3（12px）
+                <Stack gap="s">
+                  <DeployNowTabs
+                    aria-label="検証方法"
+                    items={METHOD_TABS}
+                    selectedKey={domain.verificationMethod}
+                    onSelect={(k) => onChangeMethod(k as VerificationMethod)}
+                  />
+                  {progress}
+                </Stack>
               ) : (
                 progress
               )}

@@ -1,5 +1,4 @@
 import { Fragment, useState } from 'react'
-import { TabPanel } from 'react-aria-components'
 
 import { Button, LinkButton } from '../../Button'
 import { Callout } from '../../Callout'
@@ -15,10 +14,14 @@ import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
 import { Switch } from '../../Switch'
-import { Tab, TabList, Tabs } from '../../Tab'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
-import { DeployNowShell, ProjectDetailLayout, useDeployNowNavigate } from './deployNowShell'
+import {
+  DeployNowShell,
+  DeployNowTabs,
+  ProjectDetailLayout,
+  useDeployNowNavigate,
+} from './deployNowShell'
 import { TextLink } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
@@ -1382,84 +1385,74 @@ const EnvVarsScreen = ({
   return (
     <DeployNowShell>
       <ProjectDetailLayout activeTab="env">
-        {/* 実物は wip-ui の Tabs を使わず、role="tablist" の native button（text-sm、選択中は font-bold +
-            下線 2px、タブの間は gap-6）を手組みしている */}
-        <Tabs selectedKey={target} onSelectionChange={(k) => setTarget(k as EnvVar['target'])}>
-          {/* タブと本文の間は実物の 16px */}
-          <Stack gap="m">
-            <TabList aria-label="環境変数の環境">
-              <Tab id="production">本番</Tab>
-              <Tab id="preview">プレビュー</Tab>
-            </TabList>
-            {/* GAP-10: TabPanel は react-aria-components から直接 import している */}
-            {(['production', 'preview'] as const).map((t) => (
-              <TabPanel key={t} id={t}>
-                <Stack gap="m">
-                  <Stack alignItems="flex-end">
-                    <Button
-                      appearance="flat"
-                      color="neutral"
-                      size="s"
-                      onPress={() => setDialog({ kind: 'form', editing: null })}
-                    >
-                      + 環境変数を追加
-                    </Button>
-                  </Stack>
-                  {!hasAiGatewayKey && (
-                    <Callout
-                      color="neutral"
-                      appearance="flat"
-                      action={
-                        // 実物は素の a で Button を包み、中の span（inline-flex items-center gap-1）に文言とアイコンを並べている
-                        <a
-                          href="https://lolipop.jp/ai/gateway/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Button appearance="outlined" size="s">
-                            <Stack flexDirection="row" gap="xxs" alignItems="center">
-                              APIキーを発行
-                              <Icon name="launch" size="s" />
-                            </Stack>
-                          </Button>
-                        </a>
-                      }
-                    >
-                      <Stack gap="xxs">
-                        <Typography component="div" size="s" fontWeight="bold">
-                          アプリにAIを組み込むには
-                        </Typography>
-                        <Typography component="div" size="xs" color="medium_emphasis">
-                          ロリポップ！AIゲートウェイは、Claude・GPT・Gemini
-                          などのAIモデルをひとつのAPIキーで呼び出せるサービスです。
-                          <br />
-                          {/* GAP-20: 等幅のトークンが無い。実物と同じく素の code（ブラウザ既定の等幅）にし、
+        {/* タブと本文の間は実物の 16px */}
+        <Stack gap="m">
+          <DeployNowTabs
+            aria-label="環境変数の環境"
+            items={[
+              { key: 'production', label: '本番' },
+              { key: 'preview', label: 'プレビュー' },
+            ]}
+            selectedKey={target}
+            onSelect={(k) => setTarget(k as EnvVar['target'])}
+          />
+          <Stack alignItems="flex-end">
+            <Button
+              appearance="flat"
+              color="neutral"
+              size="s"
+              onPress={() => setDialog({ kind: 'form', editing: null })}
+            >
+              + 環境変数を追加
+            </Button>
+          </Stack>
+          {!hasAiGatewayKey && (
+            <Callout
+              color="neutral"
+              appearance="flat"
+              action={
+                // 実物は素の a で Button を包み、中の span（inline-flex items-center gap-1）に文言とアイコンを並べている
+                <a href="https://lolipop.jp/ai/gateway/" target="_blank" rel="noopener noreferrer">
+                  <Button appearance="outlined" size="s">
+                    <Stack flexDirection="row" gap="xxs" alignItems="center">
+                      APIキーを発行
+                      <Icon name="launch" size="s" />
+                    </Stack>
+                  </Button>
+                </a>
+              }
+            >
+              <Stack gap="xxs">
+                <Typography component="div" size="s" fontWeight="bold">
+                  アプリにAIを組み込むには
+                </Typography>
+                <Typography component="div" size="xs" color="medium_emphasis">
+                  ロリポップ！AIゲートウェイは、Claude・GPT・Gemini
+                  などのAIモデルをひとつのAPIキーで呼び出せるサービスです。
+                  <br />
+                  {/* GAP-20: 等幅のトークンが無い。実物と同じく素の code（ブラウザ既定の等幅）にし、
                               枠（rounded border px-1）は素の要素で付ける。枠の色は Typography の色を継ぐ。
                               実物の枠は #e0e0e0・地は白（地の色は出せない） */}
-                          発行したキーを{' '}
-                          <Typography component="span" size="xs" color="low_emphasis">
-                            <code style={codeChipStyle}>
-                              <Typography component="span" size="xs" color="medium_emphasis">
-                                {AI_GATEWAY_ENV_KEY}
-                              </Typography>
-                            </code>
-                          </Typography>{' '}
-                          として追加すると、アプリから使えます。
-                        </Typography>
-                      </Stack>
-                    </Callout>
-                  )}
-                  <EnvVarList
-                    vars={vars.filter((e) => e.target === t)}
-                    target={t}
-                    onEdit={(env) => setDialog({ kind: 'form', editing: env })}
-                    onDelete={(env) => setDialog({ kind: 'delete', env })}
-                  />
-                </Stack>
-              </TabPanel>
-            ))}
-          </Stack>
-        </Tabs>
+                  発行したキーを{' '}
+                  <Typography component="span" size="xs" color="low_emphasis">
+                    <code style={codeChipStyle}>
+                      <Typography component="span" size="xs" color="medium_emphasis">
+                        {AI_GATEWAY_ENV_KEY}
+                      </Typography>
+                    </code>
+                  </Typography>{' '}
+                  として追加すると、アプリから使えます。
+                </Typography>
+              </Stack>
+            </Callout>
+          )}
+          <EnvVarList
+            vars={vars.filter((e) => e.target === target)}
+            target={target}
+            onEdit={(env) => setDialog({ kind: 'form', editing: env })}
+            onDelete={(env) => setDialog({ kind: 'delete', env })}
+          />
+        </Stack>
       </ProjectDetailLayout>
 
       {dialog.kind === 'form' && (
