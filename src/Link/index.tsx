@@ -13,29 +13,29 @@ type LinkColor = 'neutral' | 'white'
 interface Props extends AriaLinkProps {
   /** リンクの色。white は暗い背景の上に置くときに使う */
   color?: LinkColor
-  /** 外部のサイトを新しいタブで開く。末尾にアイコンを付ける */
-  external?: boolean
+  /** target が _blank のときに付く、新しいタブで開くことを示すアイコンを消す */
+  hideNewTabIcon?: boolean
 }
 
 export const Link: FC<Props> = ({
   children,
   color = 'neutral',
-  external = false,
+  hideNewTabIcon = false,
   className,
   ...props
 }) => {
   const classNames = clsx('wip-link', `-color-${color}`, className)
-  const externalProps = external ? { target: '_blank', rel: 'noopener noreferrer' } : {}
+  const opensInNewTab = props.target === '_blank'
 
   return (
-    <AriaLink className={classNames} {...externalProps} {...props}>
+    <AriaLink className={classNames} {...props}>
       {(renderProps) => {
         const content = typeof children === 'function' ? children(renderProps) : children
-        if (!external) return content
+        if (!opensInNewTab) return content
         return (
           <>
             {content}
-            <Icon name="launch" className="_external-icon" aria-hidden="true" />
+            {!hideNewTabIcon && <Icon name="launch" className="_new-tab-icon" aria-hidden="true" />}
             <span className="_visually-hidden">（新しいタブで開く）</span>
           </>
         )

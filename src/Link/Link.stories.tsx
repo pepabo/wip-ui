@@ -15,7 +15,11 @@ const meta = {
       control: 'select',
       options: ['neutral', 'white'],
     },
-    external: {
+    target: {
+      control: 'select',
+      options: ['_self', '_blank'],
+    },
+    hideNewTabIcon: {
       control: 'boolean',
     },
     isDisabled: {
@@ -34,7 +38,6 @@ type Story = StoryObj<typeof meta>
 export const Playground: Story = {
   args: {
     color: 'neutral',
-    external: false,
     isDisabled: false,
   },
 }
@@ -55,12 +58,26 @@ export const Color: Story = {
   ),
 }
 
-export const External: Story = {
-  name: 'external',
+export const Target: Story = {
+  name: 'target',
   render: () => (
     <Stack flexDirection="row" gap="m">
-      <Link href="#">false</Link>
-      <Link href="https://example.com" external>
+      <Link href="#">_self</Link>
+      <Link href="https://example.com" target="_blank">
+        _blank
+      </Link>
+    </Stack>
+  ),
+}
+
+export const HideNewTabIcon: Story = {
+  name: 'hideNewTabIcon',
+  render: () => (
+    <Stack flexDirection="row" gap="m">
+      <Link href="https://example.com" target="_blank">
+        false
+      </Link>
+      <Link href="https://example.com" target="_blank" hideNewTabIcon>
         true
       </Link>
     </Stack>
