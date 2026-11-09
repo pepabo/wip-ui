@@ -25,12 +25,21 @@
     opacity: 0.5;
   }
 
+  // hover では、文字の色を一段薄くする
   &.-color-neutral {
     color: adapter.get-text-color(light, high_emphasis);
+
+    &[data-hovered] {
+      color: adapter.get-text-color(light, mid_emphasis);
+    }
   }
 
   &.-color-white {
     color: adapter.get-text-color(dark, high_emphasis);
+
+    &[data-hovered] {
+      color: adapter.get-text-color(dark, mid_emphasis);
+    }
   }
 
   ._new-tab-icon {
