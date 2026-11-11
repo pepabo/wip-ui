@@ -1,0 +1,71 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+// Sticker とは見た目のベースを共有しない。面を持たず、表や一覧に繰り返し並んでも重くならない形にする
+.wip-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: adapter.get-gap-size(xxs);
+  position: relative;
+  width: fit-content;
+  vertical-align: middle;
+
+  // 丸の色は、Switch や Meter の塗りと同じく 600 にする
+  // neutral は、フォームの枠線と同じ 500 にする（白に対して 3:1 以上）
+  --wip-status-indicator-color: #{adapter.get-semantic-color(neutral, 500)};
+
+  @each $color in (informative, positive, negative, notice) {
+    &.-color-#{$color} {
+      --wip-status-indicator-color: #{adapter.get-semantic-color($color, 600)};
+    }
+  }
+
+  ._dot {
+    flex-shrink: 0;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 50%;
+    background-color: var(--wip-status-indicator-color);
+  }
+
+  // 処理中の印。Loader の s（1rem）は文字の横には大きいため、ここで小さく描く
+  ._spinner {
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 0.125rem solid var(--wip-status-indicator-color);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: wip-status-indicator-spin 1s linear infinite;
+
+    // 動きを減らす設定のときは、回さずに欠けた円のまま止める
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  // 状態の色は丸にだけ付け、文字は状態によらず中くらいの強さにする
+  ._label {
+    @include adapter.text($level: s, $density: dense);
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+
+  // 丸だけのときの文言。画面には出さず、読み上げだけに使う。外に置くので、丸の横に余白も付かない
+  ._hidden-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+@keyframes wip-status-indicator-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
