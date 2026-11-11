@@ -78,7 +78,8 @@ node_modules/wip-ui/
 ├── guidelines/rules.md    常に守るルール
 ├── guidelines/selector.md 用途からコンポーネントを選ぶ一覧
 ├── dist/js/<Folder>/<Name>.md  各コンポーネントの使い方と props
-└── lint/biome/no-raw-element.grit
+├── lint/biome/no-raw-element.grit  lint（Biome）
+└── lint/eslint/                   lint（ESLint）
 ```
 
 ### ガイドラインを読ませる
@@ -118,9 +119,11 @@ alwaysApply: false
 UI を実装・修正・レビューするときは、最初に node_modules/wip-ui/guidelines/README.md を読み、書かれている順番に従う。
 ```
 
-### lint を入れる（Biome）
+### lint を入れる
 
-wip-ui のコンポーネントで置き換えられる素の HTML 要素を検出します。`biome.json` に追加します。
+wip-ui のコンポーネントで置き換えられる素の HTML 要素を検出します。Biome と ESLint のどちらからでも使え、判定とメッセージは同じです。
+
+**Biome**（`biome.json`）
 
 ```json
 {
@@ -128,7 +131,18 @@ wip-ui のコンポーネントで置き換えられる素の HTML 要素を検�
 }
 ```
 
-検出する要素と、例外として素の要素を使う場合の書き方は、[lint/README.md](./lint/README.md) を参照してください。
+**ESLint**（9 以上、flat config の `eslint.config.js`）
+
+```js
+import wipUi from 'wip-ui/lint/eslint'
+
+export default [
+  // ...
+  wipUi.configs.recommended,
+]
+```
+
+検出する要素、対象のファイルを絞る書き方、例外として素の要素を使う場合の書き方は、[lint/README.md](./lint/README.md) を参照してください。
 
 ## Contributing
 

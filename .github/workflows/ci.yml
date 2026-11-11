@@ -28,9 +28,13 @@ jobs:
       - name: Lint (typecheck + biome)
         run: npm run lint
 
+      - name: Test
+        run: npm test -- --run
+
       - name: Build
         run: npm run build
 
-      # selector.md は各コンポーネントの md から生成する。md を直して生成し忘れた場合に検知する
-      - name: Check guidelines are up to date
-        run: git diff --exit-code -- guidelines/selector.md
+      # selector.md は各コンポーネントの md から、lint の grit と README の表は lint/rules.json から生成する。
+      # 元を直して生成し忘れた場合に検知する
+      - name: Check generated files are up to date
+        run: git diff --exit-code -- guidelines/selector.md lint/biome/no-raw-element.grit lint/README.md
