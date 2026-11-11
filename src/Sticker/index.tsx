@@ -6,7 +6,7 @@ import type { FC, HTMLAttributes, ReactNode } from 'react'
 import './_index.scss'
 
 type StickerColor = 'neutral' | 'informative' | 'positive' | 'negative' | 'notice' | 'attention'
-type StickerSize = 's' | 'm'
+type StickerSize = 's' | 'm' | 'l'
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
   /** ステッカーのセマンティックカラー */
