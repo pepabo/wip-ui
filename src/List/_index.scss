@@ -1,0 +1,87 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  // 区切り線は、Paper の枠線（high_emphasis）より薄くして、枠の中で目立ちすぎないようにする
+  &.-divider > .wip-list-item + .wip-list-item {
+    border-top: adapter.get-border-size(m) solid adapter.get-border-color(light, low_emphasis);
+  }
+}
+
+.wip-list-item {
+  ._row {
+    @include adapter.text($level: s, $density: normal);
+    display: flex;
+    align-items: center;
+    gap: adapter.get-gap-size(s);
+    width: 100%;
+    box-sizing: border-box;
+    padding: adapter.get-spacing-size(s) adapter.get-spacing-size(m);
+    color: adapter.get-text-color(light, high_emphasis);
+  }
+
+  // 押せる行。リンクとボタンのどちらでも同じ見た目にするため、ボタンの既定の見た目を消す
+  ._row.-interactive {
+    margin: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    outline: none;
+
+    &[data-hovered] {
+      background-color: adapter.get-background-overlay-color(light, $state: hover);
+    }
+
+    &[data-pressed] {
+      background-color: adapter.get-background-overlay-color(light, $state: selected);
+    }
+
+    &[data-focus-visible] {
+      outline: 0.125rem solid adapter.get-semantic-color(informative, 500);
+      outline-offset: -0.125rem;
+    }
+
+    // 使えない状態は、Checkbox や Select と同じ inhouse の透明度で示す
+    &[data-disabled] {
+      opacity: adapter.get-disabled-surface-opacity();
+      cursor: default;
+    }
+  }
+
+  // 先頭の Icon は m（1.5rem）で描く。Menu や SideNavigation の項目より行が大きいため、アイコンも一回り大きくする
+  ._leading {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  ._body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  ._description {
+    @include adapter.text($level: xs, $density: dense);
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+
+  ._trailing {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: adapter.get-gap-size(xs);
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+}
