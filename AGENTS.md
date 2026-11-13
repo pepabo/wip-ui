@@ -9,6 +9,10 @@
 - `npm run typecheck` — TypeScript 型チェック
 - `npm run lint:staged <files>` — Biome による lint（ステージング済みファイル対象）
 
+## コンポーネントを作るとき
+
+コンポーネントを作る・直すときは、先に `guidelines/brand.md`（ブランドらしさの判断の基準）を読む。
+
 ## ドキュメントのルール
 
 ### 書く場所
