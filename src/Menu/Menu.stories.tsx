@@ -100,17 +100,14 @@ export const ItemColor: Story = {
   ),
 }
 
-export const ItemLeadingAndTrailing: Story = {
-  name: 'MenuItem leading / trailing',
+export const ItemLeading: Story = {
+  name: 'MenuItem leading',
   render: () => (
     <MenuTrigger>
       <Button appearance="outlined">ファイルの操作</Button>
       <Menu>
         <MenuItem leading={<Icon name="pencil" />}>編集</MenuItem>
         <MenuItem leading={<Icon name="copy" />}>複製</MenuItem>
-        <MenuItem leading={<Icon name="share" />} trailing={<Icon name="launch" />}>
-          別のタブで開く
-        </MenuItem>
       </Menu>
     </MenuTrigger>
   ),
