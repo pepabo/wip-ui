@@ -1,4 +1,8 @@
 @use '@pepabo-inhouse/adapter' as adapter;
+@use '@pepabo-inhouse/adapter/mixins' as adapter-mixins;
+
+$breakpoints: (xs, s, m, l, xl, xxl);
+$padding-sizes: (xxs, xs, s, m, l, xl, xxl);
 
 .wip-paper {
   border-radius: adapter.get-radius-size(l);
@@ -38,5 +42,29 @@
 
   &--square {
     border-radius: 0;
+  }
+
+  &.-padding-none {
+    padding: 0;
+  }
+
+  @each $size in $padding-sizes {
+    &.-padding-#{$size} {
+      padding: adapter.get-spacing-size($size);
+    }
+  }
+
+  @each $bp in $breakpoints {
+    @include adapter-mixins.mq-boundary(up, $bp) {
+      &.-padding-#{$bp}-none {
+        padding: 0;
+      }
+
+      @each $size in $padding-sizes {
+        &.-padding-#{$bp}-#{$size} {
+          padding: adapter.get-spacing-size($size);
+        }
+      }
+    }
   }
 }
