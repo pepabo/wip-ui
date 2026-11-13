@@ -44,8 +44,9 @@
     outline-offset: -0.125rem;
   }
 
+  // 使えない項目は、Checkbox や Switch と同じく opacity で表す
   &[data-disabled] {
-    color: adapter.get-text-color(light, low_emphasis);
+    opacity: adapter.get-disabled-surface-opacity();
     cursor: default;
   }
 
@@ -71,10 +72,6 @@
   ._description {
     @include adapter.text($level: xs, $density: dense);
     color: adapter.get-text-color(light, mid_emphasis);
-  }
-
-  &[data-disabled] ._description {
-    color: adapter.get-text-color(light, low_emphasis);
   }
 }
 
