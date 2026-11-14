@@ -1,0 +1,59 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-link {
+  // 文字の大きさと太さは、置いた場所から引き継ぐ
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  border-radius: adapter.get-radius-size(m);
+  cursor: pointer;
+
+  // 下線は文字の色を薄めて引き、hover で文字と同じ濃さにする
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+
+  &[data-hovered] {
+    text-decoration-color: currentColor;
+  }
+
+  &[data-focus-visible] {
+    outline: 0.25rem solid color-mix(in lch, adapter.get-semantic-color(neutral, 500) 15%, transparent);
+    outline-offset: 0;
+  }
+
+  &[data-disabled] {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  // hover では、文字の色を一段薄くする
+  &.-color-neutral {
+    color: adapter.get-text-color(light, high_emphasis);
+
+    &[data-hovered] {
+      color: adapter.get-text-color(light, mid_emphasis);
+    }
+  }
+
+  &.-color-white {
+    color: adapter.get-text-color(dark, high_emphasis);
+
+    &[data-hovered] {
+      color: adapter.get-text-color(dark, mid_emphasis);
+    }
+  }
+
+  ._new-tab-icon {
+    margin-left: 0.125em;
+    font-size: 1em;
+    vertical-align: -0.125em;
+  }
+
+  ._visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
