@@ -39,6 +39,7 @@
 | Divider | セクションや要素のまとまりを線で区切る | `dist/js/Divider/Divider.md` |
 | Sticker | ステータスやカテゴリを小さなラベルで示す | `dist/js/Sticker/Sticker.md` |
 | Table | 構造化されたデータを行と列で一覧表示する | `dist/js/Table/Table.md` |
+| Tooltip | ボタンなどに、マウスを乗せたときやフォーカスしたときに補足を表示するポップアップ | `dist/js/Tooltip/Tooltip.md` |
 | Typography | 見出しや本文などのテキストを表示する | `dist/js/Typography/Typography.md` |
 
 ## Surfaces

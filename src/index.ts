@@ -46,5 +46,7 @@ export * from './Table'
 export * from './TextField'
 // Token
 export * from './Token/Color'
+// Tooltip
+export * from './Tooltip'
 // Typography
 export * from './Typography'
