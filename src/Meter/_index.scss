@@ -1,0 +1,94 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-meter {
+  display: flex;
+  flex-direction: column;
+  gap: adapter.get-gap-size(xs);
+  width: 100%;
+
+  ._header {
+    display: flex;
+    align-items: baseline;
+    gap: adapter.get-gap-size(s);
+  }
+
+  ._label {
+    @include adapter.text($level: s, $density: dense);
+    color: adapter.get-text-color(light, high_emphasis);
+    font-weight: bold;
+  }
+
+  // 数値の桁がそろうよう、等幅の数字にする
+  ._value {
+    @include adapter.text($level: s, $density: dense);
+    display: inline-flex;
+    align-items: center;
+    gap: adapter.get-gap-size(xxs);
+    margin-left: auto;
+    color: adapter.get-text-color(light, high_emphasis);
+    font-variant-numeric: tabular-nums;
+  }
+
+  ._icon {
+    font-size: 1rem;
+  }
+
+  ._track {
+    height: 0.75rem;
+    border-radius: adapter.get-radius-size(m);
+    background-color: adapter.get-semantic-color(neutral, 100);
+    overflow: hidden;
+  }
+
+  // 通常の値は操作の色（informative）と混ざらないよう、灰色で塗る。Switch の neutral の塗りと同じ 800
+  ._fill {
+    height: 100%;
+    border-radius: inherit;
+    background-color: adapter.get-semantic-color(neutral, 800);
+    transition: width 200ms ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  ._description {
+    @include adapter.text($level: xs, $density: normal);
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+
+  &.-size-s ._track {
+    height: 0.375rem;
+  }
+
+  // 状態の色（バーの塗りと同じ色）は、バーとアイコンにだけ使う。ラベル・値・補足は、状態によらず通常の文字色にする
+  // トラックは、Callout の背景と同じ薄い色（100）にする
+  &.-color-notice {
+    ._track {
+      background-color: adapter.get-semantic-color(notice, 100);
+    }
+
+    // 塗りは、通常の灰色や危険の赤と見分けられるよう、黄色らしい 600 にする
+    ._fill {
+      background-color: adapter.get-semantic-color(notice, 600);
+    }
+
+    ._icon {
+      color: adapter.get-semantic-color(notice, 600);
+    }
+  }
+
+  &.-color-negative {
+    ._track {
+      background-color: adapter.get-semantic-color(negative, 100);
+    }
+
+    ._fill {
+      background-color: adapter.get-semantic-color(negative, 600);
+    }
+
+    ._icon {
+      color: adapter.get-semantic-color(negative, 600);
+    }
+  }
+}

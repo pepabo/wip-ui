@@ -24,6 +24,8 @@ export * from './Grid'
 export * from './Icon'
 // Loader
 export * from './Loader'
+// Meter
+export * from './Meter'
 // Paper
 export * from './Paper'
 // Radio
