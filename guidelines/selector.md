@@ -45,6 +45,7 @@
 
 | コンポーネント | 用途 | 使い方 |
 |---|---|---|
+| Accordion | トリガーを押して、その下の内容を開閉するセクションの並び | `dist/js/Accordion/Accordion.md` |
 | Paper | 影やボーダーでコンテンツの面を浮かせる | `dist/js/Paper/Paper.md` |
 
 ## Feedback

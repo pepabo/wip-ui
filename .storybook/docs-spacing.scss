@@ -1,16 +1,17 @@
 // Storybook docs ページの見出し周りの余白を調整
+// 見本（.docs-story）の中の要素には効かせない。部品の見出しや表の見た目が変わってしまうため
 .sbdocs-wrapper {
   .sbdocs-content {
-    h1 {
+    h1:not(.docs-story *) {
       margin-bottom: 24px;
     }
 
-    h2 {
+    h2:not(.docs-story *) {
       margin-top: 48px;
       margin-bottom: 16px;
     }
 
-    h3 {
+    h3:not(.docs-story *) {
       margin-top: 32px;
       margin-bottom: 12px;
     }
@@ -22,12 +23,12 @@
     }
 
     // テーブルの上に余白
-    table {
+    table:not(.docs-story *) {
       margin-top: 8px;
     }
 
     // コードブロックの前後
-    pre {
+    pre:not(.docs-story *) {
       margin-top: 8px;
     }
   }
