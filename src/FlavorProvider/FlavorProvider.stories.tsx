@@ -30,9 +30,9 @@ const Sample = () => (
     </Stack>
     <TextField label="メールアドレス" placeholder="email@example.com" />
     <Stack flexDirection="row" gap="s">
-      <Sticker color="positive">稼働中</Sticker>
-      <Sticker color="notice">要確認</Sticker>
-      <Sticker color="negative">停止中</Sticker>
+      <Sticker color="attention">おすすめ</Sticker>
+      <Sticker color="notice">提供終了予定</Sticker>
+      <Sticker color="negative">提供終了</Sticker>
     </Stack>
   </Stack>
 )

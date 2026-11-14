@@ -17,7 +17,7 @@ const meta = {
     },
     size: {
       control: 'select',
-      options: ['s', 'm'],
+      options: ['s', 'm', 'l'],
     },
   },
   args: {
@@ -55,6 +55,7 @@ export const Size: Story = {
     <Stack flexDirection="row" gap="s" alignItems="center">
       <Sticker size="s">s</Sticker>
       <Sticker size="m">m</Sticker>
+      <Sticker size="l">l</Sticker>
     </Stack>
   ),
 }

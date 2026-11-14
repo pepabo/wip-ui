@@ -37,7 +37,7 @@
 |---|---|---|
 | Avatar | ユーザーのプロフィール画像を円形で表示する | `dist/js/Avatar/Avatar.md` |
 | Divider | セクションや要素のまとまりを線で区切る | `dist/js/Divider/Divider.md` |
-| Sticker | ステータスやカテゴリを小さなラベルで示す | `dist/js/Sticker/Sticker.md` |
+| Sticker | おすすめ・ベータなど、対象の属性や分類を小さなラベルで示す | `dist/js/Sticker/Sticker.md` |
 | Table | 構造化されたデータを行と列で一覧表示する | `dist/js/Table/Table.md` |
 | Typography | 見出しや本文などのテキストを表示する | `dist/js/Typography/Typography.md` |
 
