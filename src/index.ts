@@ -22,6 +22,8 @@ export * from './FlavorProvider'
 export * from './Grid'
 // Icon
 export * from './Icon'
+// List
+export * from './List'
 // Loader
 export * from './Loader'
 // Paper
