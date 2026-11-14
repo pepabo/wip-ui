@@ -34,6 +34,8 @@ export * from './Select'
 export * from './SnackBar'
 // Stack
 export * from './Stack'
+// StatusIndicator
+export * from './StatusIndicator'
 // Sticker
 export * from './Sticker'
 // Switch
