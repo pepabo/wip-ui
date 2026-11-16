@@ -1,0 +1,133 @@
+name: PR Preview
+
+on:
+  pull_request:
+    types: [labeled, unlabeled, synchronize, closed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  PR: ${{ github.event.pull_request.number }}
+  GIT_AUTHOR_NAME: github-actions[bot]
+  GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  GIT_COMMITTER_NAME: github-actions[bot]
+  GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+
+jobs:
+  changed:
+    # フォークの PR のトークンは gh-pages に書き込めないため、対象にしない
+    if: >-
+      github.event.action != 'closed' &&
+      contains(github.event.pull_request.labels.*.name, 'preview') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    outputs:
+      dirs: ${{ steps.dirs.outputs.dirs }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # src/index.ts や guidelines のような共有ファイルだけの変更では、プレビューを作らない
+      - name: Find changed story folders
+        id: dirs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          dirs=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --jq '.[].filename' \
+            | sed -nE 's|^src/([A-Za-z0-9_-]+)/.*|\1|p' | sort -u \
+            | while read -r dir; do
+                if [ -n "$(find "src/$dir" \( -name '*.stories.*' -o -name '*.mdx' \) -print -quit 2>/dev/null)" ]; then
+                  echo "$dir"
+                fi
+              done | paste -sd, -)
+          echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
+          echo "Preview target: ${dirs:-none (no story folder changed)}" >> "$GITHUB_STEP_SUMMARY"
+
+  # PR のコードを動かすジョブには、書き込みの権限を渡さない
+  build:
+    needs: changed
+    if: needs.changed.outputs.dirs != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build Storybook
+        run: npm run build-storybook
+        env:
+          STORY_DIRS: ${{ needs.changed.outputs.dirs }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storybook-preview
+          path: storybook-static
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # push に失敗し続けた場合に、下の until で止まらなくなるのを防ぐ
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - run: rm -rf "pr-preview/$PR"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: storybook-preview
+          path: pr-preview/${{ github.event.pull_request.number }}
+
+      - name: Push to gh-pages
+        run: |
+          git add -A "pr-preview/$PR"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -qm "Deploy preview for #$PR"
+          # 本番やほかの PR も同じブランチに push するため、先を越されたら取り込んでやり直す
+          until git push -q origin gh-pages; do git pull -q --rebase origin gh-pages; done
+
+      - name: Comment preview URL
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-preview/${{ github.event.pull_request.number }}/
+        run: |
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --edit-last --create-if-none \
+            --body "Storybook preview: $URL"
+
+  remove:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      ((github.event.action == 'unlabeled' && github.event.label.name == 'preview') ||
+      (github.event.action == 'closed' && contains(github.event.pull_request.labels.*.name, 'preview')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Remove from gh-pages
+        run: |
+          git rm -rq --ignore-unmatch "pr-preview/$PR"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -qm "Remove preview for #$PR"
+          until git push -q origin gh-pages; do git pull -q --rebase origin gh-pages; done

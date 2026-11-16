@@ -7,12 +7,16 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
+
+env:
+  GIT_AUTHOR_NAME: github-actions[bot]
+  GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  GIT_COMMITTER_NAME: github-actions[bot]
+  GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
 
 jobs:
   build:
@@ -30,18 +34,37 @@ jobs:
       - name: Build Storybook
         run: npm run build-storybook
 
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: storybook
           path: storybook-static
+          retention-days: 1
 
   deploy:
     needs: build
+    # workflow_dispatch は main 以外のブランチからも起動できる
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    # push に失敗し続けた場合に、下の until で止まらなくなるのを防ぐ
+    timeout-minutes: 5
+    permissions:
+      contents: write
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Remove the previous build
+        run: find . -mindepth 1 -maxdepth 1 ! -name .git ! -name .nojekyll ! -name pr-preview -exec rm -rf {} +
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: storybook
+
+      - name: Push to gh-pages
+        run: |
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -qm "Deploy $GITHUB_SHA"
+          # PR のプレビューも同じブランチに push するため、先を越されたら取り込んでやり直す
+          until git push -q origin gh-pages; do git pull -q --rebase origin gh-pages; done

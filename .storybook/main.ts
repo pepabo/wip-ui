@@ -1,7 +1,13 @@
 import type { StorybookConfig } from '@storybook/react-vite'
 
+const storyDirs = process.env.STORY_DIRS?.split(',').filter(Boolean)
+const storyRoots = storyDirs?.length ? storyDirs.map((dir) => `../src/${dir}`) : ['../src']
+
 const config: StorybookConfig = {
-  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+  stories: storyRoots.flatMap((root) => [
+    `${root}/**/*.mdx`,
+    `${root}/**/*.stories.@(js|jsx|mjs|ts|tsx)`,
+  ]),
   addons: ['@storybook/addon-links', '@storybook/addon-docs', '@storybook/addon-mcp'],
 
   framework: {
