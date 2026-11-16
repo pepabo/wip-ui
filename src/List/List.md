@@ -11,14 +11,14 @@ category: Data Display
 ## 基本の使い方
 
 ```tsx
-import { Icon, List, ListItem, Paper } from 'wip-ui'
+import { List, ListItem, Paper } from 'wip-ui'
 
-<Paper outlined style={{ overflow: 'hidden' }}>
+<Paper outlined>
   <List>
-    <ListItem href="/settings/profile" trailing={<Icon name="chevron_right" size="s" aria-hidden="true" />}>
+    <ListItem href="/settings/profile">
       プロフィール
     </ListItem>
-    <ListItem href="/settings/notifications" trailing={<Icon name="chevron_right" size="s" aria-hidden="true" />}>
+    <ListItem href="/settings/notifications">
       通知
     </ListItem>
   </List>
@@ -56,7 +56,7 @@ import { Icon, List, ListItem, Paper } from 'wip-ui'
 ### 押せる行
 
 - [should] 行を押すと別の画面に移るなら href、その場で何かが起きる（ダイアログが開く、選ばれる）なら onPress にする
-- [should] 詳細の画面へ進む行は、右端に Icon name="chevron_right" を aria-hidden="true" で置き、押せることが分かるようにする。aria-hidden を付けないと、アイコンの名前が行の名前に混ざって読まれる
+- href を指定した行は、右端に、詳細へ進めることを示す矢印が付く
 - [must] 押せる行の右端に、ボタンやリンクなどの押せる要素を置かない。行全体がリンクやボタンになるため、押せるものの中に押せるものが入る。操作のボタンが要る行は、押せない行にして、ボタンだけを押せるようにする
 - [avoid] 押せる行と押せない行を、同じ List に混ぜない
 
@@ -78,5 +78,4 @@ import { Icon, List, ListItem, Paper } from 'wip-ui'
 ## 実装
 
 - List は `<ul role="list">`、ListItem は `<li>` として描画される。押せる行は、`<li>` の中に `<a>` か `<button>` が入る
-- [should] Paper の中に入れるときは、Paper に `overflow: hidden` を指定する。押せる行の hover の塗りが、Paper の角からはみ出るため
 - [should] Next.js などのルーターでページを移動する場合は、react-aria-components の RouterProvider でアプリを囲む

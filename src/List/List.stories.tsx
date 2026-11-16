@@ -11,7 +11,7 @@ import type { ReactNode } from 'react'
 
 // md の「面との関係」のとおり、Paper outlined の中に余白なしで入れる
 const Card = ({ children }: { children: ReactNode }) => (
-  <Paper outlined style={{ width: 400, overflow: 'hidden' }}>
+  <Paper outlined style={{ width: 400 }}>
     {children}
   </Paper>
 )
@@ -39,15 +39,9 @@ export const Playground: Story = {
   render: (args) => (
     <Card>
       <List {...args}>
-        <ListItem href="#" trailing={<Icon name="chevron_right" size="s" aria-hidden="true" />}>
-          プロフィール
-        </ListItem>
-        <ListItem href="#" trailing={<Icon name="chevron_right" size="s" aria-hidden="true" />}>
-          通知
-        </ListItem>
-        <ListItem href="#" trailing={<Icon name="chevron_right" size="s" aria-hidden="true" />}>
-          セキュリティ
-        </ListItem>
+        <ListItem href="#">プロフィール</ListItem>
+        <ListItem href="#">通知</ListItem>
+        <ListItem href="#">セキュリティ</ListItem>
       </List>
     </Card>
   ),
@@ -147,14 +141,8 @@ export const Href: Story = {
   render: () => (
     <Card>
       <List>
-        <ListItem href="#" trailing={<Icon name="chevron_right" size="s" aria-hidden="true" />}>
-          プロフィール
-        </ListItem>
-        <ListItem
-          href="#"
-          isDisabled
-          trailing={<Icon name="chevron_right" size="s" aria-hidden="true" />}
-        >
+        <ListItem href="#">プロフィール</ListItem>
+        <ListItem href="#" isDisabled>
           isDisabled
         </ListItem>
       </List>

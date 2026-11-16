@@ -3,6 +3,9 @@
 .wip-list {
   margin: 0;
   padding: 0;
+  // Paper の中に置いたとき、押せる行の hover の塗りが Paper の角からはみ出ないようにする
+  border-radius: inherit;
+  overflow: hidden;
   list-style: none;
 
   // 区切り線は、Paper の枠線（high_emphasis）より薄くして、枠の中で目立ちすぎないようにする
@@ -82,6 +85,11 @@
     flex-shrink: 0;
     align-items: center;
     gap: adapter.get-gap-size(xs);
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+
+  ._chevron {
+    flex-shrink: 0;
     color: adapter.get-text-color(light, mid_emphasis);
   }
 }

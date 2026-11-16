@@ -8,6 +8,8 @@ import {
 } from 'react-aria-components'
 import clsx from 'clsx'
 
+import { Icon } from '../Icon'
+
 import type { ReactNode } from 'react'
 
 export interface ListItemProps extends Omit<AriaLinkProps, 'children' | 'className' | 'style'> {
@@ -53,6 +55,8 @@ export const ListItem = ({
         {description && <span className="_description">{description}</span>}
       </span>
       {trailing && <span className="_trailing">{trailing}</span>}
+      {/* 詳細へ進める行には、押せることが分かるように矢印を付ける */}
+      {href && <Icon name="chevron_right" size="s" className="_chevron" aria-hidden="true" />}
     </>
   )
 
