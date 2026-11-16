@@ -1,0 +1,1 @@
+function e(n,s,i){if(s==null)return[];if(typeof s!="object")return[`-${n}-${s}`];const o={...s};return o.xxs===void 0&&i!==void 0&&(o.xxs=i),Object.entries(o).filter(([,t])=>t!==void 0).map(([t,r])=>t==="xxs"?`-${n}-${r}`:`-${n}-${t}-${r}`)}export{e as r};

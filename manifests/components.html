@@ -1,0 +1,5613 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Components Manifest</title>
+  <style>
+      :root {
+          --bg: #0b0c10;
+          --panel: #121318;
+          --muted: #9aa0a6;
+          --fg: #e8eaed;
+          --ok: #22c55e;
+          --info: #1e88e5;
+          --err: #c62828;
+          --ok-bg: #0c1a13;
+          --info-bg: #0c1624;
+          --err-bg: #1a0e0e;
+          --chip: #1f2330;
+          --border: #2b2f3a;
+          --link: #8ab4f8;
+          --active-ring: 1px; /* 1px active ring for pills and toggles */
+      }
+
+      * {
+          box-sizing: border-box;
+      }
+
+      html,
+      body {
+          margin: 0;
+          background: var(--bg);
+          color: var(--fg);
+          font: 14px/1.5 system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Ubuntu,
+          Cantarell,
+          'Helvetica Neue',
+          Arial,
+          'Noto Sans';
+      }
+
+      .wrap {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 16px 20px;
+      }
+
+      header {
+          position: sticky;
+          top: 0;
+          backdrop-filter: blur(6px);
+          background: color-mix(in srgb, var(--bg) 84%, transparent);
+          border-bottom: 1px solid var(--border);
+          z-index: 10;
+      }
+
+      h1 {
+          font-size: 20px;
+          margin: 0 0 6px;
+      }
+
+      .summary {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+          align-items: center;
+      }
+
+      /* Top filter pills */
+      .filter-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          border: 1px solid var(--border);
+          border-radius: 999px;
+          background: var(--panel);
+          text-decoration: none;
+          cursor: pointer;
+          user-select: none;
+          color: var(--fg);
+      }
+
+      .filter-pill.ok {
+          color: #b9f6ca;
+          border-color: color-mix(in srgb, var(--ok) 55%, var(--border));
+          background: color-mix(in srgb, var(--ok) 18%, #000);
+      }
+
+      .filter-pill.info {
+          color: #b3d9ff;
+          border-color: color-mix(in srgb, var(--info) 55%, var(--border));
+          background: var(--info-bg);
+      }
+
+      .filter-pill.err {
+          color: #ff9aa0;
+          border-color: color-mix(in srgb, var(--err) 55%, var(--border));
+          background: var(--err-bg);
+      }
+
+      .filter-pill.all {
+          color: #d7dbe0;
+          border-color: var(--border);
+          background: var(--panel);
+      }
+
+      .filter-pill[aria-disabled='true'] {
+          cursor: default;
+          text-decoration: none;
+      }
+
+      .filter-pill:focus,
+      .filter-pill:active {
+          outline: none;
+          box-shadow: none;
+      }
+
+      /* Selected top pill ring via :target */
+      #filter-all:target ~ header .filter-pill[data-k='all'],
+      #filter-errors:target ~ header .filter-pill[data-k='errors'],
+      #filter-infos:target ~ header .filter-pill[data-k='infos'],
+      #filter-story-errors:target ~ header .filter-pill[data-k='story-errors'],
+      #filter-doc-errors:target ~ header .filter-pill[data-k='docs'],
+      #filter-docs:target ~ header .filter-pill[data-k='docs'] {
+          box-shadow: 0 0 0 var(--active-ring) currentColor;
+          border-color: currentColor;
+      }
+
+      /* Hidden targets for filtering */
+      #filter-all,
+      #filter-errors,
+      #filter-infos,
+      #filter-story-errors,
+      #filter-doc-errors,
+      #filter-docs {
+          display: none;
+      }
+
+      main {
+          padding: 36px 0 40px;
+      }
+
+      .grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 18px;
+      }
+
+      /* one card per row */
+
+      .card {
+          border: 1px solid var(--border);
+          background: var(--panel);
+          border-radius: 14px;
+          padding: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+      }
+
+      .head {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+      }
+
+      .title {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+      }
+
+      .title h2 {
+          font-size: 16px;
+          margin: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+      }
+
+      .meta {
+          font-size: 12px;
+          color: var(--muted);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+      }
+
+      .kv {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+      }
+
+      .chip {
+          font-size: 12px;
+          padding: 4px 8px;
+          border-radius: 999px;
+          background: var(--chip);
+          border: 1px solid var(--border);
+      }
+
+      .hint {
+          color: var(--muted);
+          font-size: 12px;
+      }
+
+      .badges {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+      }
+
+      /* Per-card badges: labels become toggles when clickable */
+      .badge {
+          font-size: 12px;
+          padding: 3px 8px;
+          border-radius: 999px;
+          border: 1px solid var(--border);
+          background: var(--chip);
+          color: #d7dbe0;
+      }
+
+      .badge.ok {
+          color: #b9f6ca;
+          border-color: color-mix(in srgb, var(--ok) 55%, var(--border));
+      }
+
+      .badge.info {
+          color: #b3d9ff;
+          border-color: color-mix(in srgb, var(--info) 55%, var(--border));
+      }
+
+      .badge.err {
+          color: #ff9aa0;
+          border-color: color-mix(in srgb, var(--err) 55%, var(--border));
+      }
+
+      .as-toggle {
+          cursor: pointer;
+      }
+
+      /* 1px ring on active toggle */
+      .tg-err:checked + label.as-toggle,
+      .tg-info:checked + label.as-toggle,
+      .tg-stories:checked + label.as-toggle,
+      .tg-docs:checked + label.as-toggle,
+      .tg-content:checked + label.as-toggle,
+      .tg-props:checked + label.as-toggle {
+          box-shadow: 0 0 0 var(--active-ring) currentColor;
+          border-color: currentColor;
+      }
+
+      /* Panels: hidden by default, shown when respective toggle checked */
+      .panels {
+          display: grid;
+          gap: 10px;
+      }
+
+      .panel {
+          display: none;
+      }
+
+      .tg-err:checked ~ .panels .panel-err {
+          display: grid;
+      }
+
+      .tg-info:checked ~ .panels .panel-info {
+          display: grid;
+          gap: 8px;
+      }
+
+      .tg-stories:checked ~ .panels .panel-stories {
+          display: grid;
+          gap: 8px;
+      }
+
+      .tg-docs:checked ~ .panels .panel-docs {
+          display: grid;
+          gap: 8px;
+      }
+
+      .tg-content:checked ~ .panels .panel-content {
+          display: grid;
+          gap: 8px;
+      }
+
+      .tg-props:checked ~ .panels .panel-props {
+          display: grid;
+      }
+
+      /* Colored notes for prop type error + info */
+      .note {
+          padding: 12px;
+          border: 1px solid var(--border);
+          border-radius: 10px;
+      }
+
+      .note.err {
+          border-color: color-mix(in srgb, var(--err) 55%, var(--border));
+          background: var(--err-bg);
+          color: #ffd1d4;
+      }
+
+      .note.info {
+          border-color: color-mix(in srgb, var(--info) 55%, var(--border));
+          background: var(--info-bg);
+          color: #d6e8ff;
+      }
+
+      .note.ok {
+          border-color: color-mix(in srgb, var(--ok) 55%, var(--border));
+          background: var(--ok-bg);
+          color: var(--fg);
+      }
+
+      .note-title {
+          font-weight: 600;
+          margin-bottom: 6px;
+      }
+
+      .note-body {
+          white-space: normal;
+      }
+
+      /* Story error cards */
+      .ex {
+          padding: 10px;
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          background: #0f131b;
+      }
+
+      .ex.err {
+          border-color: color-mix(in srgb, var(--err) 55%, var(--border));
+      }
+
+      .row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+      }
+
+      .status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          display: inline-block;
+      }
+
+      .dot-ok {
+          background: var(--ok);
+      }
+
+      .dot-err {
+          background: var(--err);
+      }
+
+      .ex-name {
+          font-weight: 600;
+      }
+
+      /* Error groups (visible in errors filter) */
+      .error-groups {
+          display: none;
+          margin-bottom: 16px;
+      }
+
+      .group {
+          border: 1px solid var(--border);
+          background: var(--panel);
+          border-radius: 14px;
+          overflow: hidden;
+      }
+
+      .group + .group {
+          margin-top: 12px;
+      }
+
+      .group-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 14px;
+          cursor: pointer;
+          border-bottom: 1px solid var(--border);
+      }
+
+      .group-header:hover {
+          background: #141722;
+      }
+
+      .group-title {
+          font-weight: 600;
+          flex: 1;
+      }
+
+      .group-count {
+          font-size: 12px;
+          color: var(--muted);
+      }
+
+      .group-cards {
+          display: none;
+          padding: 12px;
+      }
+
+      .group .card {
+          margin: 12px 0;
+      }
+
+      .group .card:first-child {
+          margin-top: 0;
+      }
+
+      .group .card:last-child {
+          margin-bottom: 0;
+      }
+
+      /* caret rotation */
+      .group-tg:checked + label .caret {
+          transform: rotate(90deg);
+      }
+
+      .caret {
+          transition: transform 0.15s ease;
+      }
+
+      /* toggle body */
+      .group-tg:checked ~ .group-cards {
+          display: block;
+      }
+
+      /* CSS-only filtering of cards via top pills */
+      #filter-errors:target ~ main .card:not(.has-error):not(.has-story-error) {
+          display: none;
+      }
+
+      #filter-infos:target ~ main .card:not(.has-info) {
+          display: none;
+      }
+
+      #filter-story-errors:target ~ main .card:not(.has-story-error) {
+          display: none;
+      }
+
+      #filter-doc-errors:target ~ main .card:not(.has-doc-error) {
+          display: none;
+      }
+
+      #filter-docs:target ~ main .card:has(> .tg-docs),
+      #filter-docs:target ~ main .card.is-doc {
+          display: block;
+      }
+
+      #filter-docs:target ~ main .card:not(:has(> .tg-docs)):not(.is-doc) {
+          display: none;
+      }
+
+      #filter-all:target ~ main .card {
+          display: block;
+      }
+
+      /* In errors view, hide standalone component-error cards in the regular grid (they will appear in groups) */
+      #filter-errors:target ~ main .grid .card.has-error {
+          display: none;
+      }
+
+      /* Show grouped section only in errors view */
+      #filter-errors:target ~ main .error-groups {
+          display: block;
+      }
+
+      /* Section titles */
+      .section-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--muted);
+          margin: 24px 0 12px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid var(--border);
+      }
+      .section-title:first-child {
+          margin-top: 0;
+      }
+
+      /* When a toggle is checked, show the corresponding panel */
+      .card > .tg-err:checked ~ .panels .panel-err {
+          display: grid;
+      }
+      
+      .card > .tg-info:checked ~ .panels .panel-info {
+          display: grid;
+      }
+      
+      .card > .tg-stories:checked ~ .panels .panel-stories {
+          display: grid;
+      }
+
+      .card > .tg-docs:checked ~ .panels .panel-docs {
+          display: grid;
+      }
+
+      .card > .tg-content:checked ~ .panels .panel-content {
+          display: grid;
+      }
+
+      /* Add vertical spacing around panels only when any panel is visible */
+      .card > .tg-err:checked ~ .panels,
+      .card > .tg-info:checked ~ .panels,
+      .card > .tg-stories:checked ~ .panels,
+      .card > .tg-docs:checked ~ .panels,
+      .card > .tg-content:checked ~ .panels,
+      .card > .tg-props:checked ~ .panels {
+          margin: 10px 0;
+      }
+
+      /* Optional: a subtle 1px ring on the active badge, using :has() if available */
+      @supports selector(.card:has(.tg-err:checked)) {
+          .card:has(.tg-err:checked) label[for$='-err'],
+          .card:has(.tg-info:checked) label[for$='-info'],
+          .card:has(.tg-stories:checked) label[for$='-stories'],
+          .card:has(.tg-docs:checked) label[for$='-docs'],
+          .card:has(.tg-content:checked) label[for$='-content'],
+          .card:has(.tg-props:checked) label[for$='-props'] {
+              box-shadow: 0 0 0 1px currentColor;
+              border-color: currentColor;
+          }
+      }
+
+      /* Wrap long lines in code blocks at ~120 characters */
+      pre, code {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+      pre {
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+          overflow-x: auto; /* fallback for extremely long tokens */
+          margin: 8px 0 0;
+      }
+      pre > code {
+          display: block;
+          white-space: inherit;
+          overflow-wrap: inherit;
+          word-break: inherit;
+          inline-size: min(100%, 120ch);
+      }
+
+      /* MDX content container for docs */
+      .mdx-content {
+          background: #0f131b;
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          padding: 12px;
+          max-height: 400px;
+          overflow-y: auto;
+          margin-top: 8px;
+      }
+  </style>
+</head>
+<body>
+<!-- Hidden targets for the top-level filters -->
+<span id="filter-all"></span>
+<span id="filter-errors"></span>
+<span id="filter-infos"></span>
+<span id="filter-story-errors"></span>
+<span id="filter-doc-errors"></span>
+<span id="filter-docs"></span>
+<header>
+  <div class="wrap">
+    <h1>Manifest Debugger</h1>
+    <div class="summary"><a class="filter-pill all" data-k="all" href="#filter-all">All</a><a class="filter-pill err" data-k="errors" href="#filter-errors">1/24 prop type error</a><a class="filter-pill info" data-k="infos" href="#filter-infos">24/24 infos</a><span class="filter-pill ok" aria-disabled="true">112 stories ok</span><a class="filter-pill ok" data-k="docs" href="#filter-docs">9 docs ok</a></div>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <div class="note ok" style="margin-bottom: 16px;">
+              Using <code>react-docgen-typescript</code>. Generation took <strong>1.6s</strong>.
+            </div>
+    <h2 class="section-title">Components</h2>
+    <div class="grid" role="list">
+      
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="AppBar">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> AppBar</h2>
+      <div class="badges">
+        <label for="c-0-components-navigation-appbar-props" class="badge ok as-toggle">2 prop types</label>
+        <label for="c-0-components-navigation-appbar-info" class="badge info as-toggle">1 info</label>
+        <label for="c-0-components-navigation-appbar-stories" class="badge ok as-toggle">3 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/AppBar/AppBar.stories.tsx">components-navigation-appbar · ./src/AppBar/AppBar.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-0-components-navigation-appbar-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-0-components-navigation-appbar-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-0-components-navigation-appbar-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">2 prop types</span>
+            </div>
+            <pre><code>Component: src/AppBar/index.ts::AppBar</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * AppBarの外観スタイル
+ */
+appearance?: &quot;transparent&quot; | &quot;white&quot; | &quot;filled&quot; = white
+
+/**
+ * AppBarの配置方法
+ */
+position?: &quot;fixed&quot; | &quot;relative&quot; = relative</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { AppBar, AppBarLeading, AppBarTrailing, Button, Icon, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;AppBar appearance=&quot;white&quot; position=&quot;relative&quot;&gt;{children}&lt;/AppBar&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">appearance</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Appearance = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;AppBar appearance=&quot;filled&quot;&gt;{children}&lt;/AppBar&gt;
+    &lt;AppBar appearance=&quot;white&quot;&gt;{children}&lt;/AppBar&gt;
+    &lt;div style={{ background: &#39;#333&#39; }}&gt;
+      &lt;AppBar appearance=&quot;transparent&quot;&gt;{children}&lt;/AppBar&gt;
+    &lt;/div&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">position</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Position = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;div style={{ transform: &#39;translateZ(0)&#39;, height: &#39;160px&#39;, overflow: &#39;auto&#39; }}&gt;
+      &lt;AppBar position=&quot;relative&quot;&gt;{children}&lt;/AppBar&gt;
+      &lt;div style={{ height: &#39;400px&#39;, padding: &#39;16px&#39; }}&gt;relative&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div style={{ transform: &#39;translateZ(0)&#39;, height: &#39;160px&#39;, overflow: &#39;auto&#39; }}&gt;
+      &lt;AppBar position=&quot;fixed&quot;&gt;{children}&lt;/AppBar&gt;
+      &lt;div style={{ height: &#39;400px&#39;, padding: &#39;16px&#39;, paddingTop: &#39;80px&#39; }}&gt;fixed&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  has-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Avatar">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-err"></span> Avatar</h2>
+      <div class="badges">
+        <label for="c-1-components-data-display-avatar-err" class="badge err as-toggle">prop type error</label>
+        <label for="c-1-components-data-display-avatar-info" class="badge info as-toggle">1 info</label>
+        <label for="c-1-components-data-display-avatar-stories" class="badge ok as-toggle">2 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Avatar/Avatar.stories.tsx">components-data-display-avatar · ./src/Avatar/Avatar.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  <input id="c-1-components-data-display-avatar-err" class="tg tg-err" type="checkbox" hidden />
+  <input id="c-1-components-data-display-avatar-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-1-components-data-display-avatar-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  
+
+  <div class="panels">
+    
+        <div class="panel panel-err">
+          
+    <div class="note err">
+      <div class="note-title">Prop type error</div>
+      <div class="note-body"><pre><code>We could not detect the component from your story file. Specify meta.component.
+   9 | }
+  10 |
+&gt; 11 | const meta: Meta&lt;AvatarStoryProps&gt; = {
+     | ^
+  12 |   title: &#39;Components/Data Display/Avatar&#39;,
+  13 |   parameters: {
+  14 |     layout: &#39;centered&#39;,
+
+./src/Avatar/Avatar.stories.tsx:
+import { Stack } from &#39;../Stack&#39;
+import { Avatar } from &#39;./index&#39;
+
+import type { Meta, StoryObj } from &#39;@storybook/react-vite&#39;
+import type { ComponentPropsWithoutRef } from &#39;react&#39;
+
+type AvatarStoryProps = ComponentPropsWithoutRef&lt;&#39;img&#39;&gt; &amp; {
+  size?: &#39;xs&#39; | &#39;s&#39; | &#39;m&#39; | &#39;l&#39;
+}
+
+const meta: Meta&lt;AvatarStoryProps&gt; = {
+  title: &#39;Components/Data Display/Avatar&#39;,
+  parameters: {
+    layout: &#39;centered&#39;,
+  },
+  tags: [&#39;autodocs&#39;],
+  argTypes: {
+    size: {
+      control: &#39;select&#39;,
+      options: [&#39;xs&#39;, &#39;s&#39;, &#39;m&#39;, &#39;l&#39;],
+    },
+  },
+}
+
+export default meta
+type Story = StoryObj&lt;AvatarStoryProps&gt;
+
+export const Playground: Story = {
+  render: (args) =&gt; &lt;Avatar {...args} /&gt;,
+  args: {
+    src: &#39;https://i.pravatar.cc/150?img=1&#39;,
+    alt: &#39;山田 花子&#39;,
+    size: &#39;m&#39;,
+  },
+}
+
+export const Size: Story = {
+  name: &#39;size&#39;,
+  render: () =&gt; (
+    &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+      &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=2&quot; alt=&quot;鈴木 太郎&quot; size=&quot;xs&quot; /&gt;
+      &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=3&quot; alt=&quot;佐藤 次郎&quot; size=&quot;s&quot; /&gt;
+      &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=1&quot; alt=&quot;山田 花子&quot; size=&quot;m&quot; /&gt;
+      &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=4&quot; alt=&quot;田中 由紀&quot; size=&quot;l&quot; /&gt;
+    &lt;/Stack&gt;
+  ),
+}
+</code></pre></div>
+    </div>
+        </div>
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Avatar, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=1&quot; alt=&quot;山田 花子&quot; size=&quot;m&quot; /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Size = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+    &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=2&quot; alt=&quot;鈴木 太郎&quot; size=&quot;xs&quot; /&gt;
+    &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=3&quot; alt=&quot;佐藤 次郎&quot; size=&quot;s&quot; /&gt;
+    &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=1&quot; alt=&quot;山田 花子&quot; size=&quot;m&quot; /&gt;
+    &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=4&quot; alt=&quot;田中 由紀&quot; size=&quot;l&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Breadcrumbs">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Breadcrumbs</h2>
+      <div class="badges">
+        <label for="c-2-components-navigation-breadcrumbs-props" class="badge ok as-toggle">7 prop types</label>
+        <label for="c-2-components-navigation-breadcrumbs-info" class="badge info as-toggle">1 info</label>
+        <label for="c-2-components-navigation-breadcrumbs-stories" class="badge ok as-toggle">1 story</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Breadcrumbs/Breadcrumbs.stories.tsx">components-navigation-breadcrumbs · ./src/Breadcrumbs/Breadcrumbs.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-2-components-navigation-breadcrumbs-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-2-components-navigation-breadcrumbs-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-2-components-navigation-breadcrumbs-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">7 prop types</span>
+            </div>
+            <pre><code>Component: src/Breadcrumbs/index.tsx::Breadcrumbs</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * The children of the component. A function may be provided to alter the children based on component state.
+ */
+children?: ChildrenOrFunction&lt;LinkRenderProps&gt;
+
+/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;LinkRenderProps&gt;
+
+/**
+ * Values that should invalidate the item cache when using dynamic collections.
+ */
+dependencies?: readonly any[]
+
+/**
+ * Whether the breadcrumbs are disabled.
+ */
+isDisabled?: boolean
+
+/**
+ * Handler that is called when a breadcrumb is clicked.
+ */
+onAction?: ((key: Key) =&gt; void)
+
+/**
+ * A slot name for the component. Slots allow the component to receive props from a parent component.
+ * An explicit `null` value indicates that the local props completely override all props received from a parent.
+ */
+slot?: string | null
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;LinkRenderProps&gt;</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Breadcrumb, Breadcrumbs } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;nav aria-label=&quot;パンくずリスト&quot;&gt;
+    &lt;Breadcrumbs isDisabled={false}&gt;
+        &lt;Breadcrumb href=&quot;/&quot;&gt;ホーム&lt;/Breadcrumb&gt;
+        &lt;Breadcrumb href=&quot;/products&quot;&gt;商品一覧&lt;/Breadcrumb&gt;
+        &lt;Breadcrumb&gt;商品詳細&lt;/Breadcrumb&gt;
+    &lt;/Breadcrumbs&gt;
+&lt;/nav&gt;;</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Button">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Button</h2>
+      <div class="badges">
+        <label for="c-3-components-actions-button-props" class="badge ok as-toggle">12 prop types</label>
+        <label for="c-3-components-actions-button-info" class="badge info as-toggle">1 info</label>
+        <label for="c-3-components-actions-button-stories" class="badge ok as-toggle">8 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Button/Button.stories.tsx">components-actions-button · ./src/Button/Button.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-3-components-actions-button-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-3-components-actions-button-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-3-components-actions-button-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">12 prop types</span>
+            </div>
+            <pre><code>Component: src/Button/index.tsx::Button</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * ボタンの外観スタイル
+ */
+appearance?: ButtonAppearance = flat
+
+/**
+ * The children of the component. A function may be provided to alter the children based on component state.
+ */
+children?: ChildrenOrFunction&lt;ButtonRenderProps&gt;
+
+/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;ButtonRenderProps&gt;
+
+/**
+ * ボタンの色テーマ
+ */
+color?: ButtonColor = neutral
+
+/**
+ * アイコンのみで表示する
+ */
+iconOnly?: boolean = false
+
+/**
+ * Whether the button is in a pending state. This disables press and hover events
+ * while retaining focusability, and announces the pending state to screen readers.
+ */
+isPending?: boolean
+
+/**
+ * ボタンの先頭に表示するアイコン
+ */
+leading?: ReactNode
+
+/**
+ * ボタンのサイズ
+ */
+size?: ButtonSize = m
+
+/**
+ * A slot name for the component. Slots allow the component to receive props from a parent component.
+ * An explicit `null` value indicates that the local props completely override all props received from a parent.
+ */
+slot?: string | null
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;ButtonRenderProps&gt;
+
+/**
+ * ボタンの末尾に表示するアイコン
+ */
+trailing?: ReactNode
+
+/**
+ * ボタンの幅
+ */
+width?: ButtonWidth = auto</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Button, Icon, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Button
+    appearance=&quot;flat&quot;
+    color=&quot;neutral&quot;
+    size=&quot;m&quot;
+    width=&quot;auto&quot;
+    isDisabled={false}&gt;Button&lt;/Button&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">appearance</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Appearance = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+    &lt;Button appearance=&quot;flat&quot;&gt;flat&lt;/Button&gt;
+    &lt;Button appearance=&quot;outlined&quot;&gt;outlined&lt;/Button&gt;
+    &lt;Button appearance=&quot;transparent&quot;&gt;transparent&lt;/Button&gt;
+    &lt;div style={{ background: &#39;#333&#39;, padding: &#39;8px&#39; }}&gt;
+      &lt;Button appearance=&quot;white&quot;&gt;white&lt;/Button&gt;
+    &lt;/div&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">color</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Color = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;Button color=&quot;neutral&quot;&gt;neutral&lt;/Button&gt;
+    &lt;Button color=&quot;interactive&quot;&gt;interactive&lt;/Button&gt;
+    &lt;Button color=&quot;negative&quot;&gt;negative&lt;/Button&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Size = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+    &lt;Button size=&quot;s&quot;&gt;s&lt;/Button&gt;
+    &lt;Button size=&quot;m&quot;&gt;m&lt;/Button&gt;
+    &lt;Button size=&quot;l&quot;&gt;l&lt;/Button&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">width</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Width = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Button width=&quot;auto&quot;&gt;auto&lt;/Button&gt;
+    &lt;Button width=&quot;third&quot;&gt;third&lt;/Button&gt;
+    &lt;Button width=&quot;half&quot;&gt;half&lt;/Button&gt;
+    &lt;Button width=&quot;full&quot;&gt;full&lt;/Button&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isDisabled</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsDisabled = () =&gt; &lt;Button isDisabled&gt;Disabled&lt;/Button&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">leading / trailing</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const LeadingAndTrailing = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;Button leading={&lt;Icon name=&quot;download&quot; aria-hidden=&quot;true&quot; /&gt;}&gt;leading&lt;/Button&gt;
+    &lt;Button trailing={&lt;Icon name=&quot;arrow_right&quot; aria-hidden=&quot;true&quot; /&gt;}&gt;trailing&lt;/Button&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">iconOnly</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IconOnly = () =&gt; (
+  &lt;Button iconOnly aria-label=&quot;検索&quot;&gt;
+    &lt;Icon name=&quot;magnifying_glass&quot; aria-hidden=&quot;true&quot; /&gt;
+  &lt;/Button&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Callout">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Callout</h2>
+      <div class="badges">
+        <label for="c-4-components-feedback-callout-props" class="badge ok as-toggle">3 prop types</label>
+        <label for="c-4-components-feedback-callout-info" class="badge info as-toggle">1 info</label>
+        <label for="c-4-components-feedback-callout-stories" class="badge ok as-toggle">4 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Callout/Callout.stories.tsx">components-feedback-callout · ./src/Callout/Callout.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-4-components-feedback-callout-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-4-components-feedback-callout-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-4-components-feedback-callout-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">3 prop types</span>
+            </div>
+            <pre><code>Component: src/Callout/index.tsx::Callout</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * 右側に表示するアクション要素（ボタンやアイコン）
+ */
+action?: ReactNode
+
+/**
+ * コールアウトの外観スタイル
+ */
+appearance?: CalloutAppearance = flat
+
+/**
+ * コールアウトのセマンティックカラー
+ */
+color?: CalloutColor = informative</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Button, Callout, Icon, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Callout color=&quot;informative&quot; appearance=&quot;flat&quot;&gt;メンテナンスのため、10月30日 2:00〜4:00 はサービスを利用できません。&lt;/Callout&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">color</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Color = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Callout color=&quot;informative&quot;&gt;informative&lt;/Callout&gt;
+    &lt;Callout color=&quot;positive&quot;&gt;positive&lt;/Callout&gt;
+    &lt;Callout color=&quot;negative&quot;&gt;negative&lt;/Callout&gt;
+    &lt;Callout color=&quot;notice&quot;&gt;notice&lt;/Callout&gt;
+    &lt;Callout color=&quot;neutral&quot;&gt;neutral&lt;/Callout&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">appearance</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Appearance = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Callout appearance=&quot;flat&quot;&gt;flat&lt;/Callout&gt;
+    &lt;Callout appearance=&quot;outline&quot;&gt;outline&lt;/Callout&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">action</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Action = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Callout
+      color=&quot;negative&quot;
+      action={
+        &lt;Button appearance=&quot;outlined&quot; color=&quot;negative&quot;&gt;
+          再試行
+        &lt;/Button&gt;
+      }
+    &gt;
+      データを読み込めませんでした。
+    &lt;/Callout&gt;
+    &lt;Callout
+      color=&quot;notice&quot;
+      action={
+        &lt;Button appearance=&quot;transparent&quot; size=&quot;s&quot; iconOnly aria-label=&quot;閉じる&quot;&gt;
+          &lt;Icon name=&quot;cross&quot; aria-hidden=&quot;true&quot; /&gt;
+        &lt;/Button&gt;
+      }
+    &gt;
+      10月30日 2:00〜4:00 は、管理画面を利用できません。
+    &lt;/Callout&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Checkbox">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Checkbox</h2>
+      <div class="badges">
+        <label for="c-5-components-forms-checkbox-props" class="badge ok as-toggle">6 prop types</label>
+        <label for="c-5-components-forms-checkbox-info" class="badge info as-toggle">1 info</label>
+        <label for="c-5-components-forms-checkbox-stories" class="badge ok as-toggle">5 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Checkbox/Checkbox.stories.tsx">components-forms-checkbox · ./src/Checkbox/Checkbox.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-5-components-forms-checkbox-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-5-components-forms-checkbox-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-5-components-forms-checkbox-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">6 prop types</span>
+            </div>
+            <pre><code>Component: src/Checkbox/index.tsx::Checkbox</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * The children of the component. A function may be provided to alter the children based on component state.
+ */
+children: ReactNode
+
+/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;CheckboxRenderProps&gt;
+
+/**
+ * A ref for the HTML input element.
+ */
+inputRef?: RefObject&lt;HTMLInputElement | null&gt;
+
+/**
+ * A slot name for the component. Slots allow the component to receive props from a parent component.
+ * An explicit `null` value indicates that the local props completely override all props received from a parent.
+ */
+slot?: string | null
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;CheckboxRenderProps&gt;
+
+/**
+ * Whether to use native HTML form validation to prevent form submission
+ * when the value is missing or invalid, or mark the field as required
+ * or invalid via ARIA.
+ */
+validationBehavior?: &quot;native&quot; | &quot;aria&quot; = &#39;native&#39;</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Checkbox, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Checkbox isIndeterminate={false} isDisabled={false}&gt;Checkbox&lt;/Checkbox&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isSelected</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsSelected = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;Checkbox&gt;Unselected&lt;/Checkbox&gt;
+    &lt;Checkbox isSelected&gt;Selected&lt;/Checkbox&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isIndeterminate</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsIndeterminate = () =&gt; &lt;Checkbox isIndeterminate&gt;Select all&lt;/Checkbox&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isDisabled</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsDisabled = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;Checkbox isDisabled&gt;Disabled&lt;/Checkbox&gt;
+    &lt;Checkbox isDisabled isSelected&gt;
+      Disabled
+    &lt;/Checkbox&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">aria-label</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const AriaLabel = () =&gt; &lt;Checkbox aria-label=&quot;Select row&quot;&gt;{null}&lt;/Checkbox&gt;;</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Container">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Container</h2>
+      <div class="badges">
+        <label for="c-6-components-layout-container-props" class="badge ok as-toggle">4 prop types</label>
+        <label for="c-6-components-layout-container-info" class="badge info as-toggle">1 info</label>
+        <label for="c-6-components-layout-container-stories" class="badge ok as-toggle">4 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Container/Container.stories.tsx">components-layout-container · ./src/Container/Container.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-6-components-layout-container-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-6-components-layout-container-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-6-components-layout-container-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">4 prop types</span>
+            </div>
+            <pre><code>Component: src/Container/Container.tsx::Container</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>className?: string
+
+/**
+ * レンダリングするHTML要素
+ */
+component?: ElementType = div
+
+/**
+ * trueにすると左右のパディングを0にする
+ */
+isGapless?: boolean = false
+
+/**
+ * コンテナの最大幅
+ */
+size?: Size = l</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Container, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Container size=&quot;l&quot; isGapless={false}&gt;&lt;Box&gt;Container&lt;/Box&gt;&lt;/Container&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Size = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Container size=&quot;xs&quot;&gt;
+      &lt;Box&gt;xs&lt;/Box&gt;
+    &lt;/Container&gt;
+    &lt;Container size=&quot;s&quot;&gt;
+      &lt;Box&gt;s&lt;/Box&gt;
+    &lt;/Container&gt;
+    &lt;Container size=&quot;m&quot;&gt;
+      &lt;Box&gt;m&lt;/Box&gt;
+    &lt;/Container&gt;
+    &lt;Container size=&quot;l&quot;&gt;
+      &lt;Box&gt;l&lt;/Box&gt;
+    &lt;/Container&gt;
+    &lt;Container size=&quot;xl&quot;&gt;
+      &lt;Box&gt;xl&lt;/Box&gt;
+    &lt;/Container&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isGapless</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsGapless = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Container&gt;
+      &lt;Box&gt;false&lt;/Box&gt;
+    &lt;/Container&gt;
+    &lt;Container isGapless&gt;
+      &lt;Box&gt;true&lt;/Box&gt;
+    &lt;/Container&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">component</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const ComponentProp = () =&gt; (
+  &lt;Container component=&quot;main&quot;&gt;
+    &lt;Box&gt;main&lt;/Box&gt;
+  &lt;/Container&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Dialog">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Dialog</h2>
+      <div class="badges">
+        <label for="c-7-components-feedback-dialog-props" class="badge ok as-toggle">7 prop types</label>
+        <label for="c-7-components-feedback-dialog-info" class="badge info as-toggle">1 info</label>
+        <label for="c-7-components-feedback-dialog-stories" class="badge ok as-toggle">3 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Dialog/Dialog.stories.tsx">components-feedback-dialog · ./src/Dialog/Dialog.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-7-components-feedback-dialog-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-7-components-feedback-dialog-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-7-components-feedback-dialog-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">7 prop types</span>
+            </div>
+            <pre><code>Component: src/Dialog/index.tsx::Dialog</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;ModalRenderProps&gt;
+
+/**
+ * Whether the modal is currently performing an entry animation.
+ */
+isEntering?: boolean
+
+/**
+ * Whether the modal is currently performing an exit animation.
+ */
+isExiting?: boolean
+
+role?: &quot;dialog&quot; | &quot;alertdialog&quot;
+
+/**
+ * A slot name for the component. Slots allow the component to receive props from a parent component.
+ * An explicit `null` value indicates that the local props completely override all props received from a parent.
+ */
+slot?: string | null
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;ModalRenderProps&gt;
+
+/**
+ * The container element in which the overlay portal will be placed. This may have unknown behavior depending on where it is portalled to.
+ * @deprecated - Use a parent UNSAFE_PortalProvider to set your portal container instead.
+ */
+UNSTABLE_portalContainer?: Element = document.body</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import {
+    Button,
+    Dialog,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    Stack,
+} from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;InfoDialog isDismissable role=&quot;dialog&quot; triggerLabel=&quot;ダイアログを開く&quot; /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isDismissable</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsDismissable = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;InfoDialog isDismissable triggerLabel=&quot;true&quot; /&gt;
+    &lt;ConfirmDialog isDismissable={false} triggerLabel=&quot;false&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">role</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Role = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;InfoDialog role=&quot;dialog&quot; triggerLabel=&quot;dialog&quot; /&gt;
+    &lt;ConfirmDialog role=&quot;alertdialog&quot; isDismissable={false} triggerLabel=&quot;alertdialog&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Divider">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Divider</h2>
+      <div class="badges">
+        <label for="c-8-components-data-display-divider-props" class="badge ok as-toggle">5 prop types</label>
+        <label for="c-8-components-data-display-divider-info" class="badge info as-toggle">1 info</label>
+        <label for="c-8-components-data-display-divider-stories" class="badge ok as-toggle">3 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Divider/Divider.stories.tsx">components-data-display-divider · ./src/Divider/Divider.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-8-components-data-display-divider-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-8-components-data-display-divider-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-8-components-data-display-divider-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">5 prop types</span>
+            </div>
+            <pre><code>Component: src/Divider/index.tsx::Divider</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * 要素を絶対配置にする
+ */
+absolute?: boolean = false
+
+/**
+ * コンポーネントに追加する CSS クラス
+ */
+classes?: Partial&lt;{ root: string; }&gt;
+
+/**
+ * Flexbox の子要素として、親の高さに合わせて伸ばす
+ */
+flexItem?: boolean = false
+
+/**
+ * 区切り線の向き
+ */
+orientation?: DividerOrientation = horizontal
+
+/**
+ * 区切り線の表示範囲
+ */
+variant?: DividerVariant = fullWidth</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Divider, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Divider
+    orientation=&quot;horizontal&quot;
+    variant=&quot;fullWidth&quot;
+    absolute={false}
+    flexItem={false} /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">orientation</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Orientation = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;div&gt;
+      &lt;div style={{ padding: &#39;10px&#39; }}&gt;上のコンテンツ&lt;/div&gt;
+      &lt;Divider orientation=&quot;horizontal&quot; /&gt;
+      &lt;div style={{ padding: &#39;10px&#39; }}&gt;下のコンテンツ&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+      &lt;div style={{ padding: &#39;10px&#39; }}&gt;左のコンテンツ&lt;/div&gt;
+      &lt;Divider orientation=&quot;vertical&quot; flexItem aria-orientation=&quot;vertical&quot; /&gt;
+      &lt;div style={{ padding: &#39;10px&#39; }}&gt;右のコンテンツ&lt;/div&gt;
+    &lt;/Stack&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">variant</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Variant = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;div&gt;
+      &lt;div style={{ padding: &#39;10px&#39; }}&gt;fullWidth&lt;/div&gt;
+      &lt;Divider variant=&quot;fullWidth&quot; /&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;div style={{ padding: &#39;10px&#39; }}&gt;inset&lt;/div&gt;
+      &lt;Divider variant=&quot;inset&quot; /&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;div style={{ padding: &#39;10px&#39; }}&gt;middle&lt;/div&gt;
+      &lt;Divider variant=&quot;middle&quot; /&gt;
+    &lt;/div&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="FlavorProvider">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> FlavorProvider</h2>
+      <div class="badges">
+        <label for="c-9-introduction-flavorprovider-props" class="badge ok as-toggle">2 prop types</label>
+        <label for="c-9-introduction-flavorprovider-info" class="badge info as-toggle">1 info</label>
+        <label for="c-9-introduction-flavorprovider-stories" class="badge ok as-toggle">2 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/FlavorProvider/FlavorProvider.stories.tsx">introduction-flavorprovider · ./src/FlavorProvider/FlavorProvider.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-9-introduction-flavorprovider-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-9-introduction-flavorprovider-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-9-introduction-flavorprovider-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">2 prop types</span>
+            </div>
+            <pre><code>Component: src/FlavorProvider/FlavorProvider.tsx::FlavorProvider</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * フレーバーを適用する対象の React 要素
+ */
+children?: ReactNode
+
+/**
+ * 適用するデザイントークンのフレーバー。省略時は `pepper`。
+ */
+flavor?: Flavor = pepper</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Button, FlavorProvider, Stack, Sticker, TextField, Typography } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;FlavorProvider flavor=&quot;lolipop&quot;&gt;&lt;Sample /&gt;&lt;/FlavorProvider&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">flavor</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Flavor = () =&gt; (
+  &lt;Stack gap=&quot;xl&quot;&gt;
+    {flavors.map(({ flavor, label }) =&gt; (
+      &lt;Stack key={flavor} gap=&quot;s&quot;&gt;
+        &lt;Typography component=&quot;h3&quot; size=&quot;l&quot; fontWeight=&quot;bold&quot;&gt;
+          {label}
+        &lt;/Typography&gt;
+        &lt;FlavorProvider flavor={flavor}&gt;
+          &lt;Sample /&gt;
+        &lt;/FlavorProvider&gt;
+      &lt;/Stack&gt;
+    ))}
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Grid">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Grid</h2>
+      <div class="badges">
+        <label for="c-10-components-layout-grid-props" class="badge ok as-toggle">7 prop types</label>
+        <label for="c-10-components-layout-grid-info" class="badge info as-toggle">1 info</label>
+        <label for="c-10-components-layout-grid-stories" class="badge ok as-toggle">11 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Grid/Grid.stories.tsx">components-layout-grid · ./src/Grid/Grid.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-10-components-layout-grid-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-10-components-layout-grid-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-10-components-layout-grid-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">7 prop types</span>
+            </div>
+            <pre><code>Component: src/Grid/index.ts::Grid</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * 複数行のアイテムの垂直方向の配置
+ */
+alignContent?: GridAlignContent
+
+/**
+ * グリッドのカラム数
+ */
+columns?: number
+
+/**
+ * アイテムの並び方向
+ */
+direction?: GridDirection = row
+
+/**
+ * trueにするとアイテム間のスペースを0にする
+ */
+gapless?: boolean = false
+
+/**
+ * アイテムの水平方向の配置
+ */
+justifyContent?: GridJustifyContent
+
+/**
+ * グリッドアイテム間のスペース。レスポンシブ対応
+ */
+spacing?: Responsive&lt;GridGapSize&gt;
+
+/**
+ * アイテムの折り返し設定
+ */
+wrap?: GridWrap = wrap</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Container, Grid, GridItem, Paper, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Wrapper&gt;
+    &lt;Grid spacing=&quot;m&quot; gapless={false} direction=&quot;row&quot; wrap=&quot;wrap&quot;&gt;{threeItems}&lt;/Grid&gt;
+&lt;/Wrapper&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">spacing</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Spacing = () =&gt; (
+  &lt;Wrapper&gt;
+    &lt;Stack gap=&quot;xl&quot;&gt;
+      {spacings.map((spacing) =&gt; (
+        &lt;Grid key={spacing} spacing={spacing}&gt;
+          &lt;GridItem size={4}&gt;
+            &lt;Item&gt;{spacing}&lt;/Item&gt;
+          &lt;/GridItem&gt;
+          &lt;GridItem size={4}&gt;
+            &lt;Item&gt;{spacing}&lt;/Item&gt;
+          &lt;/GridItem&gt;
+          &lt;GridItem size={4}&gt;
+            &lt;Item&gt;{spacing}&lt;/Item&gt;
+          &lt;/GridItem&gt;
+        &lt;/Grid&gt;
+      ))}
+    &lt;/Stack&gt;
+  &lt;/Wrapper&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">spacing (responsive)</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const SpacingResponsive = () =&gt; (
+  &lt;Wrapper&gt;
+    &lt;Grid spacing={{ xxs: &#39;s&#39;, m: &#39;l&#39;, xl: &#39;xxl&#39; }}&gt;{threeItems}&lt;/Grid&gt;
+  &lt;/Wrapper&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">gapless</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Gapless = () =&gt; (
+  &lt;Wrapper&gt;
+    &lt;Grid spacing=&quot;m&quot; gapless&gt;
+      {threeItems}
+    &lt;/Grid&gt;
+  &lt;/Wrapper&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">justifyContent</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const JustifyContent = () =&gt; (
+  &lt;Wrapper&gt;
+    &lt;Stack gap=&quot;xl&quot;&gt;
+      {contentAlignments.map((justifyContent) =&gt; (
+        &lt;Grid key={justifyContent} spacing=&quot;m&quot; justifyContent={justifyContent}&gt;
+          &lt;GridItem size={3}&gt;
+            &lt;Item&gt;{justifyContent}&lt;/Item&gt;
+          &lt;/GridItem&gt;
+          &lt;GridItem size={3}&gt;
+            &lt;Item&gt;{justifyContent}&lt;/Item&gt;
+          &lt;/GridItem&gt;
+        &lt;/Grid&gt;
+      ))}
+    &lt;/Stack&gt;
+  &lt;/Wrapper&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">alignContent</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const AlignContent = () =&gt; (
+  &lt;Wrapper&gt;
+    &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+      {contentAlignments.map((alignContent) =&gt; (
+        &lt;Grid
+          key={alignContent}
+          spacing=&quot;xs&quot;
+          alignContent={alignContent}
+          style={{ height: &#39;240px&#39;, flex: 1, background: &#39;#f5f5f5&#39; }}
+        &gt;
+          &lt;GridItem size={12}&gt;
+            &lt;Item&gt;{alignContent}&lt;/Item&gt;
+          &lt;/GridItem&gt;
+          &lt;GridItem size={12}&gt;
+            &lt;Item&gt;{alignContent}&lt;/Item&gt;
+          &lt;/GridItem&gt;
+        &lt;/Grid&gt;
+      ))}
+    &lt;/Stack&gt;
+  &lt;/Wrapper&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">direction</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Direction = () =&gt; (
+  &lt;Wrapper&gt;
+    &lt;Stack gap=&quot;xl&quot;&gt;
+      {directions.map((direction) =&gt; (
+        &lt;Grid key={direction} spacing=&quot;m&quot; direction={direction}&gt;
+          &lt;GridItem size={4}&gt;
+            &lt;Item&gt;{direction} 1&lt;/Item&gt;
+          &lt;/GridItem&gt;
+          &lt;GridItem size={4}&gt;
+            &lt;Item&gt;{direction} 2&lt;/Item&gt;
+          &lt;/GridItem&gt;
+          &lt;GridItem size={4}&gt;
+            &lt;Item&gt;{direction} 3&lt;/Item&gt;
+          &lt;/GridItem&gt;
+        &lt;/Grid&gt;
+      ))}
+    &lt;/Stack&gt;
+  &lt;/Wrapper&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">wrap</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Wrap = () =&gt; (
+  &lt;Wrapper&gt;
+    &lt;Stack gap=&quot;xl&quot;&gt;
+      {wraps.map((wrap) =&gt; (
+        &lt;Grid key={wrap} spacing=&quot;m&quot; wrap={wrap}&gt;
+          &lt;GridItem size={6}&gt;
+            &lt;Item&gt;{wrap} 1&lt;/Item&gt;
+          &lt;/GridItem&gt;
+          &lt;GridItem size={6}&gt;
+            &lt;Item&gt;{wrap} 2&lt;/Item&gt;
+          &lt;/GridItem&gt;
+          &lt;GridItem size={6}&gt;
+            &lt;Item&gt;{wrap} 3&lt;/Item&gt;
+          &lt;/GridItem&gt;
+        &lt;/Grid&gt;
+      ))}
+    &lt;/Stack&gt;
+  &lt;/Wrapper&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">GridItem size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const GridItemSize = () =&gt; (
+  &lt;Wrapper&gt;
+    &lt;Grid spacing=&quot;m&quot;&gt;
+      &lt;GridItem size={12}&gt;
+        &lt;Item&gt;12&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={8}&gt;
+        &lt;Item&gt;8&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={4}&gt;
+        &lt;Item&gt;4&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={6}&gt;
+        &lt;Item&gt;6&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={6}&gt;
+        &lt;Item&gt;6&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={3}&gt;
+        &lt;Item&gt;3&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={3}&gt;
+        &lt;Item&gt;3&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={3}&gt;
+        &lt;Item&gt;3&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={3}&gt;
+        &lt;Item&gt;3&lt;/Item&gt;
+      &lt;/GridItem&gt;
+    &lt;/Grid&gt;
+  &lt;/Wrapper&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">GridItem size (responsive)</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const GridItemSizeResponsive = () =&gt; (
+  &lt;Wrapper&gt;
+    &lt;Grid spacing=&quot;m&quot;&gt;
+      &lt;GridItem size={{ xxs: 12, s: 6, m: 4 }}&gt;
+        &lt;Item&gt;1&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={{ xxs: 12, s: 6, m: 4 }}&gt;
+        &lt;Item&gt;2&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={{ xxs: 12, s: 6, m: 4 }}&gt;
+        &lt;Item&gt;3&lt;/Item&gt;
+      &lt;/GridItem&gt;
+    &lt;/Grid&gt;
+  &lt;/Wrapper&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">GridItem offset</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const GridItemOffset = () =&gt; (
+  &lt;Wrapper&gt;
+    &lt;Grid spacing=&quot;m&quot;&gt;
+      &lt;GridItem size={6} offset={3}&gt;
+        &lt;Item&gt;size=6 offset=3&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={4} offset={2}&gt;
+        &lt;Item&gt;size=4 offset=2&lt;/Item&gt;
+      &lt;/GridItem&gt;
+      &lt;GridItem size={4}&gt;
+        &lt;Item&gt;size=4&lt;/Item&gt;
+      &lt;/GridItem&gt;
+    &lt;/Grid&gt;
+  &lt;/Wrapper&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="LinkButton">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> LinkButton</h2>
+      <div class="badges">
+        <label for="c-11-components-actions-linkbutton-props" class="badge ok as-toggle">11 prop types</label>
+        <label for="c-11-components-actions-linkbutton-info" class="badge info as-toggle">1 info</label>
+        <label for="c-11-components-actions-linkbutton-stories" class="badge ok as-toggle">7 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Button/LinkButton.stories.tsx">components-actions-linkbutton · ./src/Button/LinkButton.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-11-components-actions-linkbutton-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-11-components-actions-linkbutton-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-11-components-actions-linkbutton-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">11 prop types</span>
+            </div>
+            <pre><code>Component: src/Button/index.tsx::LinkButton</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * ボタンの外観スタイル
+ */
+appearance?: ButtonAppearance = flat
+
+/**
+ * The children of the component. A function may be provided to alter the children based on component state.
+ */
+children?: ChildrenOrFunction&lt;ButtonRenderProps&gt;
+
+/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;ButtonRenderProps&gt;
+
+/**
+ * ボタンの色テーマ
+ */
+color?: ButtonColor = neutral
+
+/**
+ * アイコンのみで表示する
+ */
+iconOnly?: boolean = false
+
+/**
+ * ボタンの先頭に表示するアイコン
+ */
+leading?: ReactNode
+
+/**
+ * ボタンのサイズ
+ */
+size?: ButtonSize = m
+
+/**
+ * A slot name for the component. Slots allow the component to receive props from a parent component.
+ * An explicit `null` value indicates that the local props completely override all props received from a parent.
+ */
+slot?: string | null
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;ButtonRenderProps&gt;
+
+/**
+ * ボタンの末尾に表示するアイコン
+ */
+trailing?: ReactNode
+
+/**
+ * ボタンの幅
+ */
+width?: ButtonWidth = auto</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Icon, LinkButton, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;LinkButton
+    href=&quot;#&quot;
+    appearance=&quot;flat&quot;
+    color=&quot;neutral&quot;
+    size=&quot;m&quot;
+    width=&quot;auto&quot;
+    isDisabled={false}&gt;LinkButton&lt;/LinkButton&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">appearance</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Appearance = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+    &lt;LinkButton href=&quot;#&quot; appearance=&quot;flat&quot;&gt;
+      flat
+    &lt;/LinkButton&gt;
+    &lt;LinkButton href=&quot;#&quot; appearance=&quot;outlined&quot;&gt;
+      outlined
+    &lt;/LinkButton&gt;
+    &lt;LinkButton href=&quot;#&quot; appearance=&quot;transparent&quot;&gt;
+      transparent
+    &lt;/LinkButton&gt;
+    &lt;div style={{ background: &#39;#333&#39;, padding: &#39;8px&#39; }}&gt;
+      &lt;LinkButton href=&quot;#&quot; appearance=&quot;white&quot;&gt;
+        white
+      &lt;/LinkButton&gt;
+    &lt;/div&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">color</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Color = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;LinkButton href=&quot;#&quot; color=&quot;neutral&quot;&gt;
+      neutral
+    &lt;/LinkButton&gt;
+    &lt;LinkButton href=&quot;#&quot; color=&quot;interactive&quot;&gt;
+      interactive
+    &lt;/LinkButton&gt;
+    &lt;LinkButton href=&quot;#&quot; color=&quot;negative&quot;&gt;
+      negative
+    &lt;/LinkButton&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Size = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+    &lt;LinkButton href=&quot;#&quot; size=&quot;s&quot;&gt;
+      s
+    &lt;/LinkButton&gt;
+    &lt;LinkButton href=&quot;#&quot; size=&quot;m&quot;&gt;
+      m
+    &lt;/LinkButton&gt;
+    &lt;LinkButton href=&quot;#&quot; size=&quot;l&quot;&gt;
+      l
+    &lt;/LinkButton&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">width</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Width = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;LinkButton href=&quot;#&quot; width=&quot;auto&quot;&gt;
+      auto
+    &lt;/LinkButton&gt;
+    &lt;LinkButton href=&quot;#&quot; width=&quot;third&quot;&gt;
+      third
+    &lt;/LinkButton&gt;
+    &lt;LinkButton href=&quot;#&quot; width=&quot;half&quot;&gt;
+      half
+    &lt;/LinkButton&gt;
+    &lt;LinkButton href=&quot;#&quot; width=&quot;full&quot;&gt;
+      full
+    &lt;/LinkButton&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">leading / trailing</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const LeadingAndTrailing = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;LinkButton href=&quot;#&quot; leading={&lt;Icon name=&quot;download&quot; aria-hidden=&quot;true&quot; /&gt;}&gt;
+      leading
+    &lt;/LinkButton&gt;
+    &lt;LinkButton
+      href=&quot;#&quot;
+      target=&quot;_blank&quot;
+      trailing={&lt;Icon name=&quot;arrow_cross&quot; aria-hidden=&quot;true&quot; /&gt;}
+    &gt;
+      trailing
+    &lt;/LinkButton&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">iconOnly</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IconOnly = () =&gt; (
+  &lt;LinkButton href=&quot;#&quot; iconOnly aria-label=&quot;検索&quot;&gt;
+    &lt;Icon name=&quot;magnifying_glass&quot; aria-hidden=&quot;true&quot; /&gt;
+  &lt;/LinkButton&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Loader">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Loader</h2>
+      <div class="badges">
+        <label for="c-12-components-feedback-loader-props" class="badge ok as-toggle">2 prop types</label>
+        <label for="c-12-components-feedback-loader-info" class="badge info as-toggle">1 info</label>
+        <label for="c-12-components-feedback-loader-stories" class="badge ok as-toggle">3 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Loader/Loader.stories.tsx">components-feedback-loader · ./src/Loader/Loader.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-12-components-feedback-loader-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-12-components-feedback-loader-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-12-components-feedback-loader-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">2 prop types</span>
+            </div>
+            <pre><code>Component: src/Loader/index.tsx::Loader</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * ローダーの下に表示するメッセージテキスト
+ */
+message?: string
+
+/**
+ * ローダーのサイズ
+ */
+size?: LoaderSize = m</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Loader, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Loader size=&quot;m&quot; message=&quot;読み込み中...&quot; role=&quot;status&quot; /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Size = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+    &lt;Loader size=&quot;s&quot; role=&quot;status&quot; aria-label=&quot;読み込み中&quot; /&gt;
+    &lt;Loader size=&quot;m&quot; role=&quot;status&quot; aria-label=&quot;読み込み中&quot; /&gt;
+    &lt;Loader size=&quot;l&quot; role=&quot;status&quot; aria-label=&quot;読み込み中&quot; /&gt;
+    &lt;Loader size=&quot;xl&quot; role=&quot;status&quot; aria-label=&quot;読み込み中&quot; /&gt;
+    &lt;Loader size=&quot;xxl&quot; role=&quot;status&quot; aria-label=&quot;読み込み中&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">message</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Message = () =&gt; &lt;Loader message=&quot;読み込み中...&quot; role=&quot;status&quot; /&gt;;</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Paper">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Paper</h2>
+      <div class="badges">
+        <label for="c-13-components-surfaces-paper-props" class="badge ok as-toggle">3 prop types</label>
+        <label for="c-13-components-surfaces-paper-info" class="badge info as-toggle">1 info</label>
+        <label for="c-13-components-surfaces-paper-stories" class="badge ok as-toggle">4 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Paper/Paper.stories.tsx">components-surfaces-paper · ./src/Paper/Paper.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-13-components-surfaces-paper-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-13-components-surfaces-paper-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-13-components-surfaces-paper-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">3 prop types</span>
+            </div>
+            <pre><code>Component: src/Paper/Paper.tsx::Paper</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * 影の強さ（0-6）。値が大きいほど浮き上がって見える
+ */
+elevation?: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 1
+
+/**
+ * trueにするとボーダー表示になり影が無効化される
+ */
+outlined?: boolean = false
+
+/**
+ * trueにすると角丸を無効化する
+ */
+square?: boolean = false</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Paper, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Paper elevation={1} outlined={false} square={false}&gt;{content(&#39;Paper&#39;)}&lt;/Paper&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">elevation</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Elevation = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    {([0, 1, 2, 3, 4, 5, 6] as const).map((elevation) =&gt; (
+      &lt;Paper key={elevation} elevation={elevation}&gt;
+        {content(String(elevation))}
+      &lt;/Paper&gt;
+    ))}
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">outlined</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Outlined = () =&gt; &lt;Paper outlined&gt;{content(&#39;outlined&#39;)}&lt;/Paper&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">square</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Square = () =&gt; &lt;Paper square&gt;{content(&#39;square&#39;)}&lt;/Paper&gt;;</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="RadioGroup">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> RadioGroup</h2>
+      <div class="badges">
+        <label for="c-14-components-forms-radio-props" class="badge ok as-toggle">5 prop types</label>
+        <label for="c-14-components-forms-radio-info" class="badge info as-toggle">1 info</label>
+        <label for="c-14-components-forms-radio-stories" class="badge ok as-toggle">4 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Radio/Radio.stories.tsx">components-forms-radio · ./src/Radio/Radio.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-14-components-forms-radio-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-14-components-forms-radio-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-14-components-forms-radio-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">5 prop types</span>
+            </div>
+            <pre><code>Component: src/Radio/index.tsx::RadioGroup</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * The children of the component. A function may be provided to alter the children based on component state.
+ */
+children?: ChildrenOrFunction&lt;RadioRenderProps&gt;
+
+/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;RadioRenderProps&gt;
+
+/**
+ * A slot name for the component. Slots allow the component to receive props from a parent component.
+ * An explicit `null` value indicates that the local props completely override all props received from a parent.
+ */
+slot?: string | null
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;RadioRenderProps&gt;
+
+/**
+ * Whether to use native HTML form validation to prevent form submission
+ * when the value is missing or invalid, or mark the field as required
+ * or invalid via ARIA.
+ */
+validationBehavior?: &quot;native&quot; | &quot;aria&quot; = &#39;native&#39;</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Radio, RadioGroup } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;RadioGroup aria-label=&quot;Select an option&quot; defaultValue=&quot;option1&quot; isDisabled={false}&gt;
+    &lt;Radio value=&quot;option1&quot;&gt;Option 1&lt;/Radio&gt;
+    &lt;Radio value=&quot;option2&quot;&gt;Option 2&lt;/Radio&gt;
+    &lt;Radio value=&quot;option3&quot;&gt;Option 3&lt;/Radio&gt;
+&lt;/RadioGroup&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">defaultValue</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const DefaultValue = () =&gt; &lt;RadioGroup aria-label=&quot;Select an option&quot; defaultValue=&quot;option2&quot; isDisabled={false}&gt;
+    &lt;Radio value=&quot;option1&quot;&gt;Option 1&lt;/Radio&gt;
+    &lt;Radio value=&quot;option2&quot;&gt;Option 2&lt;/Radio&gt;
+    &lt;Radio value=&quot;option3&quot;&gt;Option 3&lt;/Radio&gt;
+&lt;/RadioGroup&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isDisabled</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsDisabled = () =&gt; &lt;RadioGroup aria-label=&quot;Select an option&quot; defaultValue=&quot;option1&quot; isDisabled&gt;
+    &lt;Radio value=&quot;option1&quot;&gt;Option 1&lt;/Radio&gt;
+    &lt;Radio value=&quot;option2&quot;&gt;Option 2&lt;/Radio&gt;
+    &lt;Radio value=&quot;option3&quot;&gt;Option 3&lt;/Radio&gt;
+&lt;/RadioGroup&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Radio isDisabled</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const RadioIsDisabled = () =&gt; (
+  &lt;RadioGroup aria-label=&quot;Select an option&quot; defaultValue=&quot;option1&quot;&gt;
+    &lt;Radio value=&quot;option1&quot;&gt;Option 1&lt;/Radio&gt;
+    &lt;Radio value=&quot;option2&quot; isDisabled&gt;
+      Option 2
+    &lt;/Radio&gt;
+    &lt;Radio value=&quot;option3&quot;&gt;Option 3&lt;/Radio&gt;
+  &lt;/RadioGroup&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Select">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Select</h2>
+      <div class="badges">
+        <label for="c-15-components-forms-select-props" class="badge ok as-toggle">9 prop types</label>
+        <label for="c-15-components-forms-select-info" class="badge info as-toggle">1 info</label>
+        <label for="c-15-components-forms-select-stories" class="badge ok as-toggle">6 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Select/Select.stories.tsx">components-forms-select · ./src/Select/Select.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-15-components-forms-select-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-15-components-forms-select-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-15-components-forms-select-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">9 prop types</span>
+            </div>
+            <pre><code>Component: src/Select/index.tsx::Select</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * ラベル下部の補足説明テキスト
+ */
+caption?: string
+
+/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;SelectRenderProps&gt;
+
+/**
+ * セレクトのラベルテキスト
+ */
+label?: string
+
+/**
+ * 未選択時のプレースホルダーテキスト
+ */
+placeholder?: string
+
+/**
+ * セレクトのサイズ
+ */
+size?: SelectSize
+
+/**
+ * A slot name for the component. Slots allow the component to receive props from a parent component.
+ * An explicit `null` value indicates that the local props completely override all props received from a parent.
+ */
+slot?: string | null
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;SelectRenderProps&gt;
+
+/**
+ * Whether to use native HTML form validation to prevent form submission
+ * when the value is missing or invalid, or mark the field as required
+ * or invalid via ARIA.
+ */
+validationBehavior?: &quot;native&quot; | &quot;aria&quot; = &#39;native&#39;
+
+/**
+ * セレクトの幅
+ */
+width?: SelectWidth</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Select, SelectItem, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Select
+    label=&quot;Label&quot;
+    caption=&quot;Caption&quot;
+    placeholder=&quot;Choose...&quot;
+    size=&quot;m&quot;
+    width=&quot;auto&quot;
+    isDisabled={false}&gt;{items}&lt;/Select&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">caption</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Caption = () =&gt; (
+  &lt;Select label=&quot;Label&quot; caption=&quot;Caption&quot; placeholder=&quot;Choose...&quot;&gt;
+    {items}
+  &lt;/Select&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Size = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;flex-end&quot;&gt;
+    &lt;Select label=&quot;s&quot; size=&quot;s&quot; placeholder=&quot;Choose...&quot;&gt;
+      {items}
+    &lt;/Select&gt;
+    &lt;Select label=&quot;m&quot; size=&quot;m&quot; placeholder=&quot;Choose...&quot;&gt;
+      {items}
+    &lt;/Select&gt;
+    &lt;Select label=&quot;l&quot; size=&quot;l&quot; placeholder=&quot;Choose...&quot;&gt;
+      {items}
+    &lt;/Select&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">width</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Width = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Select label=&quot;auto&quot; width=&quot;auto&quot; placeholder=&quot;Choose...&quot;&gt;
+      {items}
+    &lt;/Select&gt;
+    &lt;Select label=&quot;third&quot; width=&quot;third&quot; placeholder=&quot;Choose...&quot;&gt;
+      {items}
+    &lt;/Select&gt;
+    &lt;Select label=&quot;half&quot; width=&quot;half&quot; placeholder=&quot;Choose...&quot;&gt;
+      {items}
+    &lt;/Select&gt;
+    &lt;Select label=&quot;full&quot; width=&quot;full&quot; placeholder=&quot;Choose...&quot;&gt;
+      {items}
+    &lt;/Select&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">defaultSelectedKey</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const DefaultSelectedKey = () =&gt; (
+  &lt;Select label=&quot;Label&quot; defaultSelectedKey=&quot;option2&quot; placeholder=&quot;Choose...&quot;&gt;
+    {items}
+  &lt;/Select&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isDisabled</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsDisabled = () =&gt; (
+  &lt;Select label=&quot;Label&quot; isDisabled placeholder=&quot;Choose...&quot;&gt;
+    {items}
+  &lt;/Select&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="SnackBar">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> SnackBar</h2>
+      <div class="badges">
+        <label for="c-16-components-feedback-snackbar-props" class="badge ok as-toggle">3 prop types</label>
+        <label for="c-16-components-feedback-snackbar-info" class="badge info as-toggle">1 info</label>
+        <label for="c-16-components-feedback-snackbar-stories" class="badge ok as-toggle">2 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/SnackBar/SnackBar.stories.tsx">components-feedback-snackbar · ./src/SnackBar/SnackBar.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-16-components-feedback-snackbar-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-16-components-feedback-snackbar-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-16-components-feedback-snackbar-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">3 prop types</span>
+            </div>
+            <pre><code>Component: src/SnackBar/index.tsx::SnackBar</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;ToastRegionRenderProps&lt;SnackBarContent&gt;&gt;
+
+/**
+ * The queue of toasts to display.
+ */
+queue: ToastQueue&lt;SnackBarContent&gt;
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;ToastRegionRenderProps&lt;SnackBarContent&gt;&gt;</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Button, SnackBar, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = ({ message, state }) =&gt; (
+  &lt;&gt;
+    &lt;Button onPress={() =&gt; playgroundQueue.add({ message, state })}&gt;表示&lt;/Button&gt;
+    &lt;SnackBar queue={playgroundQueue} /&gt;
+  &lt;/&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">state</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const State = () =&gt; (
+  &lt;&gt;
+    &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+      &lt;Button onPress={() =&gt; stateQueue.add({ message: &#39;保存しました&#39;, state: &#39;positive&#39; })}&gt;
+        positive
+      &lt;/Button&gt;
+      &lt;Button
+        onPress={() =&gt; stateQueue.add({ message: &#39;保存できませんでした&#39;, state: &#39;negative&#39; })}
+      &gt;
+        negative
+      &lt;/Button&gt;
+      &lt;Button
+        onPress={() =&gt;
+          stateQueue.add({ message: &#39;一部のファイルをスキップしました&#39;, state: &#39;notice&#39; })
+        }
+      &gt;
+        notice
+      &lt;/Button&gt;
+      &lt;Button
+        onPress={() =&gt;
+          stateQueue.add({ message: &#39;クリップボードにコピーしました&#39;, state: &#39;neutral&#39; })
+        }
+      &gt;
+        neutral
+      &lt;/Button&gt;
+    &lt;/Stack&gt;
+    &lt;SnackBar queue={stateQueue} /&gt;
+  &lt;/&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Stack">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Stack</h2>
+      <div class="badges">
+        <label for="c-17-components-layout-stack-props" class="badge ok as-toggle">5 prop types</label>
+        <label for="c-17-components-layout-stack-info" class="badge info as-toggle">1 info</label>
+        <label for="c-17-components-layout-stack-stories" class="badge ok as-toggle">7 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Stack/Stack.stories.tsx">components-layout-stack · ./src/Stack/Stack.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-17-components-layout-stack-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-17-components-layout-stack-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-17-components-layout-stack-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">5 prop types</span>
+            </div>
+            <pre><code>Component: src/Stack/Stack.tsx::Stack</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * 交差軸方向の配置
+ */
+alignItems?: StackAlignItems = normal
+
+className?: string
+
+/**
+ * 子要素の並び方向。レスポンシブ対応
+ */
+flexDirection?: Responsive&lt;StackFlexDirection&gt; = column
+
+/**
+ * 子要素間のスペース。レスポンシブ対応
+ */
+gap?: Responsive&lt;StackGapSize&gt; = m
+
+/**
+ * 主軸方向の配置
+ */
+justifyContent?: StackJustifyContent = normal</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Stack
+    flexDirection=&quot;column&quot;
+    gap=&quot;m&quot;
+    alignItems=&quot;stretch&quot;
+    justifyContent=&quot;flex-start&quot;&gt;(&lt;&gt;
+      &lt;Box&gt;Item 1&lt;/Box&gt;
+      &lt;Box&gt;Item 2&lt;/Box&gt;
+      &lt;Box&gt;Item 3&lt;/Box&gt;
+    &lt;/&gt;)&lt;/Stack&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">flexDirection</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const FlexDirection = () =&gt; (
+  &lt;Stack gap=&quot;l&quot;&gt;
+    &lt;Frame label=&quot;column&quot;&gt;
+      &lt;Stack flexDirection=&quot;column&quot; gap=&quot;s&quot;&gt;
+        &lt;Box&gt;Item 1&lt;/Box&gt;
+        &lt;Box&gt;Item 2&lt;/Box&gt;
+        &lt;Box&gt;Item 3&lt;/Box&gt;
+      &lt;/Stack&gt;
+    &lt;/Frame&gt;
+    &lt;Frame label=&quot;row&quot;&gt;
+      &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+        &lt;Box&gt;Item 1&lt;/Box&gt;
+        &lt;Box&gt;Item 2&lt;/Box&gt;
+        &lt;Box&gt;Item 3&lt;/Box&gt;
+      &lt;/Stack&gt;
+    &lt;/Frame&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">flexDirection (responsive)</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const FlexDirectionResponsive = () =&gt; (
+  &lt;Stack flexDirection={{ xxs: &#39;column&#39;, m: &#39;row&#39; }} gap=&quot;s&quot;&gt;
+    &lt;Box&gt;Item 1&lt;/Box&gt;
+    &lt;Box&gt;Item 2&lt;/Box&gt;
+    &lt;Box&gt;Item 3&lt;/Box&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">gap</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Gap = () =&gt; (
+  &lt;Stack gap=&quot;l&quot;&gt;
+    {gaps.map((gap) =&gt; (
+      &lt;Frame key={gap} label={gap}&gt;
+        &lt;Stack flexDirection=&quot;row&quot; gap={gap}&gt;
+          &lt;Box&gt;Item 1&lt;/Box&gt;
+          &lt;Box&gt;Item 2&lt;/Box&gt;
+          &lt;Box&gt;Item 3&lt;/Box&gt;
+        &lt;/Stack&gt;
+      &lt;/Frame&gt;
+    ))}
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">gap (responsive)</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const GapResponsive = () =&gt; (
+  &lt;Stack gap={{ xxs: &#39;s&#39;, m: &#39;l&#39;, xl: &#39;xxl&#39; }}&gt;
+    &lt;Box&gt;Item 1&lt;/Box&gt;
+    &lt;Box&gt;Item 2&lt;/Box&gt;
+    &lt;Box&gt;Item 3&lt;/Box&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">alignItems</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const AlignItems = () =&gt; (
+  &lt;Stack gap=&quot;l&quot;&gt;
+    {alignItemsValues.map((alignItems) =&gt; (
+      &lt;Frame key={alignItems} label={alignItems}&gt;
+        &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems={alignItems}&gt;
+          &lt;Box&gt;Item 1&lt;/Box&gt;
+          &lt;Box height=&quot;80px&quot;&gt;Item 2&lt;/Box&gt;
+          &lt;Box&gt;Item 3&lt;/Box&gt;
+        &lt;/Stack&gt;
+      &lt;/Frame&gt;
+    ))}
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">justifyContent</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const JustifyContent = () =&gt; (
+  &lt;Stack gap=&quot;l&quot;&gt;
+    {justifyContentValues.map((justifyContent) =&gt; (
+      &lt;Frame key={justifyContent} label={justifyContent}&gt;
+        &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; justifyContent={justifyContent}&gt;
+          &lt;Box&gt;Item 1&lt;/Box&gt;
+          &lt;Box&gt;Item 2&lt;/Box&gt;
+          &lt;Box&gt;Item 3&lt;/Box&gt;
+        &lt;/Stack&gt;
+      &lt;/Frame&gt;
+    ))}
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Sticker">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Sticker</h2>
+      <div class="badges">
+        <label for="c-18-components-data-display-sticker-props" class="badge ok as-toggle">2 prop types</label>
+        <label for="c-18-components-data-display-sticker-info" class="badge info as-toggle">1 info</label>
+        <label for="c-18-components-data-display-sticker-stories" class="badge ok as-toggle">3 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Sticker/Sticker.stories.tsx">components-data-display-sticker · ./src/Sticker/Sticker.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-18-components-data-display-sticker-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-18-components-data-display-sticker-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-18-components-data-display-sticker-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">2 prop types</span>
+            </div>
+            <pre><code>Component: src/Sticker/index.tsx::Sticker</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * ステッカーのセマンティックカラー
+ */
+color?: StickerColor = neutral
+
+/**
+ * ステッカーのサイズ
+ */
+size?: StickerSize = m</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Stack, Sticker } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Sticker color=&quot;neutral&quot; size=&quot;m&quot;&gt;Sticker&lt;/Sticker&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">color</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Color = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;Sticker color=&quot;neutral&quot;&gt;neutral&lt;/Sticker&gt;
+    &lt;Sticker color=&quot;informative&quot;&gt;informative&lt;/Sticker&gt;
+    &lt;Sticker color=&quot;positive&quot;&gt;positive&lt;/Sticker&gt;
+    &lt;Sticker color=&quot;negative&quot;&gt;negative&lt;/Sticker&gt;
+    &lt;Sticker color=&quot;notice&quot;&gt;notice&lt;/Sticker&gt;
+    &lt;Sticker color=&quot;attention&quot;&gt;attention&lt;/Sticker&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Size = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+    &lt;Sticker size=&quot;s&quot;&gt;s&lt;/Sticker&gt;
+    &lt;Sticker size=&quot;m&quot;&gt;m&lt;/Sticker&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Switch">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Switch</h2>
+      <div class="badges">
+        <label for="c-19-components-forms-switch-props" class="badge ok as-toggle">8 prop types</label>
+        <label for="c-19-components-forms-switch-info" class="badge info as-toggle">1 info</label>
+        <label for="c-19-components-forms-switch-stories" class="badge ok as-toggle">6 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Switch/Switch.stories.tsx">components-forms-switch · ./src/Switch/Switch.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-19-components-forms-switch-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-19-components-forms-switch-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-19-components-forms-switch-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">8 prop types</span>
+            </div>
+            <pre><code>Component: src/Switch/index.tsx::Switch</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * The children of the component. A function may be provided to alter the children based on component state.
+ */
+children?: ChildrenOrFunction&lt;SwitchRenderProps&gt;
+
+/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;SwitchRenderProps&gt;
+
+/**
+ * スイッチの色テーマ
+ */
+color?: SwitchColor = neutral
+
+/**
+ * A ref for the HTML input element.
+ */
+inputRef?: RefObject&lt;HTMLInputElement | null&gt;
+
+/**
+ * スイッチのラベルテキスト
+ */
+label?: ReactNode
+
+/**
+ * スイッチのサイズ
+ */
+size?: SwitchSize = m
+
+/**
+ * A slot name for the component. Slots allow the component to receive props from a parent component.
+ * An explicit `null` value indicates that the local props completely override all props received from a parent.
+ */
+slot?: string | null
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;SwitchRenderProps&gt;</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Stack, Switch } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Switch label=&quot;Switch&quot; size=&quot;m&quot; color=&quot;neutral&quot; isDisabled={false} /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">label</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Label = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+    &lt;Switch label=&quot;Email notifications&quot; /&gt;
+    &lt;Switch aria-label=&quot;Email notifications&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Size = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+    &lt;Switch size=&quot;s&quot; label=&quot;s&quot; /&gt;
+    &lt;Switch size=&quot;m&quot; label=&quot;m&quot; /&gt;
+    &lt;Switch size=&quot;l&quot; label=&quot;l&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">color</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Color = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;Switch color=&quot;neutral&quot; defaultSelected label=&quot;neutral&quot; /&gt;
+    &lt;Switch color=&quot;interactive&quot; defaultSelected label=&quot;interactive&quot; /&gt;
+    &lt;Switch color=&quot;negative&quot; defaultSelected label=&quot;negative&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isSelected</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsSelected = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;Switch label=&quot;Email notifications&quot; /&gt;
+    &lt;Switch label=&quot;Email notifications&quot; isSelected /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isDisabled</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsDisabled = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot;&gt;
+    &lt;Switch label=&quot;Disabled&quot; isDisabled /&gt;
+    &lt;Switch label=&quot;Disabled&quot; isDisabled isSelected /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Table">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Table</h2>
+      <div class="badges">
+        <label for="c-20-components-data-display-table-props" class="badge ok as-toggle">8 prop types</label>
+        <label for="c-20-components-data-display-table-info" class="badge info as-toggle">1 info</label>
+        <label for="c-20-components-data-display-table-stories" class="badge ok as-toggle">2 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Table/Table.stories.tsx">components-data-display-table · ./src/Table/Table.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-20-components-data-display-table-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-20-components-data-display-table-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-20-components-data-display-table-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">8 prop types</span>
+            </div>
+            <pre><code>Component: src/Table/index.tsx::Table</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * The elements that make up the table. Includes the TableHeader, TableBody, Columns, and Rows.
+ */
+children?: ReactNode
+
+/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;TableRenderProps&gt;
+
+/**
+ * Whether `disabledKeys` applies to all interactions, or only selection.
+ */
+disabledBehavior?: DisabledBehavior = &quot;selection&quot;
+
+/**
+ * The drag and drop hooks returned by `useDragAndDrop` used to enable drag and drop behavior for the Table.
+ */
+dragAndDropHooks?: DragAndDropHooks&lt;object&gt;
+
+/**
+ * Handler that is called when a user performs an action on the row.
+ */
+onRowAction?: ((key: Key) =&gt; void)
+
+/**
+ * How multiple selection should behave in the collection.
+ */
+selectionBehavior?: SelectionBehavior = &quot;toggle&quot;
+
+/**
+ * A slot name for the component. Slots allow the component to receive props from a parent component.
+ * An explicit `null` value indicates that the local props completely override all props received from a parent.
+ */
+slot?: string | null
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;TableRenderProps&gt;</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Cell, Checkbox, Column, Row, Table, TableBody, TableHeader } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Table aria-label=&quot;ファイル一覧&quot; selectionMode=&quot;none&quot;&gt;
+    &lt;TableHeader&gt;
+        &lt;Column isRowHeader&gt;名前&lt;/Column&gt;
+        &lt;Column&gt;種類&lt;/Column&gt;
+        &lt;Column&gt;更新日&lt;/Column&gt;
+    &lt;/TableHeader&gt;
+    &lt;TableBody&gt;
+        &lt;Row&gt;
+            &lt;Cell&gt;Document.pdf&lt;/Cell&gt;
+            &lt;Cell&gt;PDF&lt;/Cell&gt;
+            &lt;Cell&gt;2024-01-15&lt;/Cell&gt;
+        &lt;/Row&gt;
+        &lt;Row&gt;
+            &lt;Cell&gt;Image.png&lt;/Cell&gt;
+            &lt;Cell&gt;画像&lt;/Cell&gt;
+            &lt;Cell&gt;2024-01-14&lt;/Cell&gt;
+        &lt;/Row&gt;
+        &lt;Row&gt;
+            &lt;Cell&gt;Spreadsheet.xlsx&lt;/Cell&gt;
+            &lt;Cell&gt;Excel&lt;/Cell&gt;
+            &lt;Cell&gt;2024-01-13&lt;/Cell&gt;
+        &lt;/Row&gt;
+    &lt;/TableBody&gt;
+&lt;/Table&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">selectionMode</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const SelectionMode = () =&gt; (
+  &lt;Table aria-label=&quot;ファイル一覧&quot; selectionMode=&quot;multiple&quot;&gt;
+    &lt;TableHeader&gt;
+      &lt;Column&gt;
+        &lt;Checkbox slot=&quot;selection&quot;&gt;{null}&lt;/Checkbox&gt;
+      &lt;/Column&gt;
+      &lt;Column isRowHeader&gt;名前&lt;/Column&gt;
+      &lt;Column&gt;種類&lt;/Column&gt;
+      &lt;Column&gt;サイズ&lt;/Column&gt;
+    &lt;/TableHeader&gt;
+    &lt;TableBody&gt;
+      &lt;Row&gt;
+        &lt;Cell&gt;
+          &lt;Checkbox slot=&quot;selection&quot;&gt;{null}&lt;/Checkbox&gt;
+        &lt;/Cell&gt;
+        &lt;Cell&gt;File1.txt&lt;/Cell&gt;
+        &lt;Cell&gt;テキスト&lt;/Cell&gt;
+        &lt;Cell&gt;1.2 KB&lt;/Cell&gt;
+      &lt;/Row&gt;
+      &lt;Row&gt;
+        &lt;Cell&gt;
+          &lt;Checkbox slot=&quot;selection&quot;&gt;{null}&lt;/Checkbox&gt;
+        &lt;/Cell&gt;
+        &lt;Cell&gt;File2.doc&lt;/Cell&gt;
+        &lt;Cell&gt;文書&lt;/Cell&gt;
+        &lt;Cell&gt;45 KB&lt;/Cell&gt;
+      &lt;/Row&gt;
+      &lt;Row&gt;
+        &lt;Cell&gt;
+          &lt;Checkbox slot=&quot;selection&quot;&gt;{null}&lt;/Checkbox&gt;
+        &lt;/Cell&gt;
+        &lt;Cell&gt;File3.jpg&lt;/Cell&gt;
+        &lt;Cell&gt;画像&lt;/Cell&gt;
+        &lt;Cell&gt;230 KB&lt;/Cell&gt;
+      &lt;/Row&gt;
+    &lt;/TableBody&gt;
+  &lt;/Table&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Tabs">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Tabs</h2>
+      <div class="badges">
+        <label for="c-21-components-navigation-tabs-props" class="badge ok as-toggle">5 prop types</label>
+        <label for="c-21-components-navigation-tabs-info" class="badge info as-toggle">1 info</label>
+        <label for="c-21-components-navigation-tabs-stories" class="badge ok as-toggle">3 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Tab/Tabs.stories.tsx">components-navigation-tabs · ./src/Tab/Tabs.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-21-components-navigation-tabs-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-21-components-navigation-tabs-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-21-components-navigation-tabs-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">5 prop types</span>
+            </div>
+            <pre><code>Component: src/Tab/index.tsx::Tabs</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * The children of the component. A function may be provided to alter the children based on component state.
+ */
+children?: ChildrenOrFunction&lt;TabRenderProps&gt;
+
+/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;TabRenderProps&gt;
+
+ref?: Ref&lt;HTMLDivElement&gt;
+
+/**
+ * A slot name for the component. Slots allow the component to receive props from a parent component.
+ * An explicit `null` value indicates that the local props completely override all props received from a parent.
+ */
+slot?: string | null
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;TabRenderProps&gt;</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Tab, TabList, Tabs } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Tabs defaultSelectedKey=&quot;profile&quot; isDisabled={false}&gt;
+    &lt;TabList&gt;
+        &lt;Tab id=&quot;profile&quot;&gt;プロフィール&lt;/Tab&gt;
+        &lt;Tab id=&quot;security&quot;&gt;セキュリティ&lt;/Tab&gt;
+        &lt;Tab id=&quot;notification&quot;&gt;通知&lt;/Tab&gt;
+    &lt;/TabList&gt;
+&lt;/Tabs&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">defaultSelectedKey</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const DefaultSelectedKey = () =&gt; &lt;Tabs defaultSelectedKey=&quot;security&quot; isDisabled={false}&gt;
+    &lt;TabList&gt;
+        &lt;Tab id=&quot;profile&quot;&gt;プロフィール&lt;/Tab&gt;
+        &lt;Tab id=&quot;security&quot;&gt;セキュリティ&lt;/Tab&gt;
+        &lt;Tab id=&quot;notification&quot;&gt;通知&lt;/Tab&gt;
+    &lt;/TabList&gt;
+&lt;/Tabs&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isDisabled</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsDisabled = () =&gt; (
+  &lt;Tabs&gt;
+    &lt;TabList&gt;
+      &lt;Tab id=&quot;profile&quot;&gt;プロフィール&lt;/Tab&gt;
+      &lt;Tab id=&quot;security&quot; isDisabled&gt;
+        セキュリティ
+      &lt;/Tab&gt;
+      &lt;Tab id=&quot;notification&quot;&gt;通知&lt;/Tab&gt;
+    &lt;/TabList&gt;
+  &lt;/Tabs&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="TextField">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> TextField</h2>
+      <div class="badges">
+        <label for="c-22-components-forms-textfield-props" class="badge ok as-toggle">12 prop types</label>
+        <label for="c-22-components-forms-textfield-info" class="badge info as-toggle">1 info</label>
+        <label for="c-22-components-forms-textfield-stories" class="badge ok as-toggle">13 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/TextField/TextField.stories.tsx">components-forms-textfield · ./src/TextField/TextField.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-22-components-forms-textfield-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-22-components-forms-textfield-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-22-components-forms-textfield-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">12 prop types</span>
+            </div>
+            <pre><code>Component: src/TextField/index.tsx::TextField</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * ラベル下部の補足説明テキスト
+ */
+caption?: string
+
+/**
+ * The CSS [className](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) for the element. A function may be provided to compute the class based on component state.
+ */
+className?: ClassNameOrFunction&lt;TextFieldRenderProps&gt;
+
+/**
+ * 入力フィールドの色テーマ。negativeでエラー状態を表現
+ */
+color?: TextFieldColor
+
+/**
+ * 入力要素の種類。textareaで複数行入力に対応
+ */
+component?: TextFieldElementType
+
+/**
+ * Whether the value is invalid.
+ */
+isInvalid?: boolean
+
+/**
+ * 入力フィールドのラベルテキスト
+ */
+label?: string
+
+/**
+ * 未入力時のプレースホルダーテキスト
+ */
+placeholder?: string
+
+/**
+ * 入力フィールドのサイズ
+ */
+size?: TextFieldSize
+
+/**
+ * A slot name for the component. Slots allow the component to receive props from a parent component.
+ * An explicit `null` value indicates that the local props completely override all props received from a parent.
+ */
+slot?: string | null
+
+/**
+ * The inline [style](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style) for the element. A function may be provided to compute the style based on component state.
+ */
+style?: StyleOrFunction&lt;TextFieldRenderProps&gt;
+
+/**
+ * Whether to use native HTML form validation to prevent form submission
+ * when the value is missing or invalid, or mark the field as required
+ * or invalid via ARIA.
+ */
+validationBehavior?: &quot;native&quot; | &quot;aria&quot; = &#39;native&#39;
+
+/**
+ * 入力フィールドの幅
+ */
+width?: TextFieldWidth</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Stack, TextField } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;TextField
+    label=&quot;メールアドレス&quot;
+    caption=&quot;例：email@example.com&quot;
+    placeholder=&quot;email@example.com&quot;
+    size=&quot;m&quot;
+    width=&quot;auto&quot;
+    color=&quot;neutral&quot;
+    component=&quot;input&quot;
+    isRequired={false}
+    isDisabled={false}
+    isReadOnly={false} /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">label</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Label = () =&gt; &lt;TextField label=&quot;氏名&quot; placeholder=&quot;山田 太郎&quot; /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">caption</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Caption = () =&gt; (
+  &lt;TextField
+    label=&quot;ユーザー名&quot;
+    caption=&quot;半角英数字 20 文字以内で入力してください&quot;
+    placeholder=&quot;pepabo&quot;
+  /&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">placeholder</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Placeholder = () =&gt; &lt;TextField label=&quot;メールアドレス&quot; placeholder=&quot;email@example.com&quot; /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Size = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;TextField label=&quot;s&quot; size=&quot;s&quot; placeholder=&quot;入力してください&quot; /&gt;
+    &lt;TextField label=&quot;m&quot; size=&quot;m&quot; placeholder=&quot;入力してください&quot; /&gt;
+    &lt;TextField label=&quot;l&quot; size=&quot;l&quot; placeholder=&quot;入力してください&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">width</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Width = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;TextField label=&quot;auto&quot; width=&quot;auto&quot; placeholder=&quot;入力してください&quot; /&gt;
+    &lt;TextField label=&quot;third&quot; width=&quot;third&quot; placeholder=&quot;入力してください&quot; /&gt;
+    &lt;TextField label=&quot;half&quot; width=&quot;half&quot; placeholder=&quot;入力してください&quot; /&gt;
+    &lt;TextField label=&quot;full&quot; width=&quot;full&quot; placeholder=&quot;入力してください&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">color</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Color = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;TextField label=&quot;neutral&quot; color=&quot;neutral&quot; placeholder=&quot;入力してください&quot; /&gt;
+    &lt;TextField label=&quot;negative&quot; color=&quot;negative&quot; placeholder=&quot;入力してください&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">component</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Component = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;TextField label=&quot;input&quot; component=&quot;input&quot; placeholder=&quot;1 行のテキスト&quot; /&gt;
+    &lt;TextField label=&quot;textarea&quot; component=&quot;textarea&quot; placeholder=&quot;複数行のテキスト&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isRequired</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsRequired = () =&gt; &lt;TextField label=&quot;氏名&quot; placeholder=&quot;山田 太郎&quot; isRequired /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isDisabled</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsDisabled = () =&gt; &lt;TextField label=&quot;氏名&quot; defaultValue=&quot;山田 太郎&quot; isDisabled /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">isReadOnly</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const IsReadOnly = () =&gt; (
+  &lt;TextField
+    label=&quot;会員番号&quot;
+    caption=&quot;この項目は変更できません&quot;
+    defaultValue=&quot;123456&quot;
+    isReadOnly
+  /&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">defaultValue</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const DefaultValue = () =&gt; &lt;TextField label=&quot;氏名&quot; defaultValue=&quot;山田 太郎&quot; /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">validate</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Validate = () =&gt; (
+  &lt;TextField
+    label=&quot;ユーザー名&quot;
+    caption=&quot;半角英数字 20 文字以内で入力してください&quot;
+    defaultValue=&quot;ぺぱぼ&quot;
+    validate={(value) =&gt; (/^[a-zA-Z0-9]*$/.test(value) ? null : &#39;半角英数字で入力してください&#39;)}
+    validationBehavior=&quot;aria&quot;
+  /&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+<article
+  class="card 
+  no-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Typography">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Typography</h2>
+      <div class="badges">
+        <label for="c-23-components-data-display-typography-props" class="badge ok as-toggle">5 prop types</label>
+        <label for="c-23-components-data-display-typography-info" class="badge info as-toggle">1 info</label>
+        <label for="c-23-components-data-display-typography-stories" class="badge ok as-toggle">6 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Typography/Typography.stories.tsx">components-data-display-typography · ./src/Typography/Typography.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="c-23-components-data-display-typography-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-23-components-data-display-typography-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  <input id="c-23-components-data-display-typography-props" class="tg tg-props" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+        <div class="panel panel-props">
+          <div class="note ok">
+            <div class="row">
+              <span class="ex-name">Prop types <small>(react-docgen-typescript)</small></span>
+              <span class="badge ok">5 prop types</span>
+            </div>
+            <pre><code>Component: src/Typography/index.tsx::Typography</code></pre>
+            <pre><code>Props:</code></pre>
+            <pre><code>/**
+ * テキストのセマンティックカラー
+ */
+color?: TypographyColor = high_emphasis
+
+/**
+ * レンダリングするHTML要素
+ */
+component?: ElementType = p
+
+/**
+ * 行間の密度
+ */
+density?: TypographyDensity = normal
+
+/**
+ * フォントの太さ
+ */
+fontWeight?: TypographyFontWeight = normal
+
+/**
+ * テキストのサイズ。レスポンシブ対応でブレークポイントごとに指定可能
+ */
+size?: Responsive&lt;TypographySize&gt; = m</code></pre>
+          </div>
+        </div>
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Stack, Typography } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Typography
+    size=&quot;m&quot;
+    density=&quot;normal&quot;
+    fontWeight=&quot;normal&quot;
+    color=&quot;high_emphasis&quot;
+    component=&quot;p&quot;&gt;テキスト&lt;/Typography&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Size = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Typography size=&quot;xxs&quot;&gt;xxs&lt;/Typography&gt;
+    &lt;Typography size=&quot;xs&quot;&gt;xs&lt;/Typography&gt;
+    &lt;Typography size=&quot;s&quot;&gt;s&lt;/Typography&gt;
+    &lt;Typography size=&quot;m&quot;&gt;m&lt;/Typography&gt;
+    &lt;Typography size=&quot;l&quot;&gt;l&lt;/Typography&gt;
+    &lt;Typography size=&quot;xl&quot;&gt;xl&lt;/Typography&gt;
+    &lt;Typography size=&quot;xxl&quot;&gt;xxl&lt;/Typography&gt;
+    &lt;Typography size=&quot;xxxl&quot;&gt;xxxl&lt;/Typography&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">density</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Density = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Typography density=&quot;comfort&quot;&gt;comfort: {longText}&lt;/Typography&gt;
+    &lt;Typography density=&quot;normal&quot;&gt;normal: {longText}&lt;/Typography&gt;
+    &lt;Typography density=&quot;dense&quot;&gt;dense: {longText}&lt;/Typography&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">fontWeight</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const FontWeight = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Typography fontWeight=&quot;normal&quot;&gt;normal&lt;/Typography&gt;
+    &lt;Typography fontWeight=&quot;bold&quot;&gt;bold&lt;/Typography&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">color</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Color = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Typography color=&quot;high_emphasis&quot;&gt;high_emphasis&lt;/Typography&gt;
+    &lt;Typography color=&quot;medium_emphasis&quot;&gt;medium_emphasis&lt;/Typography&gt;
+    &lt;Typography color=&quot;low_emphasis&quot;&gt;low_emphasis&lt;/Typography&gt;
+    &lt;Typography color=&quot;informative&quot;&gt;informative&lt;/Typography&gt;
+    &lt;Typography color=&quot;positive&quot;&gt;positive&lt;/Typography&gt;
+    &lt;Typography color=&quot;notice&quot;&gt;notice&lt;/Typography&gt;
+    &lt;Typography color=&quot;negative&quot;&gt;negative&lt;/Typography&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">component</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Component = () =&gt; (
+  &lt;Stack gap=&quot;s&quot;&gt;
+    &lt;Typography component=&quot;h2&quot; size=&quot;xl&quot; fontWeight=&quot;bold&quot;&gt;
+      h2
+    &lt;/Typography&gt;
+    &lt;Typography component=&quot;p&quot;&gt;p&lt;/Typography&gt;
+    &lt;Typography component=&quot;span&quot;&gt;span&lt;/Typography&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article>
+    </div>
+    <div class="error-groups" role="region" aria-label="Prop type error groups">
+        <section class="group">
+          <input id="no-component-found-toggle" class="group-tg" type="checkbox" hidden />
+          <label for="no-component-found-toggle" class="group-header">
+            <span class="caret">▸</span>
+            <span class="group-title">No component found</span>
+            <span class="group-count">1</span>
+          </label>
+          <div class="group-cards">
+<article
+  class="card 
+  has-error 
+  has-info 
+  no-story-error
+  no-doc-error"
+  role="listitem"
+  aria-label="Avatar">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-err"></span> Avatar</h2>
+      <div class="badges">
+        <label for="c-error-0-components-data-display-avatar-err" class="badge err as-toggle">prop type error</label>
+        <label for="c-error-0-components-data-display-avatar-info" class="badge info as-toggle">1 info</label>
+        <label for="c-error-0-components-data-display-avatar-stories" class="badge ok as-toggle">2 stories</label>
+        
+      </div>
+    </div>
+    <div class="meta" title="./src/Avatar/Avatar.stories.tsx">components-data-display-avatar · ./src/Avatar/Avatar.stories.tsx</div>
+    
+    
+    
+  </div>
+
+  <!-- ⬇️ Hidden toggles must be siblings BEFORE .panels -->
+  <input id="c-error-0-components-data-display-avatar-err" class="tg tg-err" type="checkbox" hidden />
+  <input id="c-error-0-components-data-display-avatar-info" class="tg tg-info" type="checkbox" hidden />
+  <input id="c-error-0-components-data-display-avatar-stories" class="tg tg-stories" type="checkbox" hidden />
+  
+  
+
+  <div class="panels">
+    
+        <div class="panel panel-err">
+          
+    <div class="note err">
+      <div class="note-title">Prop type error</div>
+      <div class="note-body"><pre><code>We could not detect the component from your story file. Specify meta.component.
+   9 | }
+  10 |
+&gt; 11 | const meta: Meta&lt;AvatarStoryProps&gt; = {
+     | ^
+  12 |   title: &#39;Components/Data Display/Avatar&#39;,
+  13 |   parameters: {
+  14 |     layout: &#39;centered&#39;,
+
+./src/Avatar/Avatar.stories.tsx:
+import { Stack } from &#39;../Stack&#39;
+import { Avatar } from &#39;./index&#39;
+
+import type { Meta, StoryObj } from &#39;@storybook/react-vite&#39;
+import type { ComponentPropsWithoutRef } from &#39;react&#39;
+
+type AvatarStoryProps = ComponentPropsWithoutRef&lt;&#39;img&#39;&gt; &amp; {
+  size?: &#39;xs&#39; | &#39;s&#39; | &#39;m&#39; | &#39;l&#39;
+}
+
+const meta: Meta&lt;AvatarStoryProps&gt; = {
+  title: &#39;Components/Data Display/Avatar&#39;,
+  parameters: {
+    layout: &#39;centered&#39;,
+  },
+  tags: [&#39;autodocs&#39;],
+  argTypes: {
+    size: {
+      control: &#39;select&#39;,
+      options: [&#39;xs&#39;, &#39;s&#39;, &#39;m&#39;, &#39;l&#39;],
+    },
+  },
+}
+
+export default meta
+type Story = StoryObj&lt;AvatarStoryProps&gt;
+
+export const Playground: Story = {
+  render: (args) =&gt; &lt;Avatar {...args} /&gt;,
+  args: {
+    src: &#39;https://i.pravatar.cc/150?img=1&#39;,
+    alt: &#39;山田 花子&#39;,
+    size: &#39;m&#39;,
+  },
+}
+
+export const Size: Story = {
+  name: &#39;size&#39;,
+  render: () =&gt; (
+    &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+      &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=2&quot; alt=&quot;鈴木 太郎&quot; size=&quot;xs&quot; /&gt;
+      &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=3&quot; alt=&quot;佐藤 次郎&quot; size=&quot;s&quot; /&gt;
+      &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=1&quot; alt=&quot;山田 花子&quot; size=&quot;m&quot; /&gt;
+      &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=4&quot; alt=&quot;田中 由紀&quot; size=&quot;l&quot; /&gt;
+    &lt;/Stack&gt;
+  ),
+}
+</code></pre></div>
+    </div>
+        </div>
+    
+        <div class="panel panel-info">
+          
+    <div class="note info">
+      <div class="note-title">Info</div>
+      <div class="note-body">No description found. Write a jsdoc comment such as /** Component description */.</div>
+    </div>
+        </div>
+    
+    
+        <div class="panel panel-stories">
+          
+          
+          
+          <div class="note ok">
+                <div class="row">
+                  <span class="ex-name">Imports</span>
+                </div>
+                <pre><code>import { Avatar, Stack } from "wip-ui";</code></pre>
+              </div>
+          
+          
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">Playground</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Playground = () =&gt; &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=1&quot; alt=&quot;山田 花子&quot; size=&quot;m&quot; /&gt;;</code></pre>
+            </div>
+            <div class="note ok">
+              <div class="row">
+                <span class="ex-name">size</span>
+                <span class="badge ok">story ok</span>
+              </div>
+              
+              
+              <pre><code>const Size = () =&gt; (
+  &lt;Stack flexDirection=&quot;row&quot; gap=&quot;s&quot; alignItems=&quot;center&quot;&gt;
+    &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=2&quot; alt=&quot;鈴木 太郎&quot; size=&quot;xs&quot; /&gt;
+    &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=3&quot; alt=&quot;佐藤 次郎&quot; size=&quot;s&quot; /&gt;
+    &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=1&quot; alt=&quot;山田 花子&quot; size=&quot;m&quot; /&gt;
+    &lt;Avatar src=&quot;https://i.pravatar.cc/150?img=4&quot; alt=&quot;田中 由紀&quot; size=&quot;l&quot; /&gt;
+  &lt;/Stack&gt;
+);</code></pre>
+            </div>
+        </div>
+    
+  </div>
+</article></div>
+        </section>
+      </div>
+    <h2 class="section-title">Unattached Docs</h2>
+    <div class="grid" role="list">
+      
+<article
+  class="card is-doc no-doc-error"
+  role="listitem"
+  aria-label="Docs">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Introduction/Overview</h2>
+      <div class="badges">
+        
+        <label for="doc-0-introduction-overview-docs-content" class="badge ok as-toggle">view content</label>
+      </div>
+    </div>
+    <div class="meta" title="./src/docs/Overview.mdx">introduction-overview--docs · ./src/docs/Overview.mdx</div>
+    <div>wip-ui の概要と inhouse デザインシステムとの関係</div>
+  </div>
+
+  <!-- Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="doc-0-introduction-overview-docs-content" class="tg tg-content" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-content">
+          <div class="mdx-content">
+            <pre><code>import { Meta } from &#39;@storybook/addon-docs/blocks&#39;
+import { Table, TableHeader, TableBody, Column, Row, Cell } from &#39;../Table&#39;
+
+&lt;Meta title=&quot;Introduction/Overview&quot; summary=&quot;wip-ui の概要と inhouse デザインシステムとの関係&quot; /&gt;
+
+# wip-ui
+
+wip-ui は、GMO ペパボの共通基盤デザインシステム [inhouse](https://design.pepabo.com/inhouse/) をベースにした React コンポーネントライブラリです。
+
+## inhouse とは
+
+inhouse は、ペパボが展開する複数サービスに共通するデザイン原則・ガイドライン・アセットを統一した共通基盤デザインシステムです。プロダクトデザインとコミュニケーションデザインの両方をカバーし、サービスごとのブランドを維持しながら一貫性を担保します。
+
+詳細は [design.pepabo.com/inhouse](https://design.pepabo.com/inhouse/) を参照してください。
+
+## フレーバー
+
+inhouse の中核となる仕組みが **フレーバー（Flavor）** です。フレーバーは、ブランドごとに上書き可能なデザイントークンの集合で、以下の 5 つのカテゴリで構成されます。
+
+&lt;Table aria-label=&quot;フレーバーカテゴリ一覧&quot;&gt;
+  &lt;TableHeader&gt;
+    &lt;Column id=&quot;category&quot; isRowHeader&gt;カテゴリ&lt;/Column&gt;
+    &lt;Column id=&quot;content&quot;&gt;内容&lt;/Column&gt;
+  &lt;/TableHeader&gt;
+  &lt;TableBody&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Color**&lt;/Cell&gt;&lt;Cell&gt;プリミティブカラーとセマンティックカラー&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Elevation**&lt;/Cell&gt;&lt;Cell&gt;影によるZ軸方向の奥行き表現（レベル 0〜6）&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Icon**&lt;/Cell&gt;&lt;Cell&gt;Material Design ベースのアイコングリッド&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Sizing**&lt;/Cell&gt;&lt;Cell&gt;スペーシング、ボタン高さ、角丸、線幅&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Typography**&lt;/Cell&gt;&lt;Cell&gt;フォントサイズ、行間、フォントファミリー&lt;/Cell&gt;&lt;/Row&gt;
+  &lt;/TableBody&gt;
+&lt;/Table&gt;
+
+wip-ui では以下のフレーバーが利用可能です。Storybook のツールバーから切り替えて確認できます。
+
+- **Pepper**（デフォルト）
+- **Minne**
+- **Apollo**
+- **Nachiguro**
+- **Flippers**
+- **Kung-pu**
+- **Lolipop**
+
+セットアップ方法は [Getting Started](?path=/docs/introduction-getting-started--docs) を参照してください。
+
+## トークンの 2 層構造
+
+デザイントークンはプリミティブトークンとセマンティックトークンの 2 層で管理されます。
+
+- **プリミティブトークン**: 具体的な値を直接定義（例: `$blue-600: #3e6f99`）
+- **セマンティックトークン**: 意味を持つ名前でプリミティブトークンを参照（例: `$informative-color: $blue-600`）
+
+コンポーネントではセマンティックトークンを使用してください。フレーバーを切り替えた際に、プリミティブトークンの値が変わってもセマンティックな意味が保たれます。
+</code></pre>
+          </div>
+        </div>
+  </div>
+</article>
+<article
+  class="card is-doc no-doc-error"
+  role="listitem"
+  aria-label="Docs">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Introduction/Getting Started</h2>
+      <div class="badges">
+        
+        <label for="doc-1-introduction-getting-started-docs-content" class="badge ok as-toggle">view content</label>
+      </div>
+    </div>
+    <div class="meta" title="./src/docs/GettingStarted.mdx">introduction-getting-started--docs · ./src/docs/GettingStarted.mdx</div>
+    <div>wip-ui のインストールとセットアップ手順</div>
+  </div>
+
+  <!-- Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="doc-1-introduction-getting-started-docs-content" class="tg tg-content" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-content">
+          <div class="mdx-content">
+            <pre><code>import { Meta } from &#39;@storybook/addon-docs/blocks&#39;
+
+&lt;Meta title=&quot;Introduction/Getting Started&quot; summary=&quot;wip-ui のインストールとセットアップ手順&quot; /&gt;
+
+# Getting Started
+
+## インストール
+
+```bash
+npm install wip-ui react react-dom react-aria-components
+```
+
+## セットアップ
+
+### 1. CSS のインポート
+
+使用するフレーバーの CSS ファイルをアプリケーションのエントリーポイントでインポートします。
+
+```tsx
+// 例: Pepper フレーバーを使用する場合
+import &#39;wip-ui/css/pepper.css&#39;
+```
+
+利用可能なフレーバーは [Overview](?path=/docs/introduction-overview--docs) を参照してください。
+
+### 2. FlavorProvider の配置
+
+アプリケーションのルートに `FlavorProvider` を配置して、使用するフレーバーを指定します。
+
+```tsx
+import { FlavorProvider } from &#39;wip-ui&#39;
+import &#39;wip-ui/css/lolipop.css&#39;
+
+function App() {
+  return (
+    &lt;FlavorProvider flavor=&quot;lolipop&quot;&gt;
+      {/* アプリケーション全体 */}
+    &lt;/FlavorProvider&gt;
+  )
+}
+```
+
+`FlavorProvider` の詳細な API は [Introduction/FlavorProvider](?path=/docs/introduction-flavorprovider--docs) を参照してください。
+
+### 3. コンポーネントの使用
+
+```tsx
+import { Button, Typography, Stack } from &#39;wip-ui&#39;
+
+function MyPage() {
+  return (
+    &lt;Stack gap=&quot;m&quot;&gt;
+      &lt;Typography component=&quot;h1&quot; size=&quot;xl&quot; fontWeight=&quot;bold&quot;&gt;
+        ページタイトル
+      &lt;/Typography&gt;
+      &lt;Button color=&quot;interactive&quot;&gt;アクション&lt;/Button&gt;
+    &lt;/Stack&gt;
+  )
+}
+```
+
+## 必須ピア依存
+
+- `react` ^19.1.1
+- `react-dom` ^19.1.1
+- `react-aria-components` ^1.12.2
+</code></pre>
+          </div>
+        </div>
+  </div>
+</article>
+<article
+  class="card is-doc no-doc-error"
+  role="listitem"
+  aria-label="Docs">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Introduction/Changelog</h2>
+      <div class="badges">
+        
+        <label for="doc-2-introduction-changelog-docs-content" class="badge ok as-toggle">view content</label>
+      </div>
+    </div>
+    <div class="meta" title="./src/docs/Changelog.mdx">introduction-changelog--docs · ./src/docs/Changelog.mdx</div>
+    <div>wip-ui のリリース履歴</div>
+  </div>
+
+  <!-- Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="doc-2-introduction-changelog-docs-content" class="tg tg-content" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-content">
+          <div class="mdx-content">
+            <pre><code>import { Meta } from &#39;@storybook/addon-docs/blocks&#39;
+
+&lt;Meta title=&quot;Introduction/Changelog&quot; summary=&quot;wip-ui のリリース履歴&quot; /&gt;
+
+# Changelog
+
+リリース履歴は GitHub リポジトリの [Releases](https://github.com/pepabo/wip-ui/releases) を参照してください。
+</code></pre>
+          </div>
+        </div>
+  </div>
+</article>
+<article
+  class="card is-doc no-doc-error"
+  role="listitem"
+  aria-label="Docs">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Foundations/Colors</h2>
+      <div class="badges">
+        
+        <label for="doc-3-foundations-colors-docs-content" class="badge ok as-toggle">view content</label>
+      </div>
+    </div>
+    <div class="meta" title="./src/docs/Color.mdx">foundations-colors--docs · ./src/docs/Color.mdx</div>
+    <div>カラートークンの体系と使い分けガイド</div>
+  </div>
+
+  <!-- Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="doc-3-foundations-colors-docs-content" class="tg tg-content" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-content">
+          <div class="mdx-content">
+            <pre><code>import { Canvas, Meta } from &#39;@storybook/addon-docs/blocks&#39;
+import { Table, TableHeader, TableBody, Column, Row, Cell } from &#39;../Table&#39;
+import * as ColorStories from &#39;./Color.stories&#39;
+
+&lt;Meta title=&quot;Foundations/Colors&quot; summary=&quot;カラートークンの体系と使い分けガイド&quot; /&gt;
+
+# Colors
+
+wip-ui のカラーシステムは [inhouse のカラートークン](https://design.pepabo.com/inhouse/flavors/color/) に基づいています。プリミティブカラーとセマンティックカラーの 2 層で構成され、フレーバーごとに異なるパレットが適用されます。
+
+## プリミティブカラー
+
+色名とレベル（明度段階）の組み合わせで定義される直接的な色値です。
+
+&lt;Table aria-label=&quot;プリミティブカラー一覧&quot;&gt;
+  &lt;TableHeader&gt;
+    &lt;Column id=&quot;name&quot; isRowHeader&gt;色名&lt;/Column&gt;
+    &lt;Column id=&quot;range&quot;&gt;レベル範囲&lt;/Column&gt;
+  &lt;/TableHeader&gt;
+  &lt;TableBody&gt;
+    &lt;Row&gt;&lt;Cell&gt;Black / White&lt;/Cell&gt;&lt;Cell&gt;1000&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;Gray&lt;/Cell&gt;&lt;Cell&gt;50〜900&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;Blue&lt;/Cell&gt;&lt;Cell&gt;50〜900&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;Green&lt;/Cell&gt;&lt;Cell&gt;50〜900&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;Red&lt;/Cell&gt;&lt;Cell&gt;50〜900&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;Yellow&lt;/Cell&gt;&lt;Cell&gt;50〜900&lt;/Cell&gt;&lt;/Row&gt;
+  &lt;/TableBody&gt;
+&lt;/Table&gt;
+
+レベルの数値が大きいほど暗くなります。コンポーネント実装では直接使用せず、セマンティックカラーを使用してください。
+
+## セマンティックカラー
+
+意図（intention）に基づいた名前で定義される色です。コンポーネントの `color` prop はこの体系に対応しています。
+
+&lt;Table aria-label=&quot;セマンティックカラー一覧&quot;&gt;
+  &lt;TableHeader&gt;
+    &lt;Column id=&quot;name&quot; isRowHeader&gt;セマンティック名&lt;/Column&gt;
+    &lt;Column id=&quot;meaning&quot;&gt;意味&lt;/Column&gt;
+    &lt;Column id=&quot;usage&quot;&gt;使用場面&lt;/Column&gt;
+  &lt;/TableHeader&gt;
+  &lt;TableBody&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Neutral**&lt;/Cell&gt;&lt;Cell&gt;中立&lt;/Cell&gt;&lt;Cell&gt;標準の背景、ボーダー、テキスト&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Informative**&lt;/Cell&gt;&lt;Cell&gt;情報提供&lt;/Cell&gt;&lt;Cell&gt;ヘルプ、案内、リンク&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Positive**&lt;/Cell&gt;&lt;Cell&gt;肯定・成功&lt;/Cell&gt;&lt;Cell&gt;完了メッセージ、成功状態&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Negative**&lt;/Cell&gt;&lt;Cell&gt;否定・エラー&lt;/Cell&gt;&lt;Cell&gt;エラーメッセージ、削除&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Notice**&lt;/Cell&gt;&lt;Cell&gt;注意・警告&lt;/Cell&gt;&lt;Cell&gt;警告メッセージ、注意喚起&lt;/Cell&gt;&lt;/Row&gt;
+  &lt;/TableBody&gt;
+&lt;/Table&gt;
+
+### Implication カラー
+
+慣例的に色の意味が定着しているケースに使用します。
+
+&lt;Table aria-label=&quot;Implication カラー一覧&quot;&gt;
+  &lt;TableHeader&gt;
+    &lt;Column id=&quot;name&quot; isRowHeader&gt;名前&lt;/Column&gt;
+    &lt;Column id=&quot;meaning&quot;&gt;意味&lt;/Column&gt;
+    &lt;Column id=&quot;example&quot;&gt;例&lt;/Column&gt;
+  &lt;/TableHeader&gt;
+  &lt;TableBody&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Interactive**&lt;/Cell&gt;&lt;Cell&gt;インタラクティブ要素&lt;/Cell&gt;&lt;Cell&gt;ハイパーリンク&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;**Favorite**&lt;/Cell&gt;&lt;Cell&gt;お気に入り&lt;/Cell&gt;&lt;Cell&gt;ハートアイコン&lt;/Cell&gt;&lt;/Row&gt;
+  &lt;/TableBody&gt;
+&lt;/Table&gt;
+
+## カラートークン一覧
+
+ツールバーのフレーバー切り替えで各テーマのカラーを確認できます。
+
+&lt;Canvas of={ColorStories.Swatches} sourceState=&quot;none&quot; /&gt;
+
+## アクセシビリティ
+
+色だけで情報を伝えないでください。色覚に依存しないよう、アイコンやテキストなど他の区別手段を併用してください。
+</code></pre>
+          </div>
+        </div>
+  </div>
+</article>
+<article
+  class="card is-doc no-doc-error"
+  role="listitem"
+  aria-label="Docs">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Foundations/Typography</h2>
+      <div class="badges">
+        
+        <label for="doc-4-foundations-typography-docs-content" class="badge ok as-toggle">view content</label>
+      </div>
+    </div>
+    <div class="meta" title="./src/docs/Typography.mdx">foundations-typography--docs · ./src/docs/Typography.mdx</div>
+    <div>タイポグラフィトークンの体系</div>
+  </div>
+
+  <!-- Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="doc-4-foundations-typography-docs-content" class="tg tg-content" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-content">
+          <div class="mdx-content">
+            <pre><code>import { Canvas, Meta } from &#39;@storybook/addon-docs/blocks&#39;
+import * as TypographyStories from &#39;./Typography.stories&#39;
+
+&lt;Meta title=&quot;Foundations/Typography&quot; summary=&quot;タイポグラフィトークンの体系&quot; /&gt;
+
+# Typography
+
+wip-ui のタイポグラフィは [inhouse のタイポグラフィトークン](https://design.pepabo.com/inhouse/flavors/typography/) に基づいています。4px のバーティカルリズムグリッドに沿ったフォントサイズと行間が定義されています。
+
+## フォントサイズ
+
+8 段階のサイズスケールが用意されています。`m`（16px = 1rem）が基準です。
+
+&lt;Canvas of={TypographyStories.TypeScale} sourceState=&quot;none&quot; /&gt;
+
+## 行間（Density）
+
+行間は 3 段階の密度で制御します。用途に応じて使い分けてください。
+
+&lt;Canvas of={TypographyStories.Density} sourceState=&quot;none&quot; /&gt;
+
+## テキストカラー
+
+強調度に基づく 3 段階のカラーと、状態を示すセマンティックカラーが用意されています。
+
+&lt;Canvas of={TypographyStories.TextColors} sourceState=&quot;none&quot; /&gt;
+
+</code></pre>
+          </div>
+        </div>
+  </div>
+</article>
+<article
+  class="card is-doc no-doc-error"
+  role="listitem"
+  aria-label="Docs">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Foundations/Spacing</h2>
+      <div class="badges">
+        
+        <label for="doc-5-foundations-spacing-docs-content" class="badge ok as-toggle">view content</label>
+      </div>
+    </div>
+    <div class="meta" title="./src/docs/SpacingAndLayout.mdx">foundations-spacing--docs · ./src/docs/SpacingAndLayout.mdx</div>
+    <div>スペーシングトークンのスケール</div>
+  </div>
+
+  <!-- Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="doc-5-foundations-spacing-docs-content" class="tg tg-content" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-content">
+          <div class="mdx-content">
+            <pre><code>import { Canvas, Meta } from &#39;@storybook/addon-docs/blocks&#39;
+import * as SpacingStories from &#39;./Spacing.stories&#39;
+
+&lt;Meta title=&quot;Foundations/Spacing&quot; summary=&quot;スペーシングトークンのスケール&quot; /&gt;
+
+# Spacing
+
+wip-ui のスペーシングは [inhouse のサイジングトークン](https://design.pepabo.com/inhouse/flavors/sizing/) に基づいています。16px と 24px を基準値として、タイポグラフィから導出されたスケールで統一されています。
+
+## スペーシングスケール
+
+コンポーネントの `gap`・`spacing` prop で使用するスケールです。
+
+&lt;Canvas of={SpacingStories.Scale} sourceState=&quot;none&quot; /&gt;
+
+## Gap の比較
+
+Stack の `gap` prop を変えたときの間隔の違いです。
+
+&lt;Canvas of={SpacingStories.GapComparison} sourceState=&quot;none&quot; /&gt;
+
+</code></pre>
+          </div>
+        </div>
+  </div>
+</article>
+<article
+  class="card is-doc no-doc-error"
+  role="listitem"
+  aria-label="Docs">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Foundations/Elevation</h2>
+      <div class="badges">
+        
+        <label for="doc-6-foundations-elevation-docs-content" class="badge ok as-toggle">view content</label>
+      </div>
+    </div>
+    <div class="meta" title="./src/docs/Elevation.mdx">foundations-elevation--docs · ./src/docs/Elevation.mdx</div>
+    <div>エレベーション（影）による奥行き表現のガイドライン</div>
+  </div>
+
+  <!-- Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="doc-6-foundations-elevation-docs-content" class="tg tg-content" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-content">
+          <div class="mdx-content">
+            <pre><code>import { Canvas, Meta } from &#39;@storybook/addon-docs/blocks&#39;
+import * as ElevationStories from &#39;./Elevation.stories&#39;
+
+&lt;Meta title=&quot;Foundations/Elevation&quot; summary=&quot;エレベーション（影）による奥行き表現のガイドライン&quot; /&gt;
+
+# Elevation
+
+wip-ui のエレベーションは [inhouse のエレベーショントークン](https://design.pepabo.com/inhouse/flavors/elevation/) に基づいています。影（box-shadow）を使って Z 軸方向の奥行きを表現し、要素間の階層関係をユーザーに伝えます。
+
+## レベル
+
+7 段階のエレベーションレベルが定義されています。数値が大きいほどユーザーに近い位置にあることを示します。
+
+&lt;Canvas of={ElevationStories.Levels} sourceState=&quot;none&quot; /&gt;
+
+## スタックの分類
+
+### Major Stack
+
+画面全体の「地面（ground plane）」を基準とした絶対的な重なり順を定義します。新しいスタッキングコンテキストを作り、z-index の関係を決定します。
+
+### Minor Stack
+
+Major Stack の上に相対的に重なる要素です。
+
+- **On タイプ**: 前の要素の上に積み重なる。新しいスタッキングコンテキストは作らない（例: ボタン、カード）
+- **Over タイプ**: スタッキングコンテキストを作り、他の要素の上に浮かぶ（例: ヘッダー、メニュー、ダイアログ）
+
+</code></pre>
+          </div>
+        </div>
+  </div>
+</article>
+<article
+  class="card is-doc no-doc-error"
+  role="listitem"
+  aria-label="Docs">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Foundations/Breakpoints</h2>
+      <div class="badges">
+        
+        <label for="doc-7-foundations-breakpoints-docs-content" class="badge ok as-toggle">view content</label>
+      </div>
+    </div>
+    <div class="meta" title="./src/docs/Breakpoints.mdx">foundations-breakpoints--docs · ./src/docs/Breakpoints.mdx</div>
+    <div>レスポンシブデザインのブレークポイント定義</div>
+  </div>
+
+  <!-- Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="doc-7-foundations-breakpoints-docs-content" class="tg tg-content" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-content">
+          <div class="mdx-content">
+            <pre><code>import { Canvas, Meta } from &#39;@storybook/addon-docs/blocks&#39;
+import * as BreakpointStories from &#39;./Breakpoints.stories&#39;
+import { Table, TableHeader, TableBody, Column, Row, Cell } from &#39;../Table&#39;
+
+&lt;Meta title=&quot;Foundations/Breakpoints&quot; summary=&quot;レスポンシブデザインのブレークポイント定義&quot; /&gt;
+
+# Breakpoints
+
+wip-ui のレスポンシブ対応は 7 段階のブレークポイントで構成されています。
+
+ブラウザのウィンドウ幅を変更すると、アクティブなブレークポイントがリアルタイムで切り替わります。
+
+&lt;Canvas of={BreakpointStories.Indicator} sourceState=&quot;none&quot; /&gt;
+
+&lt;Table aria-label=&quot;ブレークポイント一覧&quot;&gt;
+  &lt;TableHeader&gt;
+    &lt;Column id=&quot;name&quot; isRowHeader&gt;名前&lt;/Column&gt;
+    &lt;Column id=&quot;width&quot;&gt;幅&lt;/Column&gt;
+    &lt;Column id=&quot;usage&quot;&gt;主な用途&lt;/Column&gt;
+  &lt;/TableHeader&gt;
+  &lt;TableBody&gt;
+    &lt;Row&gt;&lt;Cell&gt;&lt;code&gt;xxs&lt;/code&gt;&lt;/Cell&gt;&lt;Cell&gt;330px〜&lt;/Cell&gt;&lt;Cell&gt;小型スマートフォン&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;&lt;code&gt;xs&lt;/code&gt;&lt;/Cell&gt;&lt;Cell&gt;480px〜&lt;/Cell&gt;&lt;Cell&gt;スマートフォン&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;&lt;code&gt;s&lt;/code&gt;&lt;/Cell&gt;&lt;Cell&gt;600px〜&lt;/Cell&gt;&lt;Cell&gt;大型スマートフォン・小型タブレット&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;&lt;code&gt;m&lt;/code&gt;&lt;/Cell&gt;&lt;Cell&gt;768px〜&lt;/Cell&gt;&lt;Cell&gt;タブレット&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;&lt;code&gt;l&lt;/code&gt;&lt;/Cell&gt;&lt;Cell&gt;1024px〜&lt;/Cell&gt;&lt;Cell&gt;小型デスクトップ&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;&lt;code&gt;xl&lt;/code&gt;&lt;/Cell&gt;&lt;Cell&gt;1280px〜&lt;/Cell&gt;&lt;Cell&gt;デスクトップ&lt;/Cell&gt;&lt;/Row&gt;
+    &lt;Row&gt;&lt;Cell&gt;&lt;code&gt;xxl&lt;/code&gt;&lt;/Cell&gt;&lt;Cell&gt;1400px〜&lt;/Cell&gt;&lt;Cell&gt;大型デスクトップ&lt;/Cell&gt;&lt;/Row&gt;
+  &lt;/TableBody&gt;
+&lt;/Table&gt;
+
+## レスポンシブ Props
+
+多くのコンポーネントの prop がブレークポイントごとの指定に対応しています。単一の値を渡すと全画面幅で適用され、オブジェクトを渡すとブレークポイントごとに切り替わります。
+
+```tsx
+// 全画面幅で同じ値
+&lt;Stack gap=&quot;m&quot;&gt;...&lt;/Stack&gt;
+
+// ブレークポイントごとに切り替え
+&lt;Stack gap={{ xxs: &#39;s&#39;, m: &#39;l&#39; }}&gt;...&lt;/Stack&gt;
+```
+
+## Responsive 型
+
+レスポンシブ対応の prop は `Responsive&lt;T&gt;` 型で定義されています。
+
+```typescript
+type Responsive&lt;T&gt; = T | {
+  xxs?: T
+  xs?: T
+  s?: T
+  m?: T
+  l?: T
+  xl?: T
+  xxl?: T
+}
+```
+
+指定したブレークポイント以上の画面幅で値が適用されます。未指定のブレークポイントは、より小さいブレークポイントの値を継承します。
+</code></pre>
+          </div>
+        </div>
+  </div>
+</article>
+<article
+  class="card is-doc no-doc-error"
+  role="listitem"
+  aria-label="Docs">
+  <div class="head">
+    <div class="title">
+      <h2><span class="status-dot dot-ok"></span> Foundations/Icons</h2>
+      <div class="badges">
+        
+        <label for="doc-8-foundations-icons-docs-content" class="badge ok as-toggle">view content</label>
+      </div>
+    </div>
+    <div class="meta" title="./src/docs/Icons.mdx">foundations-icons--docs · ./src/docs/Icons.mdx</div>
+    <div>アイコン一覧</div>
+  </div>
+
+  <!-- Hidden toggles must be siblings BEFORE .panels -->
+  
+  <input id="doc-8-foundations-icons-docs-content" class="tg tg-content" type="checkbox" hidden />
+
+  <div class="panels">
+    
+    
+        <div class="panel panel-content">
+          <div class="mdx-content">
+            <pre><code>import { Canvas, Meta } from &#39;@storybook/addon-docs/blocks&#39;
+import * as IconStories from &#39;./Icons.stories&#39;
+
+&lt;Meta title=&quot;Foundations/Icons&quot; summary=&quot;アイコン一覧&quot; /&gt;
+
+# Icons
+
+wip-ui のアイコンは [inhouse のアイコントークン](https://design.pepabo.com/inhouse/flavors/icon/) に基づいた Material Design ベースのアイコンセットです。
+
+## アイコン一覧
+
+全 103 種類のアイコンが利用できます。
+
+&lt;Canvas of={IconStories.AllIcons} sourceState=&quot;none&quot; /&gt;
+</code></pre>
+          </div>
+        </div>
+  </div>
+</article>
+    </div>
+    
+  </div>
+</main>
+</body>
+</html>  

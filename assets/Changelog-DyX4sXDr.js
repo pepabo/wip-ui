@@ -1,0 +1,3 @@
+import{u as s,j as e,M as a}from"./iframe-sXJpPmIv.js";import"./preload-helper-Dp1pzeXC.js";function o(n){const t={a:"a",h1:"h1",p:"p",...s(),...n.components};return e.jsxs(e.Fragment,{children:[e.jsx(a,{title:"Introduction/Changelog",summary:"wip-ui のリリース履歴"}),`
+`,e.jsx(t.h1,{id:"changelog",children:"Changelog"}),`
+`,e.jsxs(t.p,{children:["リリース履歴は GitHub リポジトリの ",e.jsx(t.a,{href:"https://github.com/pepabo/wip-ui/releases",rel:"nofollow",children:"Releases"})," を参照してください。"]})]})}function c(n={}){const{wrapper:t}={...s(),...n.components};return t?e.jsx(t,{...n,children:e.jsx(o,{...n})}):o(n)}export{c as default};
