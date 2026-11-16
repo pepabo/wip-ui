@@ -19,9 +19,6 @@ const meta = {
       control: 'select',
       options: ['_self', '_blank'],
     },
-    hideNewTabIcon: {
-      control: 'boolean',
-    },
     isDisabled: {
       control: 'boolean',
     },
@@ -65,20 +62,6 @@ export const Target: Story = {
       <Link href="#">_self</Link>
       <Link href="https://example.com" target="_blank">
         _blank
-      </Link>
-    </Stack>
-  ),
-}
-
-export const HideNewTabIcon: Story = {
-  name: 'hideNewTabIcon',
-  render: () => (
-    <Stack flexDirection="row" gap="m">
-      <Link href="https://example.com" target="_blank">
-        false
-      </Link>
-      <Link href="https://example.com" target="_blank" hideNewTabIcon>
-        true
       </Link>
     </Stack>
   ),

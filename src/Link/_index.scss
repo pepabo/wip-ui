@@ -20,9 +20,10 @@
     outline-offset: 0;
   }
 
+  // 使えない状態は、Checkbox や Select と同じ inhouse の透明度で示す
   &[data-disabled] {
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: adapter.get-disabled-surface-opacity();
   }
 
   // hover では、文字の色を一段薄くする
