@@ -28,6 +28,8 @@ export * from './Loader'
 export * from './Paper'
 // Radio
 export * from './Radio'
+// SegmentedControl
+export * from './SegmentedControl'
 // Select
 export * from './Select'
 // SnackBar
