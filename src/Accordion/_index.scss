@@ -1,0 +1,86 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+// 外枠は持たない。カードの見た目にする場合は、使う側で Paper などに入れる
+// 区切り線は divided のときだけ、セクションの間に入れる。色は Menu の区切り線と同じ控えめな色
+.wip-accordion.-divided > .wip-accordion-item + .wip-accordion-item {
+  border-top: adapter.get-border-size(m) solid adapter.get-border-color(light, low_emphasis);
+}
+
+.wip-accordion-trigger {
+  margin: 0;
+
+  ._button {
+    @include adapter.text($level: m, $density: normal);
+    display: flex;
+    align-items: center;
+    gap: adapter.get-gap-size(xs);
+    width: 100%;
+    padding: adapter.get-spacing-size(s) adapter.get-spacing-size(m);
+    border: none;
+    background-color: transparent;
+    color: adapter.get-text-color(light, high_emphasis);
+    font-weight: bold;
+    text-align: start;
+    cursor: pointer;
+    outline: none;
+
+    &[data-hovered] {
+      background-color: adapter.get-background-overlay-color(light, $state: hover);
+    }
+
+    &[data-focus-visible] {
+      outline: 0.125rem solid adapter.get-semantic-color(informative, 500);
+      outline-offset: -0.125rem;
+    }
+
+    // 使えない状態は、Checkbox や Select と同じ inhouse の透明度で示す
+    &[data-disabled] {
+      opacity: adapter.get-disabled-surface-opacity();
+      cursor: default;
+    }
+  }
+
+  // 中身にアイコンや件数を並べられるよう、横に並べる
+  ._label {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: adapter.get-gap-size(xs);
+    min-width: 0;
+  }
+
+  ._indicator {
+    flex-shrink: 0;
+    color: adapter.get-text-color(light, mid_emphasis);
+    transition: transform 150ms ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  ._button.-indicator-start[aria-expanded='true'] ._indicator {
+    transform: rotate(90deg);
+  }
+
+  ._button.-indicator-end[aria-expanded='true'] ._indicator {
+    transform: rotate(180deg);
+  }
+}
+
+// 開閉に合わせて高さを動かす。高さは react-aria が --disclosure-panel-height に入れる
+.wip-accordion-content {
+  height: var(--disclosure-panel-height);
+  overflow: clip;
+  transition: height 200ms ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  // 閉じた内容は hidden="until-found" で隠れ、要素の箱が残るブラウザがあるため、余白は内側に付ける
+  // 内容の左右の余白は、トリガーとそろえる
+  ._inner {
+    padding: 0 adapter.get-spacing-size(m) adapter.get-spacing-size(m);
+  }
+}
