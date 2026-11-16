@@ -37,6 +37,7 @@
 |---|---|---|
 | Avatar | ユーザーのプロフィール画像を円形で表示する | `dist/js/Avatar/Avatar.md` |
 | Divider | セクションや要素のまとまりを線で区切る | `dist/js/Divider/Divider.md` |
+| StatusIndicator | 稼働中・失敗など、対象の今の状態を色の丸と文字で示す | `dist/js/StatusIndicator/StatusIndicator.md` |
 | Sticker | ステータスやカテゴリを小さなラベルで示す | `dist/js/Sticker/Sticker.md` |
 | Table | 構造化されたデータを行と列で一覧表示する | `dist/js/Table/Table.md` |
 | Typography | 見出しや本文などのテキストを表示する | `dist/js/Typography/Typography.md` |
