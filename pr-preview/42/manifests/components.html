@@ -582,7 +582,7 @@
 <main>
   <div class="wrap">
     <div class="note ok" style="margin-bottom: 16px;">
-              Using <code>react-docgen-typescript</code>. Generation took <strong>1.7s</strong>.
+              Using <code>react-docgen-typescript</code>. Generation took <strong>1.3s</strong>.
             </div>
     <h2 class="section-title">Components</h2>
     <div class="grid" role="list">
@@ -670,18 +670,9 @@ divider?: boolean = true</code></pre>
               
               <pre><code>const Playground = () =&gt; &lt;Card&gt;
     &lt;List divider&gt;
-        &lt;ListItem
-            href=&quot;#&quot;
-            trailing={&lt;Icon name=&quot;chevron_right&quot; size=&quot;s&quot; aria-hidden=&quot;true&quot; /&gt;}&gt;プロフィール
-                    &lt;/ListItem&gt;
-        &lt;ListItem
-            href=&quot;#&quot;
-            trailing={&lt;Icon name=&quot;chevron_right&quot; size=&quot;s&quot; aria-hidden=&quot;true&quot; /&gt;}&gt;通知
-                    &lt;/ListItem&gt;
-        &lt;ListItem
-            href=&quot;#&quot;
-            trailing={&lt;Icon name=&quot;chevron_right&quot; size=&quot;s&quot; aria-hidden=&quot;true&quot; /&gt;}&gt;セキュリティ
-                    &lt;/ListItem&gt;
+        &lt;ListItem href=&quot;#&quot;&gt;プロフィール&lt;/ListItem&gt;
+        &lt;ListItem href=&quot;#&quot;&gt;通知&lt;/ListItem&gt;
+        &lt;ListItem href=&quot;#&quot;&gt;セキュリティ&lt;/ListItem&gt;
     &lt;/List&gt;
 &lt;/Card&gt;;</code></pre>
             </div>
@@ -800,14 +791,8 @@ divider?: boolean = true</code></pre>
               <pre><code>const Href = () =&gt; (
   &lt;Card&gt;
     &lt;List&gt;
-      &lt;ListItem href=&quot;#&quot; trailing={&lt;Icon name=&quot;chevron_right&quot; size=&quot;s&quot; aria-hidden=&quot;true&quot; /&gt;}&gt;
-        プロフィール
-      &lt;/ListItem&gt;
-      &lt;ListItem
-        href=&quot;#&quot;
-        isDisabled
-        trailing={&lt;Icon name=&quot;chevron_right&quot; size=&quot;s&quot; aria-hidden=&quot;true&quot; /&gt;}
-      &gt;
+      &lt;ListItem href=&quot;#&quot;&gt;プロフィール&lt;/ListItem&gt;
+      &lt;ListItem href=&quot;#&quot; isDisabled&gt;
         isDisabled
       &lt;/ListItem&gt;
     &lt;/List&gt;
