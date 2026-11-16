@@ -21,20 +21,23 @@ const meta = {
     square: {
       control: 'boolean',
     },
+    padding: {
+      control: 'select',
+      options: ['none', 'xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl'],
+    },
   },
 } satisfies Meta<typeof Paper>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-const content = (label: string) => <div style={{ padding: '20px' }}>{label}</div>
-
 export const Playground: Story = {
   args: {
-    children: content('Paper'),
+    children: 'Paper',
     elevation: 1,
     outlined: false,
     square: false,
+    padding: 'l',
   },
 }
 
@@ -44,7 +47,7 @@ export const Elevation: Story = {
     <Stack flexDirection="row" gap="s">
       {([0, 1, 2, 3, 4, 5, 6] as const).map((elevation) => (
         <Paper key={elevation} elevation={elevation}>
-          {content(String(elevation))}
+          {elevation}
         </Paper>
       ))}
     </Stack>
@@ -53,10 +56,23 @@ export const Elevation: Story = {
 
 export const Outlined: Story = {
   name: 'outlined',
-  render: () => <Paper outlined>{content('outlined')}</Paper>,
+  render: () => <Paper outlined>outlined</Paper>,
 }
 
 export const Square: Story = {
   name: 'square',
-  render: () => <Paper square>{content('square')}</Paper>,
+  render: () => <Paper square>square</Paper>,
+}
+
+export const Padding: Story = {
+  name: 'padding',
+  render: () => (
+    <Stack flexDirection="row" gap="s" alignItems="flex-start">
+      {(['none', 'xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl'] as const).map((padding) => (
+        <Paper key={padding} outlined padding={padding}>
+          {padding}
+        </Paper>
+      ))}
+    </Stack>
+  ),
 }
