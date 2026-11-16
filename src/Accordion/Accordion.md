@@ -48,9 +48,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from 'wi
 
 ### 開き方
 
-- [avoid] 別のセクションを開いたときに、開いていたセクションが自動で閉じる形（allowsMultipleExpanded={false}）にしない。読んでいた内容が急に消え、セクションどうしを見比べられなくなる
 - [should] 最初から見せたい内容があるセクションは、開いた状態で表示する
-- [avoid] 中身がないセクションを isDisabled にして置かない。開けない理由を書く場所がないため、セクションごと表示しないか、開いた中に理由を書く
+- [should] 開けないセクションは、消さずに、isDisabled で操作できないと分かる見た目で残す。消すと、そのセクションがあること自体が分からなくなる
 
 ### トリガー
 
