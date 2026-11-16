@@ -103,6 +103,7 @@ jobs:
           until git push -q origin gh-pages; do git pull -q --rebase origin gh-pages; done
 
       - name: Comment preview URL
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
           URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-preview/${{ github.event.pull_request.number }}/
