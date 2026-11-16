@@ -68,6 +68,19 @@
   ._trailing {
     color: adapter.get-text-color(light, mid_emphasis);
   }
+
+  // 読み上げだけに伝える文。画面には出さない
+  ._visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    border: 0;
+    white-space: nowrap;
+  }
 }
 
 .wip-side-navigation-section {
