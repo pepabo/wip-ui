@@ -114,8 +114,8 @@ export const ItemIsCurrent: Story = {
   },
 }
 
-export const ItemLeadingAndTrailing: Story = {
-  name: 'SideNavigationItem leading / trailing',
+export const ItemLeading: Story = {
+  name: 'SideNavigationItem leading',
   render: (args) => {
     const currentPage = useCurrentPage()
 
@@ -139,9 +139,8 @@ export const ItemLeadingAndTrailing: Story = {
           href="https://example.com"
           target="_blank"
           leading={<Icon name="question_on_circle" />}
-          trailing={<Icon name="launch" />}
         >
-          ヘルプ（新しいタブで開く）
+          ヘルプ
         </SideNavigationItem>
       </SideNavigation>
     )

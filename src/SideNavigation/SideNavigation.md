@@ -53,9 +53,11 @@ import { Icon, SideNavigation, SideNavigationItem, SideNavigationSection } from 
 - [avoid] 権限がないなどで移動できないページの項目を、isDisabled にして置かない。項目には押せない理由を書く場所がないため、項目ごと表示しない
 - 項目の入れ子、件数のバッジ、ナビゲーション全体の折りたたみには対応していない
 
-### 外部のページ
+### 新しいタブで開く
 
-- [should] サービスの外のページや、新しいタブで開く項目には、trailing に Icon name="launch" を置き、ほかの項目と見分けられるようにする
+- target に _blank を指定すると、末尾に新しいタブで開くことを示すアイコンが付く
+- [should] サービスの外のページなど、いまの画面を残したまま見てほしい行き先にだけ、新しいタブで開く
+- [avoid] サービスの中のページを、新しいタブで開かない。戻るボタンで元の画面に戻れなくなる
 
 ### 配置
 
@@ -65,7 +67,7 @@ import { Icon, SideNavigation, SideNavigationItem, SideNavigationSection } from 
 ## アクセシビリティ
 
 - [must] 1つの画面に複数のナビゲーションがある場合は、aria-label でそれぞれ違う名前を付ける（例：「メインナビゲーション」「設定」）
-- [must] 新しいタブで開く項目は、ラベルの中か aria-label で、新しいタブで開くことを伝える
+- target に _blank を指定すると、スクリーンリーダー向けに「（新しいタブで開く）」が読み上げられる
 
 ## 実装
 
