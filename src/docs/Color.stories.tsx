@@ -5,6 +5,8 @@ import { Typography } from '../Typography'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
+const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
+
 const ColorStrip = ({ name, colorObj }: { name: string; colorObj: Record<string, string> }) => {
   const levels = Object.keys(colorObj).sort(
     (a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10)
@@ -59,13 +61,9 @@ const AllColorSwatches = ({ flavor }: { flavor: FlavorName }) => {
           </Typography>
         </Stack>
         <Stack gap="l">
-          <ColorStrip name="Black" colorObj={colors.primitive.black} />
-          <ColorStrip name="White" colorObj={colors.primitive.white} />
-          <ColorStrip name="Gray" colorObj={colors.primitive.gray} />
-          <ColorStrip name="Blue" colorObj={colors.primitive.blue} />
-          <ColorStrip name="Green" colorObj={colors.primitive.green} />
-          <ColorStrip name="Red" colorObj={colors.primitive.red} />
-          <ColorStrip name="Yellow" colorObj={colors.primitive.yellow} />
+          {Object.entries(colors.primitive).map(([name, colorObj]) => (
+            <ColorStrip key={name} name={capitalize(name)} colorObj={colorObj} />
+          ))}
         </Stack>
       </Stack>
       <Divider />
@@ -80,11 +78,9 @@ const AllColorSwatches = ({ flavor }: { flavor: FlavorName }) => {
           </Typography>
         </Stack>
         <Stack gap="l">
-          <ColorStrip name="Neutral" colorObj={colors.semantic.neutral} />
-          <ColorStrip name="Informative" colorObj={colors.semantic.informative} />
-          <ColorStrip name="Positive" colorObj={colors.semantic.positive} />
-          <ColorStrip name="Negative" colorObj={colors.semantic.negative} />
-          <ColorStrip name="Notice" colorObj={colors.semantic.notice} />
+          {Object.entries(colors.semantic).map(([name, colorObj]) => (
+            <ColorStrip key={name} name={capitalize(name)} colorObj={colorObj} />
+          ))}
         </Stack>
       </Stack>
     </Stack>

@@ -42,26 +42,22 @@ const convertToHexColors = (
   return result
 }
 
+type ColorScale = Record<string, { value: { r: number; g: number; b: number } }>
+
+// 色の系統（brown など）はフレーバーによって違うため、名前を決め打ちせずトークンにあるものをすべて取り出す
+const convertAll = (group: Record<string, ColorScale>): Record<string, Record<string, string>> => {
+  const result: Record<string, Record<string, string>> = {}
+  for (const [name, scale] of Object.entries(group)) {
+    result[name] = convertToHexColors(scale)
+  }
+  return result
+}
+
 export function getColorsByFlavor(flavor: FlavorName) {
   const tokens = flavorTokensMap[flavor]
 
-  const primitive = {
-    black: convertToHexColors(tokens.color.primitive.black),
-    white: convertToHexColors(tokens.color.primitive.white),
-    gray: convertToHexColors(tokens.color.primitive.gray),
-    blue: convertToHexColors(tokens.color.primitive.blue),
-    green: convertToHexColors(tokens.color.primitive.green),
-    red: convertToHexColors(tokens.color.primitive.red),
-    yellow: convertToHexColors(tokens.color.primitive.yellow),
-  }
-
-  const semantic = {
-    neutral: convertToHexColors(tokens.color.semantic.neutral),
-    informative: convertToHexColors(tokens.color.semantic.informative),
-    positive: convertToHexColors(tokens.color.semantic.positive),
-    negative: convertToHexColors(tokens.color.semantic.negative),
-    notice: convertToHexColors(tokens.color.semantic.notice),
-  }
+  const primitive = convertAll(tokens.color.primitive as unknown as Record<string, ColorScale>)
+  const semantic = convertAll(tokens.color.semantic as unknown as Record<string, ColorScale>)
 
   return { primitive, semantic }
 }
