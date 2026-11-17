@@ -1,0 +1,13 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+.wip-tooltip {
+  @include adapter.text($level: xs, $density: dense);
+  max-width: 20rem;
+  padding: adapter.get-spacing-size(xxs) adapter.get-spacing-size(xs);
+  // 背景の色によらず目立つように、暗い面に白い文字で表示する
+  background-color: adapter.get-surface-color(dark, primary);
+  color: adapter.get-text-color(dark, high_emphasis);
+  border-radius: adapter.get-radius-size(m);
+  box-shadow: adapter.get-elevation-box-shadow(2);
+  overflow-wrap: anywhere;
+}
