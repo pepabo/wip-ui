@@ -24,6 +24,8 @@ export * from './Grid'
 export * from './Icon'
 // Loader
 export * from './Loader'
+// Menu
+export * from './Menu'
 // Paper
 export * from './Paper'
 // Radio
