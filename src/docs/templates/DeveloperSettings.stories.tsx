@@ -6,14 +6,12 @@ import { Divider } from '../../Divider'
 import { Loader } from '../../Loader'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
+import { StatusIndicator } from '../../StatusIndicator'
 import { Sticker } from '../../Sticker'
 import { Typography } from '../../Typography'
 import { DeployNowShell, DeveloperSettingsLayout, useDeployNowNavigate } from './deployNowShell'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import type { ReactNode } from 'react'
-import type { StickerColor } from '../../Sticker'
-import type { TypographyColor } from '../../Typography'
 import type { DeveloperSettingsPage } from './deployNowShell'
 
 /**
@@ -52,37 +50,9 @@ type Story = StoryObj<typeof meta>
 // 面の l（24px）に足して xxl（24+48=72px、実物 80px。Paper の padding は xxl が上限）と xl（24+32=56px、実物 56px）。
 // セッションの行（実物は ul の divide-y と li の py-3）の上下は、一覧の Stack の gap（s）と Divider で付けている。
 
-const DOT_COLOR: Record<StickerColor, TypographyColor> = {
-  positive: 'positive',
-  negative: 'negative',
-  notice: 'notice',
-  informative: 'informative',
-  neutral: 'low_emphasis',
-  attention: 'notice',
-}
-
-// GAP-NEW: StatusIndicator（色ドット + ラベル）が無い。Deploys.stories.tsx と同じく、実物の
-// inline-flex items-center gap-1.5（6px）と 8px の丸（色は hex）を素の span で組み、丸の色は Typography の色を
-// currentColor で継ぐ。文字は Typography s medium_emphasis
-const statusIndicatorStyle = { display: 'inline-flex', alignItems: 'center', gap: 6 } as const
-const statusDotStyle = {
-  display: 'block',
-  width: 8,
-  height: 8,
-  borderRadius: '50%',
-  background: 'currentColor',
-} as const
-
-const StatusIndicator = ({ color, children }: { color: StickerColor; children: ReactNode }) => (
-  <span style={statusIndicatorStyle}>
-    <Typography component="span" color={DOT_COLOR[color]}>
-      <span aria-hidden style={statusDotStyle} />
-    </Typography>
-    <Typography component="span" size="s" color="medium_emphasis">
-      {children}
-    </Typography>
-  </span>
-)
+// 「有効」の色ドット + ラベルは wip-ui の StatusIndicator を使う。実物は Deploys.stories.tsx と同じ shared/ui/StatusIndicator で、
+// inline-flex items-center gap-1.5（6px）と 8px の丸（色は hex）、文字は text-sm。StatusIndicator は丸 10px・gap xxs（4px）・
+// 色は意味色（semantic 600）。StatusIndicator に attention は無い（以前の手組みでは attention → notice に寄せていた）
 
 // 実物は flex justify-center py-16 + Loader
 const LoadingBody = () => (
@@ -201,7 +171,7 @@ const GitHubConnectionBody = ({
           <Typography component="span" size="s" fontWeight="bold">
             {authorization.githubUserLogin}
           </Typography>
-          <StatusIndicator color="positive">有効</StatusIndicator>
+          <StatusIndicator color="positive" label="有効" />
         </Stack>
         {/* 実物は flex shrink-0 items-center gap-2。期限切れのときは「GitHub と接続し直す」（LinkButton outlined s）が前に入る */}
         <Stack flexDirection="row" gap="xs" alignItems="center">

@@ -1,5 +1,6 @@
 import { LinkButton } from '../../Button'
 import { Callout } from '../../Callout'
+import { Link } from '../../Link'
 import { Typography } from '../../Typography'
 import { DeployNowBareShell, DeployNowCard, useDeployNowNavigate } from './deployNowShell'
 
@@ -58,9 +59,6 @@ const LoginScreen = () => {
   )
 }
 
-// 実物の素の a は Tailwind の preflight で、色を親から継ぎ、下線が無い
-const inheritLinkStyle = { color: 'inherit', textDecoration: 'none' } as const
-
 const SignupScreen = () => {
   const navigate = useDeployNowNavigate()
   return (
@@ -81,20 +79,13 @@ const SignupScreen = () => {
       >
         ロリポップ！ID で新規登録
       </LinkButton>
-      {/* 実物は 1 つの Typography s low_emphasis の段落の中に、クラスの無い素の a を置く（色は段落から継ぎ、下線は無い）。
-          GAP-NEW: 文中のリンクが無いので、同じく素の a で、色を継いで下線を消す */}
+      {/* 実物は 1 つの Typography s low_emphasis の段落の中に、クラスの無い素の a を置く（Tailwind の preflight で
+          色は段落の low_emphasis を継ぎ、下線は無い）。Link は neutral（high_emphasis）の色で常に下線 */}
       <Typography component="div" size="s" color="low_emphasis">
         すでにアカウントをお持ちの方は{' '}
-        <a
-          href="/login"
-          style={inheritLinkStyle}
-          onClick={(event) => {
-            event.preventDefault()
-            navigate('login')
-          }}
-        >
+        <Link href="/login" onPress={() => navigate('login')}>
           ログイン
-        </a>
+        </Link>
       </Typography>
     </DeployNowCard>
   )

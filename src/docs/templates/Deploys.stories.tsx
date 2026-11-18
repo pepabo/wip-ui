@@ -9,14 +9,14 @@ import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
+import { StatusIndicator } from '../../StatusIndicator'
 import { Typography } from '../../Typography'
 import { DeployNowShell, ProjectDetailLayout, useDeployNowNavigate } from './deployNowShell'
 import { TextLink } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
-import type { StickerColor } from '../../Sticker'
-import type { TypographyColor } from '../../Typography'
+import type { StatusIndicatorColor } from '../../StatusIndicator'
 import type { ProjectHeroData } from './deployNowShell'
 
 /**
@@ -81,37 +81,10 @@ const RowLink = ({
   </Paper>
 )
 
-const DOT_COLOR: Record<StickerColor, TypographyColor> = {
-  positive: 'positive',
-  negative: 'negative',
-  notice: 'notice',
-  informative: 'informative',
-  neutral: 'low_emphasis',
-  attention: 'notice',
-}
-
-// GAP-NEW: StatusIndicator（色ドット + ラベル）が無い。実物は shared/ui/StatusIndicator で、
-// 8px の丸（色は hex）と文字を inline-flex gap-1.5（6px）で並べる。丸と並びは素の span で作り、
-// 丸の色は Typography の色を currentColor で継ぐ
-const statusIndicatorStyle = { display: 'inline-flex', alignItems: 'center', gap: 6 } as const
-const statusDotStyle = {
-  display: 'block',
-  width: 8,
-  height: 8,
-  borderRadius: '50%',
-  background: 'currentColor',
-} as const
-
-const StatusIndicator = ({ color, children }: { color: StickerColor; children: ReactNode }) => (
-  <span style={statusIndicatorStyle}>
-    <Typography component="span" color={DOT_COLOR[color]}>
-      <span aria-hidden style={statusDotStyle} />
-    </Typography>
-    <Typography component="span" size="s" color="medium_emphasis">
-      {children}
-    </Typography>
-  </span>
-)
+// 状態の色ドット + ラベルは wip-ui の StatusIndicator を使う。実物は shared/ui/StatusIndicator で、
+// 8px の丸（色は hex）と文字を inline-flex gap-1.5（6px）で並べる。StatusIndicator は丸 10px・gap xxs（4px）・
+// 色は意味色（semantic 600）。実物の toStatusColor の値（positive / notice / neutral / negative）をそのまま color に渡す。
+// StatusIndicator に attention は無い（以前の手組みでは attention → notice に寄せていたが、この画面の状態に attention は出ない）
 
 // 素の a の下線を消す（実物は Tailwind の preflight で下線が無い）
 const plainLinkStyle = { textDecoration: 'none' } as const
@@ -195,7 +168,7 @@ const statusLabel = (status: DeploymentStatus) => {
 }
 
 // ProjectDeploy/model.ts の toStatusColor
-const statusColor = (status: DeploymentStatus): StickerColor => {
+const statusColor = (status: DeploymentStatus): StatusIndicatorColor => {
   switch (status) {
     case 'READY':
       return 'positive'
@@ -447,9 +420,10 @@ const DeployList = ({
                       gap={{ xxs: 'xxs', m: 'xs' }}
                       justifyContent="space-between"
                     >
-                      <StatusIndicator color={statusColor(d.status)}>
-                        {statusLabel(d.status)}
-                      </StatusIndicator>
+                      <StatusIndicator
+                        color={statusColor(d.status)}
+                        label={statusLabel(d.status)}
+                      />
                       <Typography component="div" size="s" color="medium_emphasis">
                         {d.startedAt}
                       </Typography>
@@ -788,7 +762,7 @@ const DeployDetail = ({
 
       <Stack gap="m">
         <MetaRow label="状態">
-          <StatusIndicator color={statusColor(d.status)}>{statusLabel(d.status)}</StatusIndicator>
+          <StatusIndicator color={statusColor(d.status)} label={statusLabel(d.status)} />
         </MetaRow>
         <MetaRow label="デプロイ日時">
           <Typography component="div" size="s">

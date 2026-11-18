@@ -3,6 +3,7 @@ import { Callout } from '../../Callout'
 import { Dialog, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
+import { Link } from '../../Link'
 import { Loader } from '../../Loader'
 import { Stack } from '../../Stack'
 import { Typography } from '../../Typography'
@@ -116,12 +117,18 @@ const OrderRow = ({ title, value, help }: { title: string; value?: string; help?
 
 /**
  * components/OrderDetailDialog。更新では「変更」ボタン（changeButtonHref）を渡さない。
- * 実物は期間の変更予定・未完了の PayPay の支払いがあると、ここに Callout を足す
- * （GAP-NEW: 文中のテキストリンク（Link）が無い。未完了の支払いの案内の「こちら」をリンクにできない）。
+ * 実物は期間の変更予定があると warning の Alert（mb 5）を、未完了の PayPay の支払いがあると error の Alert（mb 2）を
+ * 「購入する」の上に足し、「購入する」を押せなくする。ここでは未完了の支払い（pendingPayment）だけを扱う。
  * 購入を始められなかったときなどは、ページの上に _components/Message（Alert の AlertTitle ＋本文）を出す
  * （GAP-NEW: Callout にタイトルの枠が無い）。
  */
-const OrderDetail = ({ loading }: { loading: boolean }) => {
+const OrderDetail = ({
+  loading,
+  pendingPayment = false,
+}: {
+  loading: boolean
+  pendingPayment?: boolean
+}) => {
   const navigate = useGamersNavigate()
   return (
     // 実物の Paper は pt 6・pb 8・px 4。見出し・明細・区切り線・合計・ボタンの間はどれも 40px（mb 5 / my 5）。
@@ -152,12 +159,30 @@ const OrderDetail = ({ loading }: { loading: boolean }) => {
             </Typography>
           )}
         </Stack>
+        {pendingPayment && (
+          // 実物は Alert（error・outlined）の中の素の a（色を継いで下線、別タブ）で、アイコンは無い。
+          // Link は neutral の色（Alert の文字の色は継がない）で、末尾に launch のアイコンが付く。
+          // 実物の Alert と「購入する」の間は 16px（mb 2）。Stack の gap は xxl のまま
+          <Callout color="negative" appearance="outline">
+            未完了の支払いがあります。お支払いを完了してから、再度お試しください。
+            <br />
+            お支払いが完了しない場合は
+            <Link
+              href="https://support.server.lolipop.jp/hc/ja/articles/49886542532883"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              こちら
+            </Link>
+            をご確認ください。
+          </Callout>
+        )}
         {/* 押すと購入中（InSubmitDialog）の後、PayPay の決済ページ（paypayUrl）へ。始められなかったときは支払い（payment）へ戻る */}
         <Button
           color="interactive"
           size="l"
           width="full"
-          isDisabled={loading}
+          isDisabled={loading || pendingPayment}
           onPress={() => navigate('external')}
         >
           購入する
@@ -194,9 +219,11 @@ const InSubmitDialog = () => (
 const RenewalScreen = ({
   loading = false,
   submitting = false,
+  pendingPayment = false,
 }: {
   loading?: boolean
   submitting?: boolean
+  pendingPayment?: boolean
 }): ReactNode => (
   <GamersShell>
     {/* client.tsx の Container（mt 3）＋ Message ＋ Grid（spacing 2、md 以上で 8 / 4） */}
@@ -206,7 +233,7 @@ const RenewalScreen = ({
           <PaymentInfo loading={loading} />
         </GridItem>
         <GridItem size={{ xxs: 12, m: 4 }}>
-          <OrderDetail loading={loading} />
+          <OrderDetail loading={loading} pendingPayment={pendingPayment} />
         </GridItem>
       </Grid>
     </GamersPageContainer>
@@ -241,4 +268,13 @@ export const Loading: Story = {
  */
 export const Submitting: Story = {
   render: () => <RenewalScreen submitting />,
+}
+
+/**
+ * PayPay の支払いが未完了のまま。注文内容に案内の Callout が出て、「購入する」は押せない。
+ *
+ * @summary 未完了の支払いあり
+ */
+export const PendingPayment: Story = {
+  render: () => <RenewalScreen pendingPayment />,
 }

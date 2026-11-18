@@ -9,6 +9,7 @@ import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
+import { Link } from '../../Link'
 import { Loader } from '../../Loader'
 import { Paper } from '../../Paper'
 import { Radio, RadioGroup } from '../../Radio'
@@ -1930,16 +1931,13 @@ const GameBody = ({
           {/* FivemManager/components/TxAdmins */}
           <InfoPaper title="txAdmin接続情報">
             <ConfigRow label="接続先">
-              {/* GAP-NEW: 文中のリンク（Link）が無い。実物は新しいタブで開くリンク ＋ OpenInNew のアイコン */}
-              <Stack flexDirection="row" gap="xxs" alignItems="center">
-                {/* Link は body1（16px） */}
-                <Typography size="m" color="informative" component="span">
+              {/* 実物は MUI の Link（primary の色・下線・body1 の 16px）で新しいタブで開き、横に OpenInNew のアイコン（small）を
+                  別に並べる。Link は neutral の色で、アイコンは Link が文字と同じ大きさで付ける */}
+              <Typography size="m" component="span">
+                <Link href={fivem.txAdminUrl} target="_blank" rel="noopener noreferrer">
                   {fivem.txAdminUrl}
-                </Typography>
-                <Typography size="s" color="informative" component="span">
-                  <Icon name="launch" size="s" />
-                </Typography>
-              </Stack>
+                </Link>
+              </Typography>
             </ConfigRow>
             <CopyRow label="PINコード" display={fivem.txAdminPin} copy={fivem.txAdminPin} />
           </InfoPaper>

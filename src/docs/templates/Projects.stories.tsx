@@ -8,6 +8,7 @@ import { Loader } from '../../Loader'
 import { Meter } from '../../Meter'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
+import { StatusIndicator } from '../../StatusIndicator'
 import { Sticker } from '../../Sticker'
 import { Typography } from '../../Typography'
 import contestBanner from './assets/deploy-now/contest-banner.webp'
@@ -15,10 +16,8 @@ import { DeployNowShell, useDeployNowNavigate } from './deployNowShell'
 import { TextLink } from './parts'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import type { ReactNode } from 'react'
 import type { MeterColor } from '../../Meter'
-import type { StickerColor } from '../../Sticker'
-import type { TypographyColor } from '../../Typography'
+import type { StatusIndicatorColor } from '../../StatusIndicator'
 
 /**
  * プロジェクト一覧。デプロイナウ（hosting-deploy-now/frontend）の /projects を写したもの。
@@ -54,7 +53,7 @@ type ProjectStatus = '成功' | 'ビルド中' | '失敗' | 'キャンセル済�
 type ServingStatus = '稼働中' | '未公開'
 
 /** shared/lib/projectStatus.ts の PROJECT_STATUS_COLOR / SERVING_STATUS_COLOR */
-const PROJECT_STATUS_COLOR: Record<ProjectStatus, StickerColor> = {
+const PROJECT_STATUS_COLOR: Record<ProjectStatus, StatusIndicatorColor> = {
   成功: 'positive',
   ビルド中: 'notice',
   失敗: 'negative',
@@ -62,7 +61,7 @@ const PROJECT_STATUS_COLOR: Record<ProjectStatus, StickerColor> = {
   キャンセル中: 'neutral',
   未デプロイ: 'neutral',
 }
-const SERVING_STATUS_COLOR: Record<ServingStatus, StickerColor> = {
+const SERVING_STATUS_COLOR: Record<ServingStatus, StatusIndicatorColor> = {
   稼働中: 'positive',
   未公開: 'neutral',
 }
@@ -137,44 +136,11 @@ const usageMetrics: UsageMetric[] = [
 const meterColor = (ratio: number): MeterColor =>
   ratio >= 0.9 ? 'negative' : ratio >= 0.75 ? 'notice' : 'neutral'
 
-const DOT_COLOR: Record<StickerColor, TypographyColor> = {
-  positive: 'positive',
-  negative: 'negative',
-  notice: 'notice',
-  informative: 'informative',
-  neutral: 'low_emphasis',
-  attention: 'notice',
-}
-
-// GAP-NEW: 色ドット + ラベル（shared/ui/StatusIndicator）が無い。実物は 8px（size-2）の丸に lolipop の solid 色を hex で塗り、
-// 文字と gap-1.5（6px）で並べる。ここは素の span で 8px の丸を作り、Typography の色を currentColor で継いで塗る。
-// gap は 6px が段階に無く xxs（4px）
-const dotStyle = {
-  display: 'inline-block',
-  width: 8,
-  height: 8,
-  borderRadius: '50%',
-  background: 'currentColor',
-  flexShrink: 0,
-} as const
-
-const StatusIndicator = ({ color, children }: { color: StickerColor; children: ReactNode }) => (
-  <Stack flexDirection="row" gap="xxs" alignItems="center">
-    <Typography component="span" size="xs" color={DOT_COLOR[color]}>
-      <span aria-hidden style={dotStyle} />
-    </Typography>
-    <Typography component="span" size="s" color="medium_emphasis">
-      {children}
-    </Typography>
-  </Stack>
-)
-
-// GAP-NEW: ラベルの無いドット（shared/ui/StatusDot）も無い。文言は aria-label でのみ補う
-const StatusDot = ({ color, label }: { color: StickerColor; label: string }) => (
-  <Typography component="span" color={DOT_COLOR[color]}>
-    <span role="img" aria-label={label} style={dotStyle} />
-  </Typography>
-)
+// 色ドット + ラベル（shared/ui/StatusIndicator）と、ラベルの無いドット（shared/ui/StatusDot）は wip-ui の StatusIndicator を使う。
+// 実物は 8px（size-2）の丸に lolipop の solid 色を hex で塗り、文字と gap-1.5（6px）で並べる。StatusIndicator は丸 10px・
+// gap xxs（4px）・色は意味色（semantic 600）。StatusDot は label を省いて aria-label で文言を渡す（実物は role="img" + aria-label、
+// StatusIndicator は見えない文字として置く）。StatusIndicator に attention は無い（以前の手組みでは attention → notice に寄せていたが、
+// PROJECT_STATUS_COLOR / SERVING_STATUS_COLOR に attention は出ない）
 
 // GAP-NEW: 画面の右下に浮かせるお知らせ（フローティングのバナー）が無い。位置だけ inline style で決める。
 // 実物は xl（1280px）以上で fixed right-6 bottom-6 w-60、xl 未満は本文の上の暗い 1 行のバー
@@ -324,9 +290,9 @@ const ProjectRow = ({ project }: { project: Project }) => {
                   {project.name}
                 </Typography>
                 {/* サイトが今見えているか。右の「デプロイ状態」とは別の軸 */}
-                <StatusDot
+                <StatusIndicator
                   color={SERVING_STATUS_COLOR[project.servingStatus]}
-                  label={project.servingStatus}
+                  aria-label={project.servingStatus}
                 />
               </Stack>
               {project.domain ? (
@@ -372,9 +338,7 @@ const ProjectRow = ({ project }: { project: Project }) => {
             </Stack>
           </GridItem>
           <GridItem size={{ xxs: 6, m: 2 }}>
-            <StatusIndicator color={PROJECT_STATUS_COLOR[project.status]}>
-              {project.status}
-            </StatusIndicator>
+            <StatusIndicator color={PROJECT_STATUS_COLOR[project.status]} label={project.status} />
           </GridItem>
           <GridItem size={{ xxs: 6, m: 2 }}>
             {/* GAP-17: 実物は md 以上だけ右寄せ（md:text-right）。md 未満は行の右端に置く（justify-between）ので結果は同じ */}

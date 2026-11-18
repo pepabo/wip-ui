@@ -7,6 +7,7 @@ import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
+import { Link } from '../../Link'
 import { Paper } from '../../Paper'
 import { Radio, RadioGroup } from '../../Radio'
 import { Select, SelectItem } from '../../Select'
@@ -725,33 +726,29 @@ const PlanSelect = () => {
                   })}
                 </Grid>
               </RadioGroup>
-              {/* 文中のリンクは wip-ui に無いので素の a。実物は MUI の Link（purple[400]・下線）で別タブ */}
+              {/* 実物は MUI の Link（purple[400]・下線・アイコン無し）で別タブ。Link は neutral の色で、末尾に launch のアイコンが付く */}
               <Typography size="xxs" density="comfort" component="div">
                 ※ 契約期間の変更が適用されるのは現在の契約期間満了後からとなります。詳しくは
-                <a
+                <Link
                   href="https://support.server.lolipop.jp/hc/ja/articles/50168829900819"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <Typography size="xxs" density="comfort" color="informative" component="span">
-                    契約期間を変更する
-                  </Typography>
-                </a>
+                  契約期間を変更する
+                </Link>
                 をご確認ください。
               </Typography>
               {/* ActiveGameNotion。Minecraft (Java版) のときだけ出る */}
               {game.id === 'minecraft-je' && (
                 <Typography size="xxs" density="comfort" component="div">
                   対応バージョンについて事前にご確認ください。
-                  <a
+                  <Link
                     href="https://support.server.lolipop.jp/hc/ja/articles/30409406263187"
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <Typography size="xxs" density="comfort" color="informative" component="span">
-                      対応バージョン一覧
-                    </Typography>
-                  </a>
+                    対応バージョン一覧
+                  </Link>
                 </Typography>
               )}
             </Stack>
@@ -860,18 +857,16 @@ const InitialPaymentMethodRadioGroup = () => {
             <Radio value="paypay">PayPay</Radio>
             <img src={paypayLogo} alt="PayPay" width={30} height={30} />
           </Stack>
-          {/* 文中のリンクは wip-ui に無いので素の a（実物は MUI の Link で別タブ） */}
+          {/* 実物は MUI の Link（primary の色・下線・アイコン無し）で別タブ。Link は neutral の色で、末尾に launch のアイコンが付く */}
           <Typography size="xxs" component="div">
             ※この支払い方法は自動更新に対応していません。詳しくは
-            <a
+            <Link
               href="https://support.server.lolipop.jp/hc/ja/articles/34754308816787"
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Typography size="xxs" color="informative" component="span">
-                利用できる支払い方法と対応ブランド
-              </Typography>
-            </a>
+              利用できる支払い方法と対応ブランド
+            </Link>
             をご確認ください。
           </Typography>
         </Stack>
@@ -982,18 +977,16 @@ const PaymentMethodChangeDialog = ({
                 <Radio value="paypay">PayPay</Radio>
                 <img src={paypayLogo} alt="PayPay" width={30} height={30} />
               </Stack>
-              {/* 文中のリンクは wip-ui に無いので素の a（実物は MUI の Link で別タブ） */}
+              {/* 実物は MUI の Link（primary の色・下線・アイコン無し）で別タブ。Link は neutral の色で、末尾に launch のアイコンが付く */}
               <Typography size="xxs" component="div">
                 ※このお支払い方法は自動更新に対応していません。詳しくは
-                <a
+                <Link
                   href="https://support.server.lolipop.jp/hc/ja/articles/34754308816787"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Typography size="xxs" color="informative" component="span">
-                    利用できる支払い方法と対応ブランド
-                  </Typography>
-                </a>
+                  利用できる支払い方法と対応ブランド
+                </Link>
                 をご確認ください。
               </Typography>
             </Stack>

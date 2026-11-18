@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Breadcrumb, Breadcrumbs } from '../../Breadcrumbs'
 import { Button } from '../../Button'
 import { Icon } from '../../Icon'
+import { Link } from '../../Link'
 import { Paper } from '../../Paper'
 import { RadioGroup } from '../../Radio'
 import { Stack } from '../../Stack'
@@ -57,12 +58,12 @@ import type { RadioGroupProps } from '../../Radio'
 
 /**
  * 文中のテキストリンク。実物は素の a（または next/link）に text-sm と青い文字（text-sky-700 など）、hover で下線。
- * 素の a で包み、中に Typography と、別タブのときは launch のアイコンを並べる。左端は前後の文字とそろう。
- * onPress を渡すと、押したとき href へは移らずに onPress を呼ぶ（テンプレートの中の画面遷移）。
- * href には実物の URL を入れる。
- * GAP: 文中のテキストリンクの部品が無い。素の a の既定の見た目が残る（下線が常に出て、下線の色は
- *      ブラウザのリンクの色・訪問済みの色になる）。文字の色は Typography の informative で、実物の色とは違う。
- *      a は置いた Stack の幅いっぱいに広がり、押せる範囲が文字より広くなる（実物は w-fit）
+ * Link を Typography s で包んで文字の大きさを text-sm にそろえる。別タブ（external）のときは Link が末尾に
+ * launch のアイコンと「（新しいタブで開く）」の読み上げを足す。
+ * onPress を渡すと、押したとき onPress を呼ぶ（テンプレートの中の画面遷移）。href には実物の URL（サービスの中のパス）を
+ * 入れ、ブラウザの移動はシェルの TemplateRouter が止める。
+ * 実物との違い：文字の色は実物が青（text-sky-700 など）、Link は neutral（本文の色）。下線は実物が hover のときだけで、
+ * Link は常に出る（文字を薄めた色、hover で文字と同じ濃さ）
  */
 export const TextLink = ({
   children,
@@ -72,34 +73,20 @@ export const TextLink = ({
 }: {
   children: ReactNode
   href: string
-  /** 別タブで開くリンク。末尾に launch のアイコンを出す */
+  /** 別タブで開くリンク。末尾に launch のアイコンが付く */
   external?: boolean
   onPress?: () => void
 }) => (
-  <a
-    href={href}
-    target={external ? '_blank' : undefined}
-    rel={external ? 'noopener noreferrer' : undefined}
-    onClick={
-      onPress
-        ? (event) => {
-            event.preventDefault()
-            onPress()
-          }
-        : undefined
-    }
-  >
-    <Stack flexDirection="row" gap="xxs" alignItems="center">
-      <Typography component="span" size="s" color="informative">
-        {children}
-      </Typography>
-      {external && (
-        <Typography component="span" size="s" color="informative">
-          <Icon name="launch" size="s" color="currentColor" aria-hidden />
-        </Typography>
-      )}
-    </Stack>
-  </a>
+  <Typography component="span" size="s">
+    <Link
+      href={href}
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noopener noreferrer' : undefined}
+      onPress={onPress}
+    >
+      {children}
+    </Link>
+  </Typography>
 )
 
 export const Card = ({

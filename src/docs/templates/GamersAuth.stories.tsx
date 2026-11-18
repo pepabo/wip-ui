@@ -7,6 +7,7 @@ import { Container } from '../../Container'
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
+import { Link } from '../../Link'
 import { Paper } from '../../Paper'
 import { Stack } from '../../Stack'
 import { TextField } from '../../TextField'
@@ -166,7 +167,7 @@ const ConsentCheckboxes = ({
 }) => (
   // 実物は 1 つ目が mb 0.5、2 つ目が mt 0.5（4px）
   <Stack gap="xxs">
-    {/* 実物のラベルは Typography variant='xs'。利用規約とプライバシーポリシーは文中のリンク（#0288D1）で、wip-ui に無いので素の a */}
+    {/* 実物のラベルは Typography variant='xs'。利用規約とプライバシーポリシーは文中のリンク（#0288D1・下線）。Link は neutral の色 */}
     <Checkbox defaultSelected>
       <Typography size="xs" component="span">
         サービスからのニュースレターを受信する
@@ -174,17 +175,9 @@ const ConsentCheckboxes = ({
     </Checkbox>
     <Checkbox isSelected={agreed} onChange={onAgreed}>
       <Typography size="xs" component="span">
-        <a href="https://lolipop.jp/terms/tos/">
-          <Typography size="xs" color="informative" component="span">
-            利用規約
-          </Typography>
-        </a>
+        <Link href="https://lolipop.jp/terms/tos/">利用規約</Link>
         {' と '}
-        <a href="https://pepabo.com/company/privacy/">
-          <Typography size="xs" color="informative" component="span">
-            プライバシーポリシー
-          </Typography>
-        </a>
+        <Link href="https://pepabo.com/company/privacy/">プライバシーポリシー</Link>
         に同意する
       </Typography>
     </Checkbox>

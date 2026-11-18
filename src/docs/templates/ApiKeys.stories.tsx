@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
@@ -7,6 +7,8 @@ import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } fr
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
+import { Link } from '../../Link'
+import { List, ListItem } from '../../List'
 import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Meter } from '../../Meter'
 import { Paper } from '../../Paper'
@@ -531,22 +533,15 @@ const KeyList = ({
                         </Checkbox>
                       </Cell>
                       <Cell>
-                        {/* 名前は詳細へのリンク（.keyLink：色は継ぎ、下線なし。GAP: hover の下線は出せない）。
-                            押しても行の操作（onRowAction）は起こさない */}
+                        {/* 名前は詳細へのリンク（.keyLink：色は継ぎ、下線なし、hover で下線）。
+                            GAP: Link は下線が常に出て（文字色の 40%、hover で文字と同じ濃さ）、hover で文字が mid_emphasis になる。
+                            押しても行の操作（onRowAction）は起こさない：Link の押下は react-aria が行へ伝えず、
+                            ブラウザの移動は TemplateRouter が止める */}
                         <TwoLine
                           primary={
-                            <a
-                              href={`#${k.id}`}
-                              onPointerDown={(e) => e.stopPropagation()}
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                onNavigate?.('key-detail')
-                              }}
-                              style={plainLinkStyle}
-                            >
+                            <Link href={`#${k.id}`} onPress={() => onNavigate?.('key-detail')}>
                               {k.alias}
-                            </a>
+                            </Link>
                           }
                           secondary={project}
                         />
@@ -658,15 +653,6 @@ const KeyList = ({
     </>
   )
 }
-
-// 素の a の見た目を消す（文中のリンク・設定の一覧の行の部品が wip-ui に無い）
-const plainLinkStyle = { color: 'inherit', textDecoration: 'none' } as const
-const settingsRowStyle = {
-  display: 'block',
-  padding: '12px 16px',
-  color: 'inherit',
-  textDecoration: 'none',
-} as const
 
 // ─── キーの画面の枠（KeyDetail/KeySettingsShell）───
 
@@ -838,20 +824,17 @@ const KeyDetail = ({
           )}
           <SettingRow label="適用中のルール">
             {rule ? (
-              // 実装はルールの詳細（/rules/:ruleId）へ移る。.ruleLink は 14px・行の高さ 20px・gray[700]・下線なし（hover で下線）。
-              // 文中のリンクの部品が無いので素の a に Typography を入れる。GAP: hover の下線と gray[900] は出せない
-              <a
-                href={`/accounts/example/projects/${project}/rules/${encodeURIComponent(rule)}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  onNavigate?.('rule-detail')
-                }}
-                style={plainLinkStyle}
-              >
-                <Typography size="s" density="dense" component="span">
+              // 実装はルールの詳細（/rules/:ruleId）へ移る。.ruleLink は 14px・行の高さ 20px・gray[700]・下線なし（hover で gray[900] と下線）。
+              // 文字の大きさは Typography から Link に継がせる。
+              // GAP: Link は下線が常に出て（文字色の 40%、hover で文字と同じ濃さ）、文字は high_emphasis で hover で mid_emphasis になる
+              <Typography size="s" density="dense" component="span">
+                <Link
+                  href={`/accounts/example/projects/${project}/rules/${encodeURIComponent(rule)}`}
+                  onPress={() => onNavigate?.('rule-detail')}
+                >
                   {rule}
-                </Typography>
-              </a>
+                </Link>
+              </Typography>
             ) : (
               <Typography size="s" color="medium_emphasis" component="div">
                 なし
@@ -887,31 +870,19 @@ const KeyDetail = ({
         </Stack>
       </Stack>
       {/* shared/ui/SettingsList：設定のまとまりを 1 枚の面に積み、行ごとに詳細ページへ渡す。
-          行は素の a（余白 12px 16px・間 16px・見出しは s の太字・右に chevron_right）。行の間は罫線。
-          GAP: 行の hover の地（gray[50]）と、罫線の色（gray[100]）は出せない */}
+          実物の行は素の a（余白 12px 16px・間 16px・見出しは s の太字・右に chevron_right）。行の間は罫線（gray[100]）、hover の地は gray[50]。
+          List の行は余白 s m（12px 16px）、href の行に chevron_right が付く。
+          GAP: 罫線は low_emphasis の色、hover の地は overlay の hover の色 */}
       <Paper padding="none" outlined>
-        {(['limits', 'models', 'guardrails'] as const).map((sub, i) => (
-          <Fragment key={sub}>
-            {i > 0 ? <Divider /> : null}
-            <a
-              href={`#${sub}`}
-              onClick={(e) => {
-                e.preventDefault()
-                onNavigate?.(`key-${sub}`)
-              }}
-              style={settingsRowStyle}
-            >
-              <Stack flexDirection="row" gap="m" alignItems="center" justifyContent="space-between">
-                <Typography size="s" fontWeight="bold" component="span">
-                  {subTitle[sub]}
-                </Typography>
-                <Typography size="s" color="medium_emphasis" component="span">
-                  <Glyph name="chevron_right" />
-                </Typography>
-              </Stack>
-            </a>
-          </Fragment>
-        ))}
+        <List>
+          {(['limits', 'models', 'guardrails'] as const).map((sub) => (
+            <ListItem key={sub} href={`#${sub}`} onPress={() => onNavigate?.(`key-${sub}`)}>
+              <Typography size="s" fontWeight="bold" component="span">
+                {subTitle[sub]}
+              </Typography>
+            </ListItem>
+          ))}
+        </List>
       </Paper>
     </>
   )

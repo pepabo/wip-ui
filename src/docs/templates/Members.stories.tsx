@@ -4,6 +4,7 @@ import { Button } from '../../Button'
 import { Callout } from '../../Callout'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Icon } from '../../Icon'
+import { Link } from '../../Link'
 import { Loader } from '../../Loader'
 import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
@@ -43,7 +44,7 @@ import type { ReactNode } from 'react'
  * - GAP: 検索欄（ListSearch）の虫眼鏡のアイコンと、600px 以上での幅 280px
  * - GAP: Skeleton が無い。読み込み中は実物では表の形の骨格（SkeletonTable、4 行）を出す。ここでは見出しだけの表の中に Loader を置く
  * - 招待と発行した URL のダイアログは aiGatewayInvite.tsx（そちらの GAP を参照）
- * - GAP: プロジェクトの権限の表のプロジェクト名は、wip-ui に文中のリンクが無いので素の a（hover の下線は無い）
+ * - プロジェクトの権限の表のプロジェクト名は Link。実物は文字の色を継いで下線は hover のときだけ、Link は neutral で常に下線
  */
 
 const meta = {
@@ -527,8 +528,6 @@ const AccountMembers = ({
 
 // ─── ダイアログ ───
 
-const projectLinkStyle = { color: 'inherit', textDecoration: 'none' }
-
 /** MemberProjectsPanel。メンバーが参加しているプロジェクトと、それぞれのロール */
 const MemberProjectsPanel = ({
   member,
@@ -567,18 +566,14 @@ const MemberProjectsPanel = ({
                   <Row key={p.id}>
                     <Cell>
                       {/* next/link でプロジェクトの概要（/accounts/[accountId]/projects/[projectId]）へ。
-                      wip-ui に文中のリンクが無いので素の a。文字の色は継承し、hover で下線（.projectLink） */}
+                      実物は文字の色を継ぎ、下線は hover のときだけ（.projectLink）。Link は neutral で常に下線 */}
                       <Typography component="span">
-                        <a
+                        <Link
                           href={`/accounts/ac-dev/projects/${p.id}`}
-                          style={projectLinkStyle}
-                          onClick={(event) => {
-                            event.preventDefault()
-                            onNavigate?.('project')
-                          }}
+                          onPress={() => onNavigate?.('project')}
                         >
                           {p.name}
-                        </a>
+                        </Link>
                       </Typography>
                     </Cell>
                     <Cell>

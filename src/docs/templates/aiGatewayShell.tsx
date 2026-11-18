@@ -9,7 +9,7 @@ import { Divider } from '../../Divider'
 import { Icon } from '../../Icon'
 import { Menu, MenuDivider, MenuItem, MenuSection, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
-import { SideNavigation, SideNavigationItem } from '../../SideNavigation'
+import { SideNavigation, SideNavigationItem, SideNavigationSection } from '../../SideNavigation'
 import { Stack } from '../../Stack'
 import { TextField } from '../../TextField'
 import { Typography } from '../../Typography'
@@ -346,20 +346,13 @@ const ProjectCreationDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
 type Navigate = ((to: string) => void) | undefined
 
-const NavList = ({
-  label,
-  items,
-  current,
-  onNavigate,
-  title,
-}: {
-  label: string
-  items: NavItem[]
-  current?: AiGatewayDestination
+/** Sidebar の navItem を SideNavigationItem にする。押すと href へは移らず onNavigate を呼ぶ（TemplateRouter） */
+const navItemsOf = (
+  items: NavItem[],
+  current: AiGatewayDestination | undefined,
   onNavigate: Navigate
-  title?: string
-}) => {
-  const list = items.map((item) => (
+) =>
+  items.map((item) => (
     <SideNavigationItem
       key={item.to}
       href="#"
@@ -370,19 +363,18 @@ const NavList = ({
       {item.label}
     </SideNavigationItem>
   ))
-  const navigation = <SideNavigation aria-label={label}>{list}</SideNavigation>
-  if (!title) return navigation
-  // 「管理」の見出しは Sidebar の NavigationContent と同じ Typography（div・xs・medium_emphasis・太字）。
-  // GAP: 実物の見出しは左右 20px・下 4px の余白（.sectionTitle）で項目の文字の頭に揃う
-  return (
-    <Stack gap="xxs">
-      <Typography component="div" size="xs" color="medium_emphasis" fontWeight="bold">
-        {title}
-      </Typography>
-      {navigation}
-    </Stack>
-  )
-}
+
+const NavList = ({
+  label,
+  items,
+  current,
+  onNavigate,
+}: {
+  label: string
+  items: NavItem[]
+  current?: AiGatewayDestination
+  onNavigate: Navigate
+}) => <SideNavigation aria-label={label}>{navItemsOf(items, current, onNavigate)}</SideNavigation>
 
 /** shared/ui/Sidebar/SidebarCredit。枠線の面の左に「クレジット」と残高、右下に「追加」 */
 const SidebarCredit = ({ onNavigate }: { onNavigate: Navigate }) => (
@@ -498,21 +490,15 @@ const Sidebar = ({
           onNavigate={onNavigate}
         />
       ) : (
-        <Stack gap="m">
-          <NavList
-            label="組織ナビゲーション"
-            items={accountNavItems}
-            current={current}
-            onNavigate={onNavigate}
-          />
-          <NavList
-            label="組織管理ナビゲーション"
-            title="管理"
-            items={accountBottomNavItems}
-            current={current}
-            onNavigate={onNavigate}
-          />
-        </Stack>
+        // 組織の項目のあとに「管理」の見出しの項目（Sidebar の NavigationContent）。1 つの nav の中で SideNavigationSection に分ける。
+        // 実物の見出し（.sectionTitle）は xs・gray[600]・太字で、左右 20px・下 4px の余白で項目の文字の頭に揃う。
+        // GAP: SideNavigationSection の見出しは左右 s（12px）・上下 xs（8px）の余白で、前の項目との間は s（12px）
+        <SideNavigation aria-label="組織ナビゲーション">
+          {navItemsOf(accountNavItems, current, onNavigate)}
+          <SideNavigationSection title="管理">
+            {navItemsOf(accountBottomNavItems, current, onNavigate)}
+          </SideNavigationSection>
+        </SideNavigation>
       )}
       <div style={supportStyle}>
         <SideNavigation aria-label="サポートナビゲーション">

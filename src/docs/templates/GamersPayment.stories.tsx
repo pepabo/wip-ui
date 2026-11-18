@@ -9,6 +9,7 @@ import { Container } from '../../Container'
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from '../../Dialog'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
+import { Link } from '../../Link'
 import { Loader } from '../../Loader'
 import { Paper } from '../../Paper'
 import { Radio, RadioGroup } from '../../Radio'
@@ -694,16 +695,15 @@ const PaymentMethodChangeDialog = ({ close }: { close: () => void }) => {
               </Stack>
               <Typography size="xxs" component="div">
                 ※この支払い方法は自動更新に対応していません。詳しくは
-                {/* 実物は MUI の Link（primary の色・下線）で、ヘルプ記事を別タブで開く */}
-                <a
+                {/* 実物は MUI の Link（primary の色・下線・アイコン無し）で、ヘルプ記事を別タブで開く。
+                    Link は neutral の色で、末尾に launch のアイコンが付く */}
+                <Link
                   href="https://support.server.lolipop.jp/hc/ja/articles/34754308816787"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Typography size="xxs" color="informative" component="span">
-                    利用できる支払い方法と対応ブランド
-                  </Typography>
-                </a>
+                  利用できる支払い方法と対応ブランド
+                </Link>
                 をご確認ください。
               </Typography>
             </Stack>

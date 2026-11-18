@@ -7,6 +7,7 @@ import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Menu, MenuItem, MenuTrigger } from '../../Menu'
 import { Paper } from '../../Paper'
+import { SegmentedControl, SegmentedControlItem } from '../../SegmentedControl'
 import { Stack } from '../../Stack'
 import { Cell, Column, Row, Table, TableBody, TableHeader } from '../../Table'
 import { Typography } from '../../Typography'
@@ -320,35 +321,6 @@ const UsageChart = ({ series, entries }: { series: Series; entries: Entry[] }) =
   )
 }
 
-// GAP-NEW: SegmentedControl が無い（shared/ui/SegmentedControl）。実物は白い地に gray[200] の枠のトラックの中に、
-// 16px・gray[600] の項目を並べ、選択中は gray[100] の地と太字。ここでは選択中を neutral の outlined、ほかを neutral の transparent にして並べる
-const Segmented = <T extends string>({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string
-  options: { id: T; label: string }[]
-  value: T
-  onChange: (v: T) => void
-}) => (
-  <Stack flexDirection="row" gap="xxs" alignItems="center">
-    {options.map((o) => (
-      <Button
-        key={o.id}
-        size="s"
-        color="neutral"
-        appearance={o.id === value ? 'outlined' : 'transparent'}
-        aria-label={`${label}: ${o.label}`}
-        onPress={() => onChange(o.id)}
-      >
-        {o.label}
-      </Button>
-    ))}
-  </Stack>
-)
-
 /** shared/ui/RetryCallout */
 const RetryCallout = ({ message }: { message: string }) => (
   <Callout
@@ -391,15 +363,17 @@ const DailyChartsSection = ({
         title="使用状況の推移"
         action={
           projectBreakdown && (
-            <Segmented
-              label="内訳"
-              options={[
-                { id: 'model', label: 'モデル別' },
-                { id: 'project', label: 'プロジェクト別' },
-              ]}
-              value={axis}
-              onChange={setAxis}
-            />
+            // shared/ui/SegmentedControl。実物は白い地に gray[200] の枠のトラックの中に 16px・gray[600] の項目を並べ、
+            // 選択中は gray[100] の地と太字。
+            // GAP: wip-ui の SegmentedControl は項目の文字が high_emphasis、選択中は neutral 200 の地で太さは変わらない
+            <SegmentedControl
+              aria-label="内訳"
+              selectedKey={axis}
+              onSelectionChange={(key) => setAxis(key === 'project' ? 'project' : 'model')}
+            >
+              <SegmentedControlItem id="model">モデル別</SegmentedControlItem>
+              <SegmentedControlItem id="project">プロジェクト別</SegmentedControlItem>
+            </SegmentedControl>
           )
         }
       />

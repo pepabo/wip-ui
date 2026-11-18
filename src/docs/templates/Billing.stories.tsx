@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 
 import { Button } from '../../Button'
 import { Callout } from '../../Callout'
@@ -8,6 +8,7 @@ import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
 import { Loader } from '../../Loader'
 import { Paper } from '../../Paper'
+import { SegmentedControl, SegmentedControlItem } from '../../SegmentedControl'
 import { Select, SelectItem } from '../../Select'
 import { Stack } from '../../Stack'
 import { Sticker } from '../../Sticker'
@@ -48,8 +49,8 @@ import type { ReactNode } from 'react'
  * - GAP: shared/ui/DataTable の列の最小幅（minWidth）と右寄せ（align: 'end'。金額・付与額・残高）が無い。表は左寄せ
  * - GAP: DataTableText tone="aux"（14px・行の高さ 20px）の文字を、Typography size="s" density="dense" で出している
  * - GAP: Dialog の幅（実物は styles.dialog の 520px）を指定できず、ダイアログは中身の幅になる
- * - GAP: SegmentedControl（shared/ui）が無い。実物は白い地に gray[200] の枠のトラックの中に 16px・gray[600] の項目を並べ、
- *   選択中は gray[100] の地と太字。ここでは選択中を neutral の outlined、ほかを neutral の transparent の Button で並べている
+ * - GAP: 実物の SegmentedControl（shared/ui）は白い地に gray[200] の枠のトラックの中に 16px・gray[600] の項目を並べ、
+ *   選択中は gray[100] の地と太字。wip-ui の SegmentedControl は項目の文字が high_emphasis、選択中は neutral 200 の地で太さは変わらない
  * - GAP: 内訳の面（chargeDetails）は実物では地が gray[50]。Paper の地のまま
  * - GAP: スイッチで開く欄の高さのアニメーション（collapsePanel）が無い。開いた状態だけを出している
  * - GAP: カード番号・有効期限・セキュリティコードは実物では決済代行の iframe（枠線 gray[200]・角丸 6px）。TextField で代用している
@@ -471,67 +472,65 @@ const ChargeDetails = ({ amount, totalLabel }: { amount: string; totalLabel: str
 )
 
 /** ManualChargeDialog。確定すると BillingDialogs の ConfirmDialog（「クレジットを追加しますか？」）が重なる */
-const ManualChargeDialog = ({ onClose, onOpen }: DialogProps) => (
-  <Dialog isOpen onOpenChange={closeOn(onClose)}>
-    <DialogHeader>
-      <DialogTitle>クレジットを追加する</DialogTitle>
-      <DialogDescription>追加したクレジットは、購入日から1年で失効します。</DialogDescription>
-    </DialogHeader>
-    {/* dialogFields（gap 16px） */}
-    <Stack gap="m">
-      {/* 「別のカードを登録する」を選ぶと、このダイアログを閉じてカードの登録を開く（registerCardFromCharge） */}
-      <Select
-        autoFocus
-        label="支払いカード"
-        width="full"
-        defaultSelectedKey="card-0"
-        onSelectionChange={(key) => {
-          if (key === 'register-card') onOpen('card')
-        }}
-      >
-        <SelectItem id="card-0" textValue={`Visa ${cardNumber}`}>
-          <CardBrandLabel />
-        </SelectItem>
-        <SelectItem id="register-card">別のカードを登録する</SelectItem>
-      </Select>
-      {/* amountSection（gap なし）: 金額の選択、「カスタム」のときだけ開く金額の欄、残りチャージ可能額。
+const ManualChargeDialog = ({ onClose, onOpen }: DialogProps) => {
+  const amountLabelId = useId()
+  return (
+    <Dialog isOpen onOpenChange={closeOn(onClose)}>
+      <DialogHeader>
+        <DialogTitle>クレジットを追加する</DialogTitle>
+        <DialogDescription>追加したクレジットは、購入日から1年で失効します。</DialogDescription>
+      </DialogHeader>
+      {/* dialogFields（gap 16px） */}
+      <Stack gap="m">
+        {/* 「別のカードを登録する」を選ぶと、このダイアログを閉じてカードの登録を開く（registerCardFromCharge） */}
+        <Select
+          autoFocus
+          label="支払いカード"
+          width="full"
+          defaultSelectedKey="card-0"
+          onSelectionChange={(key) => {
+            if (key === 'register-card') onOpen('card')
+          }}
+        >
+          <SelectItem id="card-0" textValue={`Visa ${cardNumber}`}>
+            <CardBrandLabel />
+          </SelectItem>
+          <SelectItem id="register-card">別のカードを登録する</SelectItem>
+        </Select>
+        {/* amountSection（gap なし）: 金額の選択、「カスタム」のときだけ開く金額の欄、残りチャージ可能額。
           Stack の既定の gap は m（16px）なので、最小の xxs（4px）にする */}
-      <Stack gap="xxs">
-        {/* SegmentedControl のラベルの行（14px・太字・行の高さ 24px、下に 8px） */}
-        <Stack gap="xs">
-          <Typography size="s" fontWeight="bold" component="span">
-            追加する金額
-          </Typography>
-          <Stack flexDirection="row" gap="xxs">
-            {chargeAmounts.map((o) => (
-              <Button
-                key={o.id}
-                size="s"
-                color="neutral"
-                appearance={o.id === '5000' ? 'outlined' : 'transparent'}
-                aria-pressed={o.id === '5000'}
-              >
-                {o.label}
-              </Button>
-            ))}
+        <Stack gap="xxs">
+          {/* SegmentedControl のラベルの行（14px・太字・行の高さ 24px、下に 8px）。
+            実物の SegmentedControl（shared/ui）の見た目との違いは冒頭の GAP に書いている */}
+          <Stack gap="xs">
+            <Typography id={amountLabelId} size="s" fontWeight="bold" component="span">
+              追加する金額
+            </Typography>
+            <SegmentedControl aria-labelledby={amountLabelId} defaultSelectedKey="5000">
+              {chargeAmounts.map((o) => (
+                <SegmentedControlItem key={o.id} id={o.id}>
+                  {o.label}
+                </SegmentedControlItem>
+              ))}
+            </SegmentedControl>
           </Stack>
+          <Typography size="s" color="medium_emphasis">
+            残りチャージ可能額 ￥487,654.3211（クレジット保有上限 ¥500,000）
+          </Typography>
         </Stack>
-        <Typography size="s" color="medium_emphasis">
-          残りチャージ可能額 ￥487,654.3211（クレジット保有上限 ¥500,000）
-        </Typography>
+        <ChargeDetails amount="￥5,000" totalLabel="合計金額" />
       </Stack>
-      <ChargeDetails amount="￥5,000" totalLabel="合計金額" />
-    </Stack>
-    <DialogFooter>
-      <Button appearance="transparent" color="neutral" onPress={onClose}>
-        閉じる
-      </Button>
-      <Button color="neutral" onPress={() => onOpen('chargeConfirm')}>
-        クレジットを追加する
-      </Button>
-    </DialogFooter>
-  </Dialog>
-)
+      <DialogFooter>
+        <Button appearance="transparent" color="neutral" onPress={onClose}>
+          閉じる
+        </Button>
+        <Button color="neutral" onPress={() => onOpen('chargeConfirm')}>
+          クレジットを追加する
+        </Button>
+      </DialogFooter>
+    </Dialog>
+  )
+}
 
 /**
  * BillingDialogs の ConfirmDialog（shared/ui/ConfirmDialog、幅 400px）。

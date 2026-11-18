@@ -9,6 +9,7 @@ import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } fr
 import { Divider } from '../../Divider'
 import { Grid, GridItem } from '../../Grid'
 import { Icon } from '../../Icon'
+import { Link } from '../../Link'
 import { Loader } from '../../Loader'
 import { Paper } from '../../Paper'
 import { Select, SelectItem } from '../../Select'
@@ -42,7 +43,8 @@ import type { Key, Selection } from 'react-aria-components'
  * - MOD / プラグインの絞り込みは MUI の Chip。ここでは Button
  * - MOD追加のカテゴリには Modrinth のアイコン（SVG）が付く。ここでは名前だけ
  * - MOD追加の左のカテゴリは幅 230px 固定。ここでは Grid の列
- * - Modrinth の名前・作者名、MODパックの注意の「バックアップ」は実物では文中のリンク。ここでは transparent の Button
+ * - Modrinth の名前・作者名、MODパックの注意の「バックアップ」は Link。実物の色（名前は text.primary、作者名は text.secondary、
+ *   「バックアップ」は Alert の文字の色）と下線（名前は hover のときだけ）は写せず、Link の neutral で常に下線
  * - 並べ替えの表示値は「並べ替え：関連性」のように接頭辞が付く。ここでは「関連性」だけ
  * - md 未満の「フィルタ」は右下に浮く Popover。ここでは検索欄の下に差し込んでいる
  * ここでは MOD とプラグインの両方を入れられる HYBRID のサーバー（mohist）にしている。
@@ -667,10 +669,6 @@ const CategorySidebar = ({
   )
 }
 
-// 素の a の既定の色を消し、中の Typography の色を使う（名前は hover で下線、作者名は常に下線）
-const plainLinkStyle = { color: 'inherit', textDecoration: 'none' } as const
-const inheritLinkStyle = { color: 'inherit' } as const
-
 /** ModManager/ModResultItem */
 const ModResultItem = ({ mod }: { mod: SearchResult }) => {
   const navigate = useGamersNavigate()
@@ -685,43 +683,33 @@ const ModResultItem = ({ mod }: { mod: SearchResult }) => {
             gap={{ xxs: 'xxs', s: 's' }}
             alignItems="flex-start"
           >
-            {/* 名前は Modrinth のプロジェクトのページ（projectUrl）を新しいタブで開くリンク（text.primary・hover で下線）。
-                文中のリンクの部品が無いので素の a */}
-            <a
-              href="https://modrinth.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${mod.name}（新しいタブで開く）`}
-              onClick={(event) => {
-                event.preventDefault()
-                navigate('external')
-              }}
-              style={plainLinkStyle}
-            >
-              <Stack flexDirection="row" gap="xxs" alignItems="center">
-                <Typography size="s" fontWeight="bold" component="span">
-                  {mod.name}
-                </Typography>
-                <Typography size="s" color="medium_emphasis" component="span">
-                  <Icon name="launch" size="s" color="currentColor" aria-hidden />
-                </Typography>
-              </Stack>
-            </a>
-            {/* 「by 作者名」は caption（12px・text.secondary）。作者名は authorUrl を新しいタブで開く下線付きのリンク */}
-            <Typography size="xs" color="medium_emphasis" component="span">
-              by{' '}
-              <a
-                href="https://modrinth.com/"
+            {/* 名前は Modrinth のプロジェクトのページ（projectUrl）を新しいタブで開くリンク。実物は text.primary の文字に
+                text.secondary の OpenInNew（間 4px）で、下線は hover のときだけ。Link は neutral で常に下線、
+                アイコンは文字と同じ色で Link が付ける */}
+            <Typography size="s" fontWeight="bold" component="span">
+              <Link
+                // 実物は Modrinth の URL。Storybook から外に出ないよう、deployNowShell の LinkButton と同じく # にする
+                href="#"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(event) => {
-                  event.preventDefault()
-                  navigate('external')
-                }}
-                style={inheritLinkStyle}
+                onPress={() => navigate('external')}
+              >
+                {mod.name}
+              </Link>
+            </Typography>
+            {/* 「by 作者名」は caption（12px・text.secondary）。作者名は authorUrl を新しいタブで開く下線付きのリンクで、
+                実物は周りと同じ text.secondary の色、アイコンは無い。Link は neutral（high_emphasis）で launch のアイコンが付く */}
+            <Typography size="xs" color="medium_emphasis" component="span">
+              by{' '}
+              <Link
+                // 実物は Modrinth の URL。Storybook から外に出ないよう、deployNowShell の LinkButton と同じく # にする
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                onPress={() => navigate('external')}
               >
                 {mod.author}
-              </a>
+              </Link>
             </Typography>
           </Stack>
           <Stack flexDirection="row" gap="xs" alignItems="center">
@@ -903,7 +891,7 @@ const AddMods = ({ initialQuery, onBack }: { initialQuery: string; onBack: () =>
                 </TabList>
               </Tabs>
               {type === 'modpack' && modpackAlert && (
-                // GAP-NEW: Callout に閉じるボタンの枠が無いので action に置く。文中の「バックアップ」も本来はリンク
+                // GAP-NEW: Callout に閉じるボタンの枠が無いので action に置く
                 <Callout
                   color="informative"
                   appearance="outline"
@@ -920,10 +908,10 @@ const AddMods = ({ initialQuery, onBack }: { initialQuery: string; onBack: () =>
                   }
                 >
                   MODパックをインストールすると既存の設定ファイルが上書きされることがあります。また、パック内のMODを個別に削除・変更すると、正常に動作しなくなる場合があります。操作前に必ず
-                  {/* 「バックアップ」は /servers/[id]/backup へのリンク。文中のリンクが無いので Button */}
-                  <Button appearance="transparent" size="s" onPress={() => navigate('backup')}>
+                  {/* 「バックアップ」は /servers/[id]/backup への MUI の Link（Alert の文字の色・下線）。Link は neutral の色 */}
+                  <Link href={`/servers/${server.id}/backup`} onPress={() => navigate('backup')}>
                     バックアップ
-                  </Button>
+                  </Link>
                   を作成してください。
                 </Callout>
               )}
