@@ -37,6 +37,7 @@ export const Table: FC<Props> = ({ className, children, ...props }) => {
 interface ColumnProps extends Omit<AriaColumnProps, 'className'> {
   /** 列の見出しの文字の寄せ */
   align?: TableAlign
+  /** 追加するクラス */
   className?: string
 }
 
@@ -47,6 +48,7 @@ export const Column: FC<ColumnProps> = ({ align = 'start', className, ...props }
 interface CellProps extends Omit<AriaCellProps, 'className'> {
   /** セルの文字の寄せ */
   align?: TableAlign
+  /** 追加するクラス */
   className?: string
 }
 
