@@ -1,0 +1,97 @@
+@use 'sass:map';
+@use 'sass:meta';
+@use '@pepabo-inhouse/adapter' as adapter;
+@use '@pepabo-inhouse/flavor/tokens' as tokens;
+
+// 【試し】選択中と hover の地を brown で出す。brown は lolipop と nachiguro にしか無いので、
+// 無いフレーバーでは今までの状態のトークンのまま。inhouse に暖色の状態トークンができたら戻す
+$has-brown: map.has-key(meta.module-variables(tokens), 'color-primitive-brown-50');
+@function trial-hover-color() {
+  @if $has-brown { @return rgba(adapter.get-primitive-color(brown, 500), 0.08); }
+  @return adapter.get-background-overlay-color(light, $state: hover);
+}
+@function trial-selected-color() {
+  @if $has-brown { @return adapter.get-primitive-color(brown, 100); }
+  @return adapter.get-semantic-color(neutral, 200);
+}
+
+// トラック（外枠）の内側の余白。この分だけ段がトラックより小さくなる
+$track-padding: adapter.get-border-size(l); // 0.125rem
+
+.wip-segmented-control {
+  // 段の幅をそろえる。auto のときは一番長いラベルに合わせ、full のときは親の幅を等分する
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: $track-padding;
+  box-sizing: border-box;
+  // Stack などの縦の flex の中で横に引き伸ばされないよう、中身の幅にする
+  width: max-content;
+  max-width: 100%;
+  padding: $track-padding;
+  vertical-align: middle;
+  background-color: adapter.get-surface-color(light);
+  // 枠は Checkbox・Radio と同じ濃さ。入力欄の枠（TextField）より薄くし、Button の並びに見せない
+  box-shadow: inset 0 0 0 adapter.get-border-size(m) adapter.get-border-color(light, mid_emphasis);
+  border-radius: adapter.get-radius-size(m);
+
+  &.-width-full {
+    display: grid;
+    width: 100%;
+  }
+
+  // 高さは Button・TextField の m と合わせる
+  height: 2.5rem;
+
+  ._item {
+    @include adapter.text($level: m);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: adapter.get-gap-size(xxs);
+    min-width: 0;
+    margin: 0;
+    padding: 0 adapter.get-spacing-size(m);
+    border: 0;
+    border-radius: calc(#{adapter.get-radius-size(m)} - #{$track-padding});
+    background: none;
+    color: adapter.get-text-color(light, high_emphasis);
+    font-family: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+    outline: none;
+
+    &[data-hovered]:not([data-selected]) {
+      background-color: trial-hover-color();
+    }
+
+    // 選ばれている段は薄い塗りだけで示す。濃い塗り＋白文字にすると既定の Button と同じ見た目になるため
+    &[data-selected] {
+      background-color: trial-selected-color();
+      cursor: default;
+    }
+
+    &[data-focus-visible] {
+      outline: 0.125rem solid adapter.get-semantic-color(informative, 500);
+      outline-offset: -0.125rem;
+    }
+
+    &[data-disabled] {
+      cursor: default;
+    }
+  }
+
+  &[data-disabled] {
+    opacity: adapter.get-disabled-surface-opacity();
+  }
+
+  // 一部の段だけが使えないとき。全体が使えないときは、上の全体の透明度だけで示す
+  &:not([data-disabled]) ._item[data-disabled] {
+    opacity: adapter.get-disabled-surface-opacity();
+  }
+
+  ._label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

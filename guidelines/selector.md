@@ -62,6 +62,7 @@
 |---|---|---|
 | AppBar | ページ上部でタイトルと主要なアクションを表示するナビゲーションバー | `dist/js/AppBar/AppBar.md` |
 | Breadcrumbs | ページ階層のパンくずリスト | `dist/js/Breadcrumbs/Breadcrumbs.md` |
+| SegmentedControl | 1 つの対象の状態や見え方を、その場で 1 つ選んで切り替える | `dist/js/SegmentedControl/SegmentedControl.md` |
 | Tabs | 同じ階層のコンテンツの表示を切り替えるタブ | `dist/js/Tab/Tabs.md` |
 
 ## FlavorProvider
