@@ -1,4 +1,19 @@
+@use 'sass:map';
+@use 'sass:meta';
 @use '@pepabo-inhouse/adapter' as adapter;
+@use '@pepabo-inhouse/flavor/tokens' as tokens;
+
+// 【試し】選択中と hover の地を brown で出す。brown は lolipop と nachiguro にしか無いので、
+// 無いフレーバーでは今までの状態のトークンのまま。inhouse に暖色の状態トークンができたら戻す
+$has-brown: map.has-key(meta.module-variables(tokens), 'color-primitive-brown-50');
+@function trial-hover-color() {
+  @if $has-brown { @return rgba(adapter.get-primitive-color(brown, 500), 0.08); }
+  @return adapter.get-background-overlay-color(light, $state: hover);
+}
+@function trial-selected-color() {
+  @if $has-brown { @return adapter.get-primitive-color(brown, 100); }
+  @return adapter.get-background-overlay-color(light, $state: selected);
+}
 
 .wip-side-navigation {
   width: 100%;
@@ -27,12 +42,12 @@
     outline: none;
 
     &[data-hovered] {
-      background-color: adapter.get-background-overlay-color(light, $state: hover);
+      background-color: trial-hover-color();
     }
 
     // 現在地は、hover より濃い selected の状態の色と太字で示す
     &[aria-current='page'] {
-      background-color: adapter.get-background-overlay-color(light, $state: selected);
+      background-color: trial-selected-color();
       font-weight: bold;
     }
 
