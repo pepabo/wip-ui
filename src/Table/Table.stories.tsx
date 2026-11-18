@@ -95,3 +95,37 @@ export const SelectionMode: Story = {
     </Table>
   ),
 }
+
+export const Align: Story = {
+  name: 'Column / Cell align',
+  render: () => (
+    <Table aria-label="請求一覧">
+      <TableHeader>
+        <Column isRowHeader>プロジェクト</Column>
+        <Column align="center">状態</Column>
+        <Column align="end">リクエスト</Column>
+        <Column align="end">利用額</Column>
+      </TableHeader>
+      <TableBody>
+        <Row>
+          <Cell>production</Cell>
+          <Cell align="center">有効</Cell>
+          <Cell align="end">9,466</Cell>
+          <Cell align="end">¥2,398</Cell>
+        </Row>
+        <Row>
+          <Cell>staging</Cell>
+          <Cell align="center">有効</Cell>
+          <Cell align="end">2,549</Cell>
+          <Cell align="end">¥646</Cell>
+        </Row>
+        <Row>
+          <Cell>翻訳バッチ</Cell>
+          <Cell align="center">停止</Cell>
+          <Cell align="end">273</Cell>
+          <Cell align="end">¥69</Cell>
+        </Row>
+      </TableBody>
+    </Table>
+  ),
+}
