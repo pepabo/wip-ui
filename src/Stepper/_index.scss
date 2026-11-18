@@ -1,0 +1,188 @@
+@use '@pepabo-inhouse/adapter' as adapter;
+
+// 番号を入れる丸の大きさと、丸とラベルの間隔
+$marker-size: 1.5rem;
+$marker-gap: adapter.get-spacing-size(xs);
+$line-size: adapter.get-border-size(m);
+
+.wip-stepper {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  ._item {
+    position: relative;
+    display: flex;
+    gap: $marker-gap;
+    min-width: 0;
+  }
+
+  ._marker {
+    @include adapter.text($level: xs);
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: $marker-size;
+    height: $marker-size;
+    border: $line-size solid adapter.get-border-color(light, high_emphasis);
+    border-radius: 50%;
+    background-color: adapter.get-primitive-color(white);
+    color: adapter.get-text-color(light, mid_emphasis);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  ._body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  // 文字の大きさは List の title と description にそろえる
+  ._label {
+    @include adapter.text($level: s);
+    color: adapter.get-text-color(light, high_emphasis);
+  }
+
+  ._description {
+    @include adapter.text($level: xs, $density: dense);
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+
+  // 読み上げ専用の「完了:」「エラー:」
+  ._status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  // 現在地は塗り、完了は枠とチェック、これからは薄い枠と番号。
+  // 色は Switch の ON と同じ neutral 800（文字の high_emphasis と同じ黒）
+  ._item[data-state='current'] {
+    ._marker {
+      border-color: adapter.get-semantic-color(neutral, 800);
+      background-color: adapter.get-semantic-color(neutral, 800);
+      color: adapter.get-primitive-color(white);
+    }
+
+    ._label {
+      font-weight: 600;
+    }
+  }
+
+  ._item[data-state='completed'] ._marker {
+    border-color: adapter.get-semantic-color(neutral, 800);
+    color: adapter.get-semantic-color(neutral, 800);
+  }
+
+  ._item[data-state='upcoming'] {
+    ._marker {
+      border-color: adapter.get-border-color(light, mid_emphasis);
+      color: adapter.get-text-color(light, low_emphasis);
+    }
+
+    ._label {
+      color: adapter.get-text-color(light, mid_emphasis);
+    }
+  }
+
+  // エラーは状態にかかわらず負の色で示す
+  ._item[data-invalid] {
+    ._marker {
+      border-color: adapter.get-semantic-color(negative, 500);
+      background-color: adapter.get-semantic-color(negative, 500);
+      color: adapter.get-primitive-color(white);
+    }
+
+    ._label {
+      color: adapter.get-semantic-color(negative, 600);
+    }
+  }
+
+  // つなぐ線。終わったところまでを現在地と同じ色にする
+  ._item::before,
+  ._item::after {
+    position: absolute;
+    background-color: adapter.get-border-color(light, mid_emphasis);
+    content: '';
+  }
+
+  &.-orientation-horizontal {
+    flex-direction: row;
+
+    ._item {
+      flex: 1 1 0;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    ._item::after {
+      display: none;
+    }
+
+    // 前の丸の右端から自分の丸の左端まで
+    ._item::before {
+      top: calc(#{$marker-size} / 2 - #{$line-size} / 2);
+      right: calc(50% + #{$marker-size} / 2 + #{$marker-gap});
+      left: calc(-50% + #{$marker-size} / 2 + #{$marker-gap});
+      height: $line-size;
+    }
+
+    ._item:first-child::before {
+      display: none;
+    }
+
+    ._item[data-state='completed']::before,
+    ._item[data-state='current']::before {
+      background-color: adapter.get-semantic-color(neutral, 800);
+    }
+  }
+
+  &.-orientation-vertical {
+    flex-direction: column;
+
+    ._item {
+      flex-direction: row;
+      align-items: flex-start;
+      padding-bottom: adapter.get-spacing-size(l);
+    }
+
+    ._item:last-child {
+      padding-bottom: 0;
+    }
+
+    ._item::before {
+      display: none;
+    }
+
+    // 自分の丸の下端から次の丸の上端まで
+    ._item::after {
+      top: calc(#{$marker-size} + 0.25rem);
+      bottom: 0.25rem;
+      left: calc(#{$marker-size} / 2 - #{$line-size} / 2);
+      width: $line-size;
+    }
+
+    ._item:last-child::after {
+      display: none;
+    }
+
+    ._item[data-state='completed']::after {
+      background-color: adapter.get-semantic-color(neutral, 800);
+    }
+
+    ._body {
+      padding-top: calc((#{$marker-size} - 1.5em) / 2);
+    }
+  }
+}
