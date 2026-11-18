@@ -1,4 +1,19 @@
+@use 'sass:map';
+@use 'sass:meta';
 @use '@pepabo-inhouse/adapter' as adapter;
+@use '@pepabo-inhouse/flavor/tokens' as tokens;
+
+// 【試し】選択中と hover の地を brown で出す。brown は lolipop と nachiguro にしか無いので、
+// 無いフレーバーでは今までの状態のトークンのまま。inhouse に暖色の状態トークンができたら戻す
+$has-brown: map.has-key(meta.module-variables(tokens), 'color-primitive-brown-50');
+@function trial-hover-color() {
+  @if $has-brown { @return rgba(adapter.get-primitive-color(brown, 500), 0.08); }
+  @return adapter.get-background-overlay-color(light, $state: hover);
+}
+@function trial-selected-color() {
+  @if $has-brown { @return adapter.get-primitive-color(brown, 100); }
+  @return adapter.get-semantic-color(neutral, 200);
+}
 
 // トラック（外枠）の内側の余白。この分だけ段がトラックより小さくなる
 $track-padding: adapter.get-border-size(l); // 0.125rem
@@ -47,12 +62,12 @@ $track-padding: adapter.get-border-size(l); // 0.125rem
     outline: none;
 
     &[data-hovered]:not([data-selected]) {
-      background-color: adapter.get-background-overlay-color(light, $state: hover);
+      background-color: trial-hover-color();
     }
 
     // 選ばれている段は薄い塗りだけで示す。濃い塗り＋白文字にすると既定の Button と同じ見た目になるため
     &[data-selected] {
-      background-color: adapter.get-semantic-color(neutral, 200);
+      background-color: trial-selected-color();
       cursor: default;
     }
 
