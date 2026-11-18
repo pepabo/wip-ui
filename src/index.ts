@@ -44,6 +44,8 @@ export * from './SideNavigation'
 export * from './SnackBar'
 // Stack
 export * from './Stack'
+// StatusIndicator
+export * from './StatusIndicator'
 // Sticker
 export * from './Sticker'
 // Switch
