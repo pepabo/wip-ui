@@ -69,6 +69,7 @@
 | AppBar | ページ上部でタイトルと主要なアクションを表示するナビゲーションバー | `dist/js/AppBar/AppBar.md` |
 | Breadcrumbs | ページ階層のパンくずリスト | `dist/js/Breadcrumbs/Breadcrumbs.md` |
 | Link | 文章の中や、値として置くテキストのリンク | `dist/js/Link/Link.md` |
+| SegmentedControl | 1 つの対象の状態や見え方を、その場で 1 つ選んで切り替える | `dist/js/SegmentedControl/SegmentedControl.md` |
 | SideNavigation | 画面の横に置く、ページを移動するための縦のナビゲーション | `dist/js/SideNavigation/SideNavigation.md` |
 | Tabs | 同じ階層のコンテンツの表示を切り替えるタブ | `dist/js/Tab/Tabs.md` |
 

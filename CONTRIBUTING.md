@@ -21,6 +21,8 @@ npm install
 | `npm run lint` | 型チェック + Biome チェック |
 | `npm run lint:fix` | Biome による自動修正 |
 | `npm run lint:staged <files>` | Biome による lint（ステージング対象） |
+| `npm test` | テスト（vitest） |
+| `npm run build:lint` | `lint/rules.json` から Biome のプラグインと `lint/README.md` の表を生成 |
 
 ## リリース
 
@@ -41,4 +43,6 @@ git push --follow-tags      # 新しい tag を origin にも push
 - `src/_all.scss` — 全コンポーネント SCSS のエントリ
 - `scripts/build-js.mjs` — TypeScript コンパイル + `.scss` import のストリップ
 - `scripts/build-flavor-css.mjs` — フレーバーごとに SCSS をコンパイルし `[data-flavor="xxx"]` でスコープ化。`all.css`（全フレーバー結合）も生成。Inhouse Icons woff2 を base64 で埋め込み
+- `scripts/build-lint.mjs` — `lint/rules.json` から `lint/biome/no-raw-element.grit` と `lint/README.md` の表を生成
+- `lint/` — 利用側向けの lint。判定の元データは `lint/rules.json` の1か所で、Biome 版（`lint/biome/`）は生成、ESLint 版（`lint/eslint/`）は実行時に読み込む
 - `.storybook/` — Storybook 設定とフレーバー別プレビュー CSS

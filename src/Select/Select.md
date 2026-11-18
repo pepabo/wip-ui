@@ -7,7 +7,7 @@ category: Forms
 
 ドロップダウンで、定義済みの選択肢から 1 つを選ばせるフォームコンポーネントです。選択肢は SelectItem で渡します。
 素の `<select>` の代わりに使います。
-選択肢が 4 個以下の場合は RadioGroup + Radio、自由入力が必要な場合は TextField、複数選択には Checkbox、表示の切り替えには Tabs を使ってください。
+選択肢が 4 個以下の場合は RadioGroup + Radio、自由入力が必要な場合は TextField、複数選択には Checkbox、表示の切り替えには Tabs、1 つの対象の状態や見え方をその場で切り替えるなら SegmentedControl を使ってください。
 
 ## 基本の使い方
 
