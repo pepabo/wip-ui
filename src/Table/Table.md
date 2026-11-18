@@ -36,7 +36,7 @@ import { Cell, Column, Row, Table, TableBody, TableHeader } from 'wip-ui'
 | TableBody | データ行のまとまり。Row を並べる |
 | Row | 1 行分のデータ。Cell を並べる |
 | Cell | 1 つのセル。align で文字の寄せを決める |
-| ResizableTableContainer | 列幅をユーザーが変えられるようにするときに Table を囲む |
+| ResizableTableContainer | 列幅をユーザーが変えられるようにするときに Table を囲む。横スクロールは Table が自分で持つので、そのためには使わない |
 | ColumnResizer | 列幅を変えるためのハンドル。Column の中に置く |
 | TableLoadMoreItem | 続きのデータを読み込むための行。TableBody の末尾に置く |
 
@@ -64,8 +64,7 @@ import { Cell, Column, Row, Table, TableBody, TableHeader } from 'wip-ui'
 
 ### 寄せ
 
-- [should] 数値や金額の列は、Column と Cell の align を end にして、桁をそろえる。文字の列は start のままにする
-- [should] 同じ列の Column と Cell には、同じ align を指定する
+- [should] 数値や金額の列は、Column と Cell の両方で align を end にして、桁をそろえる。文字の列は start のままにする
 
 ## アクセシビリティ
 

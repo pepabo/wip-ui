@@ -35,7 +35,7 @@ export const Table: FC<Props> = ({ className, children, ...props }) => {
 }
 
 interface ColumnProps extends Omit<AriaColumnProps, 'className'> {
-  /** 列の見出しの文字の寄せ。数値や金額の列は end にする */
+  /** 列の見出しの文字の寄せ */
   align?: TableAlign
   className?: string
 }
@@ -45,7 +45,7 @@ export const Column: FC<ColumnProps> = ({ align = 'start', className, ...props }
 }
 
 interface CellProps extends Omit<AriaCellProps, 'className'> {
-  /** セルの文字の寄せ。同じ列の Column と同じ値にする */
+  /** セルの文字の寄せ */
   align?: TableAlign
   className?: string
 }
