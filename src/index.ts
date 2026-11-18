@@ -26,6 +26,8 @@ export * from './Grid'
 export * from './Icon'
 // Link
 export * from './Link'
+// List
+export * from './List'
 // Loader
 export * from './Loader'
 // Menu
