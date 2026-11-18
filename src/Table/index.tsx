@@ -1,43 +1,59 @@
 'use client'
 
 import {
+  Cell as AriaCell,
+  type CellProps as AriaCellProps,
+  Column as AriaColumn,
+  type ColumnProps as AriaColumnProps,
   Table as AriaTable,
-  Cell,
-  Column,
+  type TableProps as AriaTableProps,
   ColumnResizer,
   ResizableTableContainer,
   Row,
   TableBody,
   TableHeader,
   TableLoadMoreItem,
-  type TableProps,
 } from 'react-aria-components'
 import clsx from 'clsx'
 
 import type { FC } from 'react'
 import './_index.scss'
 
-interface Props extends TableProps {}
+type TableAlign = 'start' | 'center' | 'end'
+
+interface Props extends AriaTableProps {}
 
 export const Table: FC<Props> = ({ className, children, ...props }) => {
-  const classNames = clsx('wip-table', className)
-
   return (
-    <AriaTable className={classNames} {...props}>
-      {children}
-    </AriaTable>
+    // 列が置いた場所の幅に収まらないときは、表の中で横にスクロールさせる
+    <div className="wip-table-container">
+      <AriaTable className={clsx('wip-table', className)} {...props}>
+        {children}
+      </AriaTable>
+    </div>
   )
 }
 
-export {
-  Cell,
-  Column,
-  ColumnResizer,
-  ResizableTableContainer,
-  Row,
-  TableBody,
-  TableHeader,
-  TableLoadMoreItem,
+interface ColumnProps extends Omit<AriaColumnProps, 'className'> {
+  /** 列の見出しの文字の寄せ。数値や金額の列は end にする */
+  align?: TableAlign
+  className?: string
 }
 
-export type { Props as TableProps }
+export const Column: FC<ColumnProps> = ({ align = 'start', className, ...props }) => {
+  return <AriaColumn className={clsx(`-align-${align}`, className)} {...props} />
+}
+
+interface CellProps extends Omit<AriaCellProps, 'className'> {
+  /** セルの文字の寄せ。同じ列の Column と同じ値にする */
+  align?: TableAlign
+  className?: string
+}
+
+export const Cell: FC<CellProps> = ({ align = 'start', className, ...props }) => {
+  return <AriaCell className={clsx(`-align-${align}`, className)} {...props} />
+}
+
+export { ColumnResizer, ResizableTableContainer, Row, TableBody, TableHeader, TableLoadMoreItem }
+
+export type { Props as TableProps, ColumnProps, CellProps, TableAlign }

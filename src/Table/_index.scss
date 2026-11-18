@@ -1,6 +1,19 @@
 @use '@pepabo-inhouse/table' as table;
 @use "@pepabo-inhouse/adapter/functions" as adapter-functions;
 
+// 表は置いた場所の幅いっぱいに広がり、列が収まらないときはこの中で横にスクロールする
+.wip-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
 .wip-table {
   @include table.style;
+  width: 100%;
+
+  // セルの文字は折り返さない。収まらない分は横スクロールに任せる
+  th,
+  td {
+    white-space: nowrap;
+  }
 }

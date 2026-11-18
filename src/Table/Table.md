@@ -32,10 +32,10 @@ import { Cell, Column, Row, Table, TableBody, TableHeader } from 'wip-ui'
 |---|---|
 | Table | テーブル全体 |
 | TableHeader | 見出し行。Column を並べる |
-| Column | 列の見出し |
+| Column | 列の見出し。align で文字の寄せを決める |
 | TableBody | データ行のまとまり。Row を並べる |
 | Row | 1 行分のデータ。Cell を並べる |
-| Cell | 1 つのセル |
+| Cell | 1 つのセル。align で文字の寄せを決める |
 | ResizableTableContainer | 列幅をユーザーが変えられるようにするときに Table を囲む |
 | ColumnResizer | 列幅を変えるためのハンドル。Column の中に置く |
 | TableLoadMoreItem | 続きのデータを読み込むための行。TableBody の末尾に置く |
@@ -58,7 +58,14 @@ import { Cell, Column, Row, Table, TableBody, TableHeader } from 'wip-ui'
 
 ### レイアウト
 
+- 表は、置いた場所の幅いっぱいに広がる。列が収まらないときは、表の中で横にスクロールする
+- セルの文字は折り返さない。収まらない分は横スクロールで見せる
 - [should] 画面幅が広い場合は、Container などで Table の外側の最大幅を制限する。Table を極端に横に広げると読みにくくなる
+
+### 寄せ
+
+- [should] 数値や金額の列は、Column と Cell の align を end にして、桁をそろえる。文字の列は start のままにする
+- [should] 同じ列の Column と Cell には、同じ align を指定する
 
 ## アクセシビリティ
 
