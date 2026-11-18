@@ -19,13 +19,20 @@
     }
   }
 
+  // 高さは、隣に並ぶ文字の行の高さに合わせる。s は xs の文字（1rem）、m は s の文字（1.25rem）、l は s の文字の普通の行間（1.5rem）
+  // 上下の余白が token にない値のときは、rem で直接書く
   &.-size-s {
-    @include adapter.text($level: xs);
-    padding: adapter.get-spacing-size(xxs) adapter.get-spacing-size(xs);
+    @include adapter.text($level: xs, $density: dense);
+    padding: 0.125rem 0.375rem; // 高さ 1.25rem
   }
 
   &.-size-m {
+    @include adapter.text($level: s, $density: dense);
+    padding: 0.125rem adapter.get-spacing-size(xs); // 高さ 1.5rem
+  }
+
+  &.-size-l {
     @include adapter.text($level: s);
-    padding: adapter.get-spacing-size(xxs) adapter.get-spacing-size(m);
+    padding: adapter.get-spacing-size(xxs) adapter.get-spacing-size(s); // 高さ 2rem
   }
 }

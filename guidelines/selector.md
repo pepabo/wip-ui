@@ -40,7 +40,7 @@
 | Divider | セクションや要素のまとまりを線で区切る | `dist/js/Divider/Divider.md` |
 | Meter | ディスクの使用量など、決まった範囲の中の今の量を示すバー | `dist/js/Meter/Meter.md` |
 | StatusIndicator | 稼働中・失敗など、対象の今の状態を色の丸と文字で示す | `dist/js/StatusIndicator/StatusIndicator.md` |
-| Sticker | ステータスやカテゴリを小さなラベルで示す | `dist/js/Sticker/Sticker.md` |
+| Sticker | おすすめ・ベータなど、対象の属性や分類を小さなラベルで示す | `dist/js/Sticker/Sticker.md` |
 | Table | 構造化されたデータを行と列で一覧表示する | `dist/js/Table/Table.md` |
 | Tooltip | ボタンなどに、マウスを乗せたときやフォーカスしたときに補足を表示するポップアップ | `dist/js/Tooltip/Tooltip.md` |
 | Typography | 見出しや本文などのテキストを表示する | `dist/js/Typography/Typography.md` |
