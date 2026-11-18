@@ -7,7 +7,7 @@ category: Forms
 
 ドロップダウンで、定義済みの選択肢から 1 つを選ばせるフォームコンポーネントです。選択肢は SelectItem で渡します。
 素の `<select>` の代わりに使います。
-選択肢が 4 個以下の場合は RadioGroup + Radio、自由入力が必要な場合は TextField、複数選択には Checkbox、表示の切り替えには Tabs を使ってください。
+選択肢が 4 個以下の場合は RadioGroup + Radio、自由入力が必要な場合は TextField、複数選択には Checkbox（選択肢が多い場合は MultiSelect）、表示の切り替えには Tabs を使ってください。
 
 ## 基本の使い方
 
@@ -39,7 +39,7 @@ import { Select, SelectItem } from 'wip-ui'
 
 - [should] 選択肢が 4 個以下の場合は、Select ではなく RadioGroup + Radio を使う。ただし、テーブル内など並べるスペースがない場合は Select を使ってよい
 - [should] 選択肢の並び順は、利用頻度よりも予測しやすさを優先する（例：都道府県は北から南の順）
-- [avoid] 複数選択に使わない。複数選択には Checkbox を並べる
+- [avoid] 複数選択に使わない。複数選択には Checkbox を並べるか、選択肢が多い場合は MultiSelect を使う
 - [avoid] 表示の切り替えやナビゲーションに使わない。表示の切り替えには Tabs を使う
 - 選択肢の絞り込み（検索）には対応していない
 

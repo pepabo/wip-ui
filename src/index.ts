@@ -24,6 +24,8 @@ export * from './Grid'
 export * from './Icon'
 // Loader
 export * from './Loader'
+// MultiSelect
+export * from './MultiSelect'
 // Paper
 export * from './Paper'
 // Radio

@@ -18,6 +18,7 @@
 | コンポーネント | 用途 | 使い方 |
 |---|---|---|
 | Checkbox | 送信して確定する ON/OFF や複数選択に使うチェックボックス | `dist/js/Checkbox/Checkbox.md` |
+| MultiSelect | 多くの選択肢から、検索しながら複数を選ばせるドロップダウン | `dist/js/MultiSelect/MultiSelect.md` |
 | Radio | 複数の選択肢から 1 つだけを選ばせるラジオボタン | `dist/js/Radio/Radio.md` |
 | Select | 定義済みの選択肢から 1 つを選ばせるドロップダウン | `dist/js/Select/Select.md` |
 | Switch | 即時に反映される設定の ON/OFF を切り替えるスイッチ | `dist/js/Switch/Switch.md` |

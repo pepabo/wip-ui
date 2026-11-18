@@ -1,0 +1,228 @@
+@use '@pepabo-inhouse/select' as select;
+@use '@pepabo-inhouse/adapter' as adapter;
+
+// 開いた部分の中の、検索欄や「すべて選択」の左右の余白
+$panel-padding: adapter.get-spacing-size(xs);
+
+.wip-multi-select {
+  // 閉じた状態の見た目は Select と同じにする
+  @include select.style();
+
+  // 複数の値を並べて表示するため、幅は親要素いっぱいにする
+  display: block;
+  width: 100%;
+
+  &[data-disabled] ._label-container {
+    opacity: adapter.get-disabled-surface-opacity();
+  }
+
+  ._label-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    margin-bottom: adapter.get-gap-size($level: xs);
+  }
+
+  ._label {
+    @include adapter.text($level: s);
+    font-weight: 600;
+  }
+
+  ._caption {
+    @include adapter.text($level: xxs);
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+
+  ._select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    position: relative;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 0.25rem solid color-mix(in lch, adapter.get-semantic-color(neutral, 500) 15%, transparent);
+      outline-offset: 0;
+    }
+  }
+
+  // 表示する文字と、幅を決めるための見えない文字を同じマスに重ねる
+  ._value {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+
+    > * {
+      grid-area: 1 / 1;
+      white-space: nowrap;
+    }
+
+    &[data-placeholder] {
+      color: adapter.get-text-color(light, mid_emphasis);
+    }
+  }
+
+  // 表示する文字は幅の計算に含めず、マスに収まらない分は省略する
+  ._value-text {
+    contain: inline-size;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // プレースホルダーと全選択肢を重ねて、いちばん長いものの幅にする
+  ._value-sizer {
+    display: grid;
+    visibility: hidden;
+
+    > * {
+      grid-area: 1 / 1;
+    }
+  }
+
+  ._icon {
+    position: absolute;
+  }
+}
+
+.wip-multi-select-popover {
+  // 絞り込みで中身が変わっても幅が動かないよう、トリガーと同じ幅にする（select と同じ）
+  box-sizing: border-box;
+  width: var(--trigger-width);
+  max-width: 100vw;
+  background-color: adapter.get-primitive-color(white);
+  border: 1px solid adapter.get-field-border-color(neutral, enabled);
+  border-radius: adapter.get-radius-size(m);
+
+  @each $size in (s, m, l) {
+    &.-size-#{$size} {
+      @include adapter.text($level: $size, $density: normal);
+    }
+  }
+
+  // react-aria が画面に収まる高さを max-height で渡してくるので、一覧だけがその中でスクロールするようにする
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  ._dialog {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: inherit;
+    outline: none;
+  }
+
+  ._search {
+    position: relative;
+    display: block;
+    padding: $panel-padding;
+    border-bottom: 1px solid adapter.get-border-color(light, mid_emphasis);
+  }
+
+  ._search-icon {
+    position: absolute;
+    top: 50%;
+    left: calc(#{$panel-padding} + #{adapter.get-spacing-size(m)});
+    transform: translateY(-50%);
+    color: adapter.get-text-color(light, mid_emphasis);
+    pointer-events: none;
+  }
+
+  // 検索欄は size に関係なく、TextField の m と同じ大きさにする
+  ._search-input {
+    @include adapter.text($level: m);
+    box-sizing: border-box;
+    width: 100%;
+    height: 2.5rem;
+    padding: 0 adapter.get-spacing-size(m) 0 calc(#{adapter.get-spacing-size(m)} * 2 + 1rem);
+    border: 0;
+    border-radius: adapter.get-radius-size(m);
+    background-color: adapter.get-surface-color(light);
+    box-shadow: inset 0 0 0 adapter.get-border-size(m) adapter.get-field-border-color(neutral, enabled);
+    color: adapter.get-text-color(light, high_emphasis);
+    font-family: inherit;
+    outline: none;
+
+    &:focus-visible {
+      box-shadow: inset 0 0 0 0.125rem adapter.get-semantic-color(informative, 500);
+    }
+
+    // SearchField の標準のクリアボタンは使わないため、ブラウザの × も出さない
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
+  }
+
+  ._select-all {
+    padding: $panel-padding;
+    border-bottom: 1px solid adapter.get-border-color(light, mid_emphasis);
+  }
+
+  ._listbox {
+    display: grid;
+    flex: 1 1 auto;
+    gap: adapter.get-gap-size(xxs);
+    align-content: start;
+    min-height: 0;
+    max-height: 16rem;
+    padding: $panel-padding;
+    overflow: auto;
+    outline: none;
+  }
+
+  ._section {
+    display: grid;
+    gap: adapter.get-gap-size(xxs);
+  }
+
+  ._section-header {
+    @include adapter.text($level: xs);
+    padding: adapter.get-spacing-size(s) adapter.get-spacing-size(m) adapter.get-spacing-size(xxs);
+    color: adapter.get-text-color(light, mid_emphasis);
+    font-weight: 600;
+  }
+
+  ._item {
+    display: flex;
+    align-items: center;
+    gap: adapter.get-spacing-size(xs);
+    padding: adapter.get-spacing-size(s) adapter.get-spacing-size(m);
+    border-radius: adapter.get-radius-size(m);
+    cursor: pointer;
+    outline: none;
+
+    // 選ばれていることはチェックボックスで示し、背景は使わない。背景は今いる行だけに使う
+    &[data-focused],
+    &[data-hovered],
+    &[data-pressed] {
+      background: adapter.get-semantic-color(informative, 200);
+    }
+
+    &[data-disabled] {
+      cursor: default;
+
+      ._item-label {
+        opacity: adapter.get-disabled-surface-opacity();
+      }
+    }
+  }
+
+  ._checkbox {
+    flex: none;
+  }
+
+  ._item-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  ._empty {
+    @include adapter.text($level: s);
+    padding: adapter.get-spacing-size(s) adapter.get-spacing-size(m);
+    color: adapter.get-text-color(light, mid_emphasis);
+  }
+}
