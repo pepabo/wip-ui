@@ -55,6 +55,13 @@ const preview: Preview = {
     docs: {
       page: ComponentDocsPage,
     },
+    // brightness の確認用に、コンポーネントを載せる面を明るい色と暗い色から選べるようにする
+    backgrounds: {
+      options: {
+        light: { name: 'Light', value: '#ffffff' },
+        dark: { name: 'Dark', value: '#1f1f1f' },
+      },
+    },
     options: {
       storySort: {
         order: [

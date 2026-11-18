@@ -28,6 +28,14 @@ const meta = {
       control: 'select',
       options: ['auto', 'half', 'third', 'full'],
     },
+    shape: {
+      control: 'select',
+      options: ['square', 'circle'],
+    },
+    brightness: {
+      control: 'select',
+      options: ['light', 'dark'],
+    },
     isDisabled: {
       control: 'boolean',
     },
@@ -112,6 +120,33 @@ export const LeadingAndTrailing: Story = {
       <Button trailing={<Icon name="arrow_right" aria-hidden="true" />}>trailing</Button>
     </Stack>
   ),
+}
+
+export const Shape: Story = {
+  name: 'shape',
+  render: () => (
+    <Stack flexDirection="row" gap="s">
+      <Button shape="square">square</Button>
+      <Button shape="circle">circle</Button>
+    </Stack>
+  ),
+}
+
+export const Brightness: Story = {
+  name: 'brightness',
+  render: () => (
+    <Stack flexDirection="row" gap="s">
+      <Button appearance="outlined" brightness="light">
+        light
+      </Button>
+      <Button appearance="outlined" brightness="dark">
+        dark
+      </Button>
+    </Stack>
+  ),
+  globals: {
+    backgrounds: { value: 'dark' },
+  },
 }
 
 export const IconOnly: Story = {

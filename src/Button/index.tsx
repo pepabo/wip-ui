@@ -5,7 +5,23 @@ import { LinkButton } from './LinkButton'
 
 import type { ButtonProps } from './Button'
 import type { LinkButtonProps } from './LinkButton'
-import type { ButtonAppearance, ButtonColor, ButtonSize, ButtonWidth } from './types'
+import type {
+  ButtonAppearance,
+  ButtonBrightness,
+  ButtonColor,
+  ButtonShape,
+  ButtonSize,
+  ButtonWidth,
+} from './types'
 
 export { Button, LinkButton }
-export type { ButtonAppearance, ButtonColor, ButtonProps, ButtonSize, ButtonWidth, LinkButtonProps }
+export type {
+  ButtonAppearance,
+  ButtonBrightness,
+  ButtonColor,
+  ButtonProps,
+  ButtonShape,
+  ButtonSize,
+  ButtonWidth,
+  LinkButtonProps,
+}
