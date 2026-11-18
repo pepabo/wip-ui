@@ -37,6 +37,7 @@
 |---|---|---|
 | Avatar | ユーザーのプロフィール画像を円形で表示する | `dist/js/Avatar/Avatar.md` |
 | Divider | セクションや要素のまとまりを線で区切る | `dist/js/Divider/Divider.md` |
+| Stepper | 順番の決まった複数ステップの手続きで、今どこまで進んだかを示す | `dist/js/Stepper/Stepper.md` |
 | Sticker | ステータスやカテゴリを小さなラベルで示す | `dist/js/Sticker/Sticker.md` |
 | Table | 構造化されたデータを行と列で一覧表示する | `dist/js/Table/Table.md` |
 | Typography | 見出しや本文などのテキストを表示する | `dist/js/Typography/Typography.md` |
