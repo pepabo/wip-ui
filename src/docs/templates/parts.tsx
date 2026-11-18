@@ -230,7 +230,7 @@ export const InfoTip = ({ label, children }: { label: string; children: ReactNod
       >
         <Icon name="info_on_circle" size="s" aria-hidden="true" />
       </Button>
-      <Tooltip offset={6}>{children}</Tooltip>
+      <Tooltip>{children}</Tooltip>
     </TooltipTrigger>
   )
 }

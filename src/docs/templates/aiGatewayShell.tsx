@@ -522,9 +522,7 @@ const Sidebar = ({
               href={item.href}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`${item.label}（新しいタブで開く）`}
               leading={<Icon name={item.icon} />}
-              trailing={<Icon name="launch" size="s" />}
             >
               {item.label}
             </SideNavigationItem>
