@@ -6,6 +6,12 @@
   ._content {
     justify-content: space-between;
   }
+
+  // inhouse の app-bar は transparent で影と文字色しか変えず、基底の白い背景が残る。
+  // appearance="transparent" の名前どおり、背景を透かして下の面を見せる
+  &.-appearance-transparent {
+    background-color: transparent;
+  }
 }
 
 .wip-app-bar-trailing {
