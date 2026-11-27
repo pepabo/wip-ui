@@ -6,6 +6,9 @@ $densities: (comfort, normal, dense);
 $breakpoints: (xs, s, m, l, xl, xxl);
 
 .wip-typography {
+  // h1〜h6 や p で描いたときのブラウザ既定の余白を打ち消す。文字どうしの間隔は Stack など並べる側が決める
+  margin: 0;
+
   // Base size + density combinations
   @each $size in $sizes {
     @each $density in $densities {
